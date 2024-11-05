@@ -65,9 +65,22 @@ sphinx-click = ">=3.0.2"
 typeguard = ">=2.13.3"
 xdoctest = {extras = ["colors"], version = ">=0.15.10"}
 myst-parser = {version = ">=0.16.1"}
+jupyterlab = "^4.0.6"
+matplotlib = "^3.8.0"
+ipympl = "^0.9.3"
+hypothesis = "^6.87.3"
+snakeviz = "^2.2.0"
+nbsphinx = "^0.9.3"
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: Slow running tests, deselect with ('-m \"not slow\"')"
+]
+
 
 [tool.poetry.scripts]
-taurex3 = "taurex.__main__:main"
+taurex = "taurex.taurex:main"
+taurex-plot = "taurex.plot.plotter:main"
 
 [tool.coverage.paths]
 source = ["src", "*/site-packages"]

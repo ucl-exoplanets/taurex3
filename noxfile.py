@@ -35,6 +35,7 @@ nox.options.sessions = (
     "pre-commit",
     "safety",
     "tests",
+    "tests_numba",
     "mypy",
     "typeguard",
     "xdoctest",
@@ -167,7 +168,29 @@ def mypy(session: Session) -> None:
 def tests(session: Session) -> None:
     """Run the test suite."""
     session.install(".")
+    session.install("coverage[toml]", "pytest", "pygments", "hypothesis")
+    try:
+        session.run(
+            "coverage",
+            "run",
+            "--parallel",
+            "-m",
+            "pytest",
+            "-m",
+            "not slow",
+            *session.posargs,
+        )
+    finally:
+        if session.interactive:
+            session.notify("coverage", posargs=[])
+
+
+@session(python=python_versions)
+def tests_numba(session: Session) -> None:
+    """Run the test suite."""
+    session.install(".")
     session.install("coverage[toml]", "pytest", "pygments")
+    session.install("numba")
     try:
         session.run("coverage", "run", "--parallel", "-m", "pytest", *session.posargs)
     finally:

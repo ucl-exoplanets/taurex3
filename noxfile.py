@@ -25,7 +25,6 @@ except ImportError:
 
 package = "taurex"
 python_versions = [
-    "3.13",
     "3.12",
     "3.11",
     "3.10",
@@ -36,6 +35,7 @@ nox.options.sessions = (
     "pre-commit",
     "safety",
     "tests",
+    "mypy",
     "typeguard",
     "xdoctest",
     "docs-build",

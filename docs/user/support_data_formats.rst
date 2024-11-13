@@ -8,7 +8,7 @@ Supported Data Formats
 Cross-sections
 ~~~~~~~~~~~~~~
 Supported formats are:
-
+ 
 - ``.pickle`` *TauREx2* pickle format
 - ``.hdf5``, ``.h5`` New HDF5 format
 - ``.dat``,  ExoTransmit_ format

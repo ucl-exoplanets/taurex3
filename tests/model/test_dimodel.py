@@ -3,6 +3,7 @@ from hypothesis import given, settings, note
 from hypothesis.strategies import floats, lists
 from taurex.constants import get_constant
 from taurex.util import conversion_factor
+import numpy as np
 
 
 

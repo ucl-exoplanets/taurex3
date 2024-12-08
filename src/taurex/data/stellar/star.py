@@ -11,6 +11,7 @@ from taurex.output import OutputGroup, Writeable
 from taurex.util.emission import black_body
 
 from ..citation import Citable
+from ..fittable import Fittable, derivedparam, fitparam
 
 
 class Star(Fittable, Logger, Writeable, Citable):

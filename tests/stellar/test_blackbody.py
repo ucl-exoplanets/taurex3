@@ -19,3 +19,7 @@ def test_blackbody_star(temperature, radius, distance,
     bs.sed
 
     assert bs.sed.shape[0] == wngrid.shape[0]
+
+    bs['distance'] = distance + 1
+
+    assert bs.distance == distance + 1

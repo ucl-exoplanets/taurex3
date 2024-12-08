@@ -83,6 +83,21 @@ class Star(Fittable, Logger, Writeable, Citable):
         """Mass in kg."""
         return self._mass
 
+    @fitparam(
+        param_name="distance",
+        param_latex="$distance$",
+        default_fit=False,
+        default_bounds=[1, 22],
+    )
+    def distanceSystem(self) -> float:
+        """Distance from Earth to the System (in pc)."""
+        return self.distance
+
+    @distanceSystem.setter
+    def distanceSystem(self, value: float) -> None:
+        """Set distance from Earth to System (in pc)."""
+        self.distance = value
+
     def initialize(self, wngrid: npt.NDArray[np.float64]) -> None:
         """Initializes the blackbody spectrum on the given wavenumber grid
 

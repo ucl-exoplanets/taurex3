@@ -34,8 +34,8 @@ Changelog = "https://github.com/ahmed-f-alrefaie/taurex3/releases"
 python = "^3.9"
 click = ">=8.0.1"
 numpy = "^1.26.0"
-astropy = "^5.0.0"
-scipy = "^1.11.3"
+astropy = ">=5.0.0"
+scipy = ">=1.11.3"
 configobj = "^5.0.0"
 h5py = "^3.9.0"
 nestle = "^0.2.0"
@@ -83,6 +83,9 @@ ipympl = "^0.9.3"
 hypothesis = "^6.87.3"
 snakeviz = "^2.2.0"
 nbsphinx = "^0.9.3"
+
+[tool.poetry.group.dev.dependencies]
+jupyterlab = "^4.3.0"
 
 [tool.pytest.ini_options]
 markers = [

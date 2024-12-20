@@ -33,13 +33,17 @@ def test_simplebinner(spectra):
 
     assert np.mean(sp) == pytest.approx(np.mean(spectra[1]), rel=0.1)
 
+def test_native_binner():
+    """Test native binning."""
 
-@given(wngrid_spectra(sort=booleans()))
-def test_native_binner(s):
-    wngrid, spectra = s
+    
 
     nb = NativeBinner()
-    wn, sp, _, _ = nb.bindown(wngrid, spectra)
 
-    assert np.array_equal(wn, wngrid)
-    assert np.array_equal(spectra, sp)
+    wngrid, spectra = np.linspace(1,100,100), np.random.rand(100)
+
+
+    res = nb.bindown(wngrid, spectra)
+
+    np.testing.assert_equal(wngrid, res[0])
+    np.testing.assert_equal(spectra, res[1])

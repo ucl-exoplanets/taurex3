@@ -92,7 +92,7 @@ def test_constant_profile(mols, tp):
     # Now check the fitting params are included
     params = tc.fitting_parameters()
 
-    if sum([v for s, v in successful]) > 1.0:
+    if np.sum([v for s, v in successful]) > 1.0:
         with pytest.raises(InvalidModelException):
             tc.initialize_chemistry(nlayers, T, P)
         return

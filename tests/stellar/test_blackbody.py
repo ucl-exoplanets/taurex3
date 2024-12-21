@@ -1,5 +1,6 @@
 from hypothesis import given, settings, strategies as st
 from ..strategies import hyp_wngrid
+import numpy as np
 
 
 @given(temperature=st.floats(), radius=st.floats(),
@@ -19,3 +20,7 @@ def test_blackbody_star(temperature, radius, distance,
     bs.sed
 
     assert bs.sed.shape[0] == wngrid.shape[0]
+
+    bs['distance'] = distance + 1
+
+    np.testing.assert_equal(bs.distance, distance + 1)

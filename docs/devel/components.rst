@@ -9,7 +9,7 @@ Components
 
 Here we present the most basic form of each component. See
 basic features under :ref:`basics` and retrieval features under
-:ref:`retrievaldev`
+:ref:`retreivaldev`
 
 
 Temperature

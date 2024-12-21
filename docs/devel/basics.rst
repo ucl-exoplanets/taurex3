@@ -258,7 +258,7 @@ Bibliographies are additive as well; if we decided to build on top of this class
 we do not need to redefine the older bibliographic information as all parent
 bibliographic information is also inherited:
 
-.. code-block:: python:
+.. code-block:: python
 
     class AnotherProfile(MyNewTemperatureProfile):
     # ...
@@ -324,7 +324,7 @@ If you're developing a :class:`~taurex.model.model.ForwardModel` then
 its own ``BIBTEX_ENTRIES`` as well as every component in the model
 itself (i.e Temperature, Contributions etc.) we have a nice recipe to accomplish this:
 
-.. code-block:: python:
+.. code-block:: python
 
     def citations(self):
 

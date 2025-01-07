@@ -8,6 +8,11 @@ from taurex.constants import PI
 
 from .emission import EmissionModel
 
+def compute_direct_image_final_flux(
+    f_total, planet_radius, star_distance
+):
+    return f_total*(planet_radius**2)/(star_distance**2)
+
 
 class DirectImageModel(EmissionModel):
     """A forward model for direct imaging of exo-planets."""
@@ -21,16 +26,9 @@ class DirectImageModel(EmissionModel):
         from an exo-planet.
 
         """
-        star_distance_meters = self._star.distance * 3.08567758e16
-
-        sdr = pow((star_distance_meters / 3.08567758e16), 2)
-        sdr = 1.0
-        planet_radius = self._planet.fullRadius
-
         return (
-            (f_total * (planet_radius**2) * 2.0 * PI)
-            / (4 * PI * (star_distance_meters**2))
-        ) * sdr
+            compute_direct_image_final_flux(f_total, self._planet.fullRadius, self._star.distance * 3.08567758e16)
+        )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:

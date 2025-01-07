@@ -21,13 +21,6 @@
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black
 
-## Features
-
-- TODO
-
-## Requirements
-
-- TODO
 
 ## Installation
 
@@ -39,7 +32,7 @@ $ pip install taurex3
 
 ## Usage
 
-Please see the [Command-line Reference] for details.
+Please see the [Documentation] for details.
 
 ## Contributing
 
@@ -48,7 +41,7 @@ To learn more, see the [Contributor Guide].
 
 ## License
 
-Distributed under the terms of the [MIT license][license],
+Distributed under the terms of the [BSD license][license],
 _TauREx3_ is free and open source software.
 
 ## Issues
@@ -60,14 +53,8 @@ please [file an issue] along with a detailed description.
 
 This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter] template.
 
-[@cjolowicz]: https://github.com/cjolowicz
-[pypi]: https://pypi.org/
-[hypermodern python cookiecutter]: https://github.com/cjolowicz/cookiecutter-hypermodern-python
-[file an issue]: https://github.com/ahmed-f-alrefaie/taurex3/issues
-[pip]: https://pip.pypa.io/
-
 <!-- github-only -->
 
 [license]: https://github.com/ahmed-f-alrefaie/taurex3/blob/main/LICENSE
 [contributor guide]: https://github.com/ahmed-f-alrefaie/taurex3/blob/main/CONTRIBUTING.md
-[command-line reference]: https://taurex3.readthedocs.io/en/latest/usage.html
+[documentation]: https://taurex3.readthedocs.io/en/latest/

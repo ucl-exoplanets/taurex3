@@ -18,7 +18,7 @@ and may have precompiled binary wheels for Windows, MacOS and/or manylinux
 +==================+==================================================+======+========+=======+===========+
 |                  |                                                  |      | Win64  | MacOS | manylinux |
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
-| taurex_ace       | Equilibrium chemistry using ACE                  | ✔    | ✔      | ✔     | ✔         |
+| acepython        | Equilibrium chemistry using ACE                  | ✔    | ✔      | ✔     | ✔         |
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
 | taurex_fastchem  | Equilibrium chemistry using FastChem             | ✔    | ✔      | ✔     | ✔         |
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
@@ -26,13 +26,10 @@ and may have precompiled binary wheels for Windows, MacOS and/or manylinux
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
 | taurex_cuda      | CUDA-acceleration of forward models              | ✔    |        |       |           |
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
-| taurex_hip       | HIP-acceleration of forward models               | ✔    |        |       |           |
-+------------------+--------------------------------------------------+------+--------+-------+-----------+
 | taurex_dynesty   | Dynesty optimizer                                | ✔    | ✔      | ✔     | ✔         |
 +------------------+--------------------------------------------------+------+--------+-------+-----------+
-| taurex_petitrad  | petitRADTRANS forward models and opacity formats | ✔    | ✔      | ✔     | ✔         |
-+------------------+--------------------------------------------------+------+--------+-------+-----------+
 
 
 
-.. _taurex_ace: http://pypi.org/projects/taurex_ace
+
+.. _acepython: http://pypi.org/projects/acepython

@@ -16,8 +16,8 @@
 [status]: https://pypi.org/project/taurex3/
 [python version]: https://pypi.org/project/taurex3
 [read the docs]: https://taurex3.readthedocs.io/
-[tests]: https://github.com/ahmed-f-alrefaie/taurex3/actions?workflow=Tests
-[codecov]: https://app.codecov.io/gh/ahmed-f-alrefaie/taurex3
+[tests]: https://github.com/ucl-exoplanets/taurex3/actions?workflow=Tests
+[codecov]: https://app.codecov.io/gh/ucl-exoplanets/taurex3
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black
 
@@ -51,6 +51,6 @@ please [file an issue] along with a detailed description.
 
 <!-- github-only -->
 
-[license]: https://github.com/ahmed-f-alrefaie/taurex3/blob/main/LICENSE
-[contributor guide]: https://github.com/ahmed-f-alrefaie/taurex3/blob/main/CONTRIBUTING.md
+[license]: https://github.com/ucl-exoplanets/taurex3/blob/main/LICENSE
+[contributor guide]: https://github.com/ucl-exoplanets/taurex3/blob/main/CONTRIBUTING.md
 [documentation]: https://taurex3.readthedocs.io/en/latest/

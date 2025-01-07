@@ -49,10 +49,6 @@ _TauREx3_ is free and open source software.
 If you encounter any problems,
 please [file an issue] along with a detailed description.
 
-## Credits
-
-This project was generated from [@cjolowicz]'s [Hypermodern Python Cookiecutter] template.
-
 <!-- github-only -->
 
 [license]: https://github.com/ahmed-f-alrefaie/taurex3/blob/main/LICENSE

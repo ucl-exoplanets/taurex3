@@ -1,9 +1,9 @@
 # TauREx3
 
-[![PyPI](https://img.shields.io/pypi/v/taurex3.svg)][pypi_]
-[![Status](https://img.shields.io/pypi/status/taurex3.svg)][status]
-[![Python Version](https://img.shields.io/pypi/pyversions/taurex3)][python version]
-[![License](https://img.shields.io/pypi/l/taurex3)][license]
+[![PyPI](https://img.shields.io/pypi/v/taurex.svg)][pypi_]
+[![Status](https://img.shields.io/pypi/status/taurex.svg)][status]
+[![Python Version](https://img.shields.io/pypi/pyversions/taurex)][python version]
+[![License](https://img.shields.io/pypi/l/taurex)][license]
 
 [![Read the documentation at https://taurex3.readthedocs.io/](https://img.shields.io/readthedocs/taurex3/latest.svg?label=Read%20the%20Docs)][read the docs]
 [![Tests](https://github.com/ahmed-f-alrefaie/taurex3/workflows/Tests/badge.svg)][tests]
@@ -12,9 +12,9 @@
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
 
-[pypi_]: https://pypi.org/project/taurex3/
-[status]: https://pypi.org/project/taurex3/
-[python version]: https://pypi.org/project/taurex3
+[pypi_]: https://pypi.org/project/taurex/
+[status]: https://pypi.org/project/taurex/
+[python version]: https://pypi.org/project/taurex
 [read the docs]: https://taurex3.readthedocs.io/
 [tests]: https://github.com/ucl-exoplanets/taurex3/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/ucl-exoplanets/taurex3

@@ -11,10 +11,10 @@ Here is a list of important resources for contributors:
 - [Issue Tracker]
 - [Code of Conduct]
 
-[mit license]: https://opensource.org/licenses/MIT
-[source code]: https://github.com/ahmed-f-alrefaie/taurex3
+[BSD license]: https://opensource.org/licenses/BSDv3
+[source code]: https://github.com/ucl-exoplanets/taurex3
 [documentation]: https://taurex3.readthedocs.io/
-[issue tracker]: https://github.com/ahmed-f-alrefaie/taurex3/issues
+[issue tracker]: https://github.com/ucl-exoplanets/taurex3/issues
 
 ## How to report a bug
 
@@ -37,7 +37,7 @@ Request features on the [Issue Tracker].
 
 ## How to set up your development environment
 
-You need Python 3.7+ and the following tools:
+You need Python 3.9+ and the following tools:
 
 - [Poetry]
 - [Nox]
@@ -54,7 +54,7 @@ or the command-line interface:
 
 ```console
 $ poetry run python
-$ poetry run taurex3
+$ poetry run taurex
 ```
 
 [poetry]: https://python-poetry.org/
@@ -108,7 +108,7 @@ $ nox --session=pre-commit -- install
 It is recommended to open an issue before starting work on anything.
 This will allow a chance to talk it over with the owners and validate your approach.
 
-[pull request]: https://github.com/ahmed-f-alrefaie/taurex3/pulls
+[pull request]: https://github.com/ucl-exoplanets/taurex3/pulls
 
 <!-- github-only -->
 

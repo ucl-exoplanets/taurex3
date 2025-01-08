@@ -9,7 +9,7 @@
     Plugin Catalogue <plugins_cata>
     Full API <api/modules>
     Citation <citation>
-    Project Page <https://github.com/ucl-exoplanets/TauREx3_public/>
+    Project Page <https://github.com/ucl-exoplanets/taurex3/>
 
 
 TauREx |version| - A true exoplanet retrieval framework

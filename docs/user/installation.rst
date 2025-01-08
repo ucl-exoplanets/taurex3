@@ -23,7 +23,7 @@ To test for correct setup you can do::
 Additionally, to restore the equilbrium chemistry and BHMie from TauREx 3.0 you can
 run::
 
-    pip install taurex_ace taurex_bhmie
+    pip install acepython taurex_bhmie
 
 
 
@@ -33,15 +33,15 @@ Installing from git source directly (platform-independent)
 
 You can directly get the most cutting-edge release from the repo::
 
-    pip install git+https://github.com/ucl-exoplanets/TauREx3_public.git
+    pip install git+https://github.com/ucl-exoplanets/taurex3.git
 
 You can also clone TauREx3 from our main git repository::
 
-    git clone https://github.com/ucl-exoplanets/TauREx3_public.git
+    git clone https://github.com/ucl-exoplanets/taurex3.git
 
 Move into the TauREx3 folder::
 
-    cd TauREx3
+    cd taurex3
 
 Then, just do::
 

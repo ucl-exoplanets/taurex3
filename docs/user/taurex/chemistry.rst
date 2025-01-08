@@ -30,7 +30,7 @@ ACE Equlibrium Chemistry
     Since version 3.1 this has been removed from the base TauREx package. You can
     restore this chemical scheme by writing::
 
-        pip install taurex_ace
+        pip install acepython
 
 
 ``chemistry_type = ace``

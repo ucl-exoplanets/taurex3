@@ -10,6 +10,13 @@ from taurex.output import OutputGroup
 
 from .contribution import Contribution
 
+if t.TYPE_CHECKING:
+    from taurex.model.model import ForwardModel
+else:
+    ForwardModel = object
+
+from .contribution import contribute_tau
+
 
 class LeeMieContribution(Contribution):
     """Computes Mie scattering contribution to optica depth.
@@ -26,7 +33,7 @@ class LeeMieContribution(Contribution):
         Extinction coefficient
 
     lee_mie_mix_ratio: float
-        Mixing ratio in atmosphere
+        Mixing ratio in atmosphere in particles/m3
 
     lee_mie_bottomP: float
         Bottom of cloud deck in Pa
@@ -36,6 +43,71 @@ class LeeMieContribution(Contribution):
 
 
     """
+
+    def contribute(
+        self,
+        model: ForwardModel,
+        start_layer: int,
+        end_layer: int,
+        density_offset: int,
+        layer: int,
+        density: npt.NDArray[np.float64],
+        tau: npt.NDArray[np.float64],
+        path_length: t.Optional[npt.NDArray[np.float64]] = None,
+    ):
+        """Computes an integral for a single layer for the optical depth.
+
+        Parameters
+        ----------
+        model: :class:`~taurex.model.model.ForwardModel`
+            A forward model
+
+        start_layer: int
+            Lowest layer limit for integration
+
+        end_layer: int
+            Upper layer limit of integration
+
+        density_offset: int
+            offset in density layer
+
+        layer: int
+            atmospheric layer being computed
+
+        density: :obj:`array`
+            density profile of atmosphere
+
+        tau: :obj:`array`
+            optical depth to store result
+
+        path_length: :obj:`array`
+            integration length
+
+        """
+        self.debug("SIGMA %s", self.sigma_xsec.shape)
+        self.debug(
+            " %s %s %s %s %s %s %s",
+            start_layer,
+            end_layer,
+            density_offset,
+            layer,
+            1,
+            tau,
+            self._ngrid,
+        )
+        contribute_tau(
+            start_layer,
+            end_layer,
+            density_offset,
+            self.sigma_xsec,
+            np.ones(self._nlayers),
+            path_length,
+            self._nlayers,
+            self._ngrid,
+            layer,
+            tau,
+        )
+        self.debug("DONE")
 
     def __init__(
         self,

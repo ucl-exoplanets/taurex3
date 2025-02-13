@@ -1,4 +1,5 @@
 """Some implemented mixins."""
+
 import typing as t
 
 import numpy as np
@@ -19,7 +20,7 @@ class MakeFreeMixin(ChemistryMixin):
 
     For example lets enhance ACE:
 
-    >>> from taurex_ace import ACEChemistry
+    >>> from acepython.taurex import ACEChemistry
     >>> from taurex.mixin import enhance_class, MakeFreeMixin
     >>> old_ace = ACEChemistry()
     >>> new_ace = enhance_class(ACEChemistry, MakeFreeMixin)

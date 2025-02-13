@@ -13,12 +13,12 @@ try:
     import numba
     from numba import float64
 
-    @numba.vectorize([float64(float64)], fastmath=True)
+    @numba.vectorize([float64(float64)], fastmath=True, error_model="numpy")
     def _convert_lamb(lamb: npt.NDArray[np.float64]) -> npt:
         """Convert wavenumber in :math:`\\mu m` to :math:`m`."""
         return 10000 * 1e-6 / lamb
 
-    @numba.vectorize([float64(float64, float64)], fastmath=True)
+    @numba.vectorize([float64(float64, float64)], fastmath=True, error_model="numpy")
     def _black_body_vec(wl: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum."""
         return (
@@ -27,13 +27,13 @@ try:
             * 1e-6
         )
 
-    @numba.njit(fastmath=True, parallel=False)
+    @numba.njit(fastmath=True, parallel=False, error_model="numpy")
     def black_body_numba(lamb: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum using numba."""
         wl = _convert_lamb(lamb)
         return _black_body_vec(wl, temp)
 
-    @numba.njit(fastmath=True, parallel=False)
+    @numba.njit(fastmath=True, parallel=False, error_model="numpy")
     def black_body_numba_II(lamb, temp):  # noqa: N802
         """Compute black body spectrum (alt algo) using numba."""
         n = lamb.shape[0]

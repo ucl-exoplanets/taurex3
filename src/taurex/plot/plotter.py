@@ -39,6 +39,11 @@ class Plotter(object):
 
         if not os.path.exists(self.out_folder):
             os.makedirs(self.out_folder)
+                      
+    def find_nearest(self, array, value):
+        array = np.asarray(array)
+        idx = (np.abs(array - value)).argmin()
+        return idx, array[idx]
 
     @property
     def num_solutions(self,fd_position='Output'):
@@ -775,7 +780,7 @@ class Plotter(object):
         plt.close()
 
 
-    def plot_fitted_tau(self):
+    def plot_fitted_tau(self, wl_min:float=.5, wl_max:float=12.):
         N = self.num_solutions
         for solution_idx, solution_val in self.solution_iter():
 
@@ -784,6 +789,12 @@ class Plotter(object):
 
             pressure = solution_val['Profiles']['pressure_profile'][:]
             wavelength = solution_val['Spectra']['native_wlgrid'][:]
+            
+            wavelength_right = self.find_nearest(wavelength, wl_min)[0]
+            wavelength_left = self.find_nearest(wavelength, wl_max)[0]
+
+            wavelength = wavelength[wavelength_left:wavelength_right+1]
+            contribution = contribution[...,wavelength_left:wavelength_right+1]
 
             self._plot_tau(contribution,pressure,wavelength)
 
@@ -795,7 +806,8 @@ class Plotter(object):
         grid = plt.GridSpec(1, 4, wspace=0.4, hspace=0.3)
         fig = plt.figure('Contribution function')
         ax1 = plt.subplot(grid[0, :3])
-        plt.imshow(contribution, aspect='auto')
+        pos = plt.imshow(contribution, aspect='auto')
+        plt.colorbar(pos, ax=ax1)
 
         ### mapping of the pressure array onto the ticks:
         y_labels = np.array([pow(10., p) for p in np.arange(np.ceil(np.log10(np.max(pressure))), np.floor(np.log10(np.min(pressure)))-1.,step=-1)])
@@ -823,8 +835,8 @@ class Plotter(object):
         plt.xticks(x_ticks, x_labels)
         plt.gca().invert_yaxis()
         plt.gca().invert_xaxis()
-        plt.xlabel(r"Wavelength ($\mu$m)")
-        plt.ylabel("Pressure (Bar)")
+        plt.xlabel(r"Wavelength [$\mu$m]")
+        plt.ylabel("Pressure [bar]")
 
         ax2 = plt.subplot(grid[0, 3])
 

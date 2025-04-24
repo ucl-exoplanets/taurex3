@@ -157,7 +157,7 @@ class LeeMieContribution(Contribution):
     @fitparam(
         param_name="lee_mie_topP",
         param_latex=r"$P^{lee}_\mathrm{top}$",
-        default_mode="log",
+        default_mode="linear",
         default_fit=False,
         default_bounds=[-1, 1],
     )
@@ -173,7 +173,7 @@ class LeeMieContribution(Contribution):
     @fitparam(
         param_name="lee_mie_bottomP",
         param_latex=r"$P^{lee}_\mathrm{bottom}$",
-        default_mode="log",
+        default_mode="linear",
         default_fit=False,
         default_bounds=[-1, 1],
     )
@@ -189,7 +189,7 @@ class LeeMieContribution(Contribution):
     @fitparam(
         param_name="lee_mie_mix_ratio",
         param_latex=r"$\chi^{lee}_\mathrm{mie}$",
-        default_mode="log",
+        default_mode="linear",
         default_fit=False,
         default_bounds=[-1, 1],
     )

@@ -143,8 +143,9 @@ class LeeMieContribution(Contribution):
     @fitparam(
         param_name="lee_mie_q",
         param_latex=r"$Q_\mathrm{ext}$",
+        default_mode="log",
         default_fit=False,
-        default_bounds=[-10, 1],
+        default_bounds=[1e-30, 1e6],
     )
     def mieQ(self) -> float:  # noqa: N802
         """Extinction coefficient."""
@@ -159,7 +160,7 @@ class LeeMieContribution(Contribution):
         param_latex=r"$P^{lee}_\mathrm{top}$",
         default_mode="log",
         default_fit=False,
-        default_bounds=[-1, 1],
+        default_bounds=[1e-30, 1e6],
     )
     def mieTopPressure(self) -> float:  # noqa: N802
         """Pressure at top of cloud deck in Pa."""
@@ -175,7 +176,7 @@ class LeeMieContribution(Contribution):
         param_latex=r"$P^{lee}_\mathrm{bottom}$",
         default_mode="log",
         default_fit=False,
-        default_bounds=[-1, 1],
+        default_bounds=[1e-30, 1e6],
     )
     def mieBottomPressure(self) -> float:  # noqa: N802
         """Pressure at bottom of cloud deck in Pa."""
@@ -191,7 +192,7 @@ class LeeMieContribution(Contribution):
         param_latex=r"$\chi^{lee}_\mathrm{mie}$",
         default_mode="log",
         default_fit=False,
-        default_bounds=[-1, 1],
+        default_bounds=[1e-40, 1],
     )
     def mieMixing(self) -> float:  # noqa: N802
         """Mixing ratio in atmosphere."""

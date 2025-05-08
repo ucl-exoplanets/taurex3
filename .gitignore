@@ -11,4 +11,4 @@ __pycache__/
 .hypothesis
 .vscode
 .ipynb_checkpoints
-scratch
+scratch/

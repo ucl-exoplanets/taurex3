@@ -31,10 +31,10 @@ classifiers = [
 Changelog = "https://github.com/ahmed-f-alrefaie/taurex3/releases"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 click = ">=8.0.1"
-numpy = "^1.26.0"
-astropy = ">=5.0.0"
+numpy = "^2.0.2"
+astropy = ">=6.0.0"
 scipy = ">=1.11.3"
 configobj = "^5.0.0"
 h5py = "^3.9.0"
@@ -52,6 +52,8 @@ numba = ["numba"]
 biblio = ["pybtex"]
 multinest = ["pymultinest"]
 
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -123,3 +125,4 @@ show_error_context = true
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+

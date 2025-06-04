@@ -27,7 +27,7 @@ def load_generic_profile_from_hdf5(
     for kw in klass_kwargs:
         if kw in temp_keys:
             v = loc[kw][()]
-            if isinstance(v, np.ndarray) and v.dtype.type is np.string_:
+            if isinstance(v, np.ndarray) and v.dtype.type is np.bytes_:
                 from taurex.util import decode_string_array
 
                 v = decode_string_array(v)

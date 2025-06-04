@@ -205,13 +205,12 @@ class ClassFactory(Singleton):
             # Make sure they're unique
             all_files = set(
                 sum(
-                    [p.glob("*.py") for p in paths],
+                    [list(p.glob("*.py")) for p in paths],
                     [],
                 )
             )
-
             for f in all_files:
-                self.info("Loading extensions from %s", f)
+                self.log.info("Loading extensions from %s", f)
                 module_name = f.stem
                 spec = importlib.util.spec_from_file_location(module_name, f)
                 foo = importlib.util.module_from_spec(spec)

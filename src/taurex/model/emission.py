@@ -526,7 +526,11 @@ class EmissionModel(OneDForwardModel):
         """log10 Flux integrated over all wavelengths (W m-2)."""
         import math
 
-        from scipy.integrate import simps
+        try:
+            from scipy.integrate import simps
+        except ImportError:
+            # Using a newer version of scipy where simps was renamed to simpson
+            from scipy.integrate import simpson as simps
 
         intensity, _mu, _w, tau = self.partial_model()
 

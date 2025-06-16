@@ -96,22 +96,15 @@ class PhoenixStar(BlackbodyStar):
 
         self.get_avail_phoenix()
         self.use_blackbody = False
+
+        self._current_phoenix_params = [
+            self.temperatureK,
+            self.logg,
+            self.metallicityZ,
+        ]
+
         self.recompute_spectra()
         # self.preload_phoenix_spectra()
-
-    def compute_logg(self) -> float:
-        """Computes log(surface_G)."""
-        import astropy.units as u
-        from astropy.constants import G
-
-        mass = self._mass * u.kg
-        radius = self._radius * u.m
-
-        small_g = (G * mass) / (radius**2)
-
-        small_g = small_g.to(u.cm / u.s**2)
-
-        return math.log10(small_g.value)
 
     def recompute_spectra(self) -> None:
         """Recompute spectra as needed."""
@@ -119,11 +112,9 @@ class PhoenixStar(BlackbodyStar):
             self.temperature > self._T_list.max()
             or self.temperature < self._T_list.min()
         ):
-            self._logg = self.compute_logg()
             self.use_blackbody = True
         else:
             self.use_blackbody = False
-            self._logg = self.compute_logg()
             f = self.find_nearest_file()
             self.read_spectra(f)
 
@@ -160,41 +151,10 @@ class PhoenixStar(BlackbodyStar):
                 self.wngrid = self.wngrid[argidx]
                 self._base_sed = self._base_sed[argidx]
 
-    @property
-    def temperature(self) -> float:
-        """Effective Temperature in Kelvin.
-
-        Returns
-        -------
-        T: float
-
-        """
-        return self._temperature
-
-    @temperature.setter
-    def temperature(self, value: float) -> None:
-        self._temperature = value
-        self.recompute_spectra()
-
-    @property
-    def mass(self) -> float:
-        """Mass of star in solar mass.
-
-        Returns
-        -------
-        M: float
-
-        """
-        return self._mass
-
-    @mass.setter
-    def mass(self, value: float) -> None:
-        self._mass = value * MSOL
-        self.recompute_spectra()
 
     def find_nearest_file(self) -> str:
         """Finds the nearest file to the current stellar parameters."""
-        idx = self._index_finder([self._temperature, self._logg, self._metallicity])
+        idx = self._index_finder([self._temperature, self.logg, self._metallicity])
         return self._files[int(idx)]
 
     def get_avail_phoenix(self) -> None:
@@ -256,6 +216,19 @@ class PhoenixStar(BlackbodyStar):
             )
             super().initialize(wngrid)
         else:
+            current_phoenix_params = [
+                self.temperatureK,
+                self.logg,
+                self.metallicityZ,
+            ]
+            if (
+                current_phoenix_params
+                != self._current_phoenix_params
+            ):
+                self.recompute_spectra()
+                self._current_phoenix_params = current_phoenix_params
+
+
             sed = self._base_sed
             self.sed = np.interp(wngrid, self.wngrid, sed)
 

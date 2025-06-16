@@ -69,6 +69,13 @@ class Star(Fittable, Logger, Writeable, Citable):
         """Radius in metres."""
         return self._radius
 
+    @radius.setter
+    def radius(self, value: float) -> None:
+        """Set radius in metres."""
+        self._radius = value
+
+    
+
     @property
     def temperature(self) -> float:
         """Blackbody temperature in Kelvin."""
@@ -84,6 +91,12 @@ class Star(Fittable, Logger, Writeable, Citable):
         """Mass in kg."""
         return self._mass
 
+    @mass.setter
+    def mass(self, value: float) -> None:
+        """Set mass in kg."""
+        self._mass = value
+
+
     @fitparam(
         param_name="distance",
         param_latex="$distance$",
@@ -98,6 +111,96 @@ class Star(Fittable, Logger, Writeable, Citable):
     def distanceSystem(self, value: float) -> None:
         """Set distance from Earth to System (in pc)."""
         self.distance = value
+
+    @fitparam(
+        param_name="star_radius",
+        param_latex="$R_{\\star}$",
+        default_fit=False,
+        default_bounds=[0.1, 10],
+    )
+    def radiusRsol(self) -> float:
+        """Radius in Solar radius."""
+        return self._radius / RSOL
+    
+    @radiusRsol.setter
+    def radiusRsol(self, value: float) -> None:
+        """Set radius in Solar radius."""
+        self._radius = value * RSOL
+
+    @fitparam(
+        param_name="star_mass",
+        param_latex="$M_{\\star}$",
+        default_fit=False,
+        default_bounds=[0.1, 10],
+    )
+    def massMsol(self) -> float:
+        """Mass in Solar mass."""
+        return self._mass / MSOL
+    
+    @massMsol.setter
+    def massMsol(self, value: float) -> None:
+        """Set mass in Solar mass."""
+        self._mass = value * MSOL
+
+    @fitparam(
+        param_name="star_metallicity",
+        param_latex="$Z$",
+        default_fit=False,
+        default_mode="log",
+        default_bounds=[0.01, 10],
+    )
+    def metallicityZ(self) -> float:
+        """Metallicity in Solar values."""
+        return self._metallicity
+    
+    @metallicityZ.setter
+    def metallicityZ(self, value: float) -> None:
+        """Set metallicity in Solar values."""
+        self._metallicity = value
+
+    @fitparam(
+        param_name="star_temperature",
+        param_latex="$T_{\\star}$",
+        default_fit=False,
+        default_bounds=[1000, 20000],
+    )
+    def temperatureK(self) -> float:
+        """Temperature in Kelvin."""
+        return self._temperature
+    
+    @temperatureK.setter
+    def temperatureK(self, value: float) -> None:
+        """Set temperature in Kelvin."""
+        self._temperature = value
+    
+    @derivedparam(
+        param_name="star_logg",
+        param_latex="$\\log_{10} g_{\\star}$",
+        compute=False,
+    )
+    def logg(self) -> float:
+        """Logarithm of surface gravity in cgs."""
+        # logg = G * M / R^2
+        # where G is the gravitational constant, M is the mass, and R is the radius
+        from astropy import constants as const
+        from astropy import units as u
+        import math
+
+        radius = self._radius << u.m
+        mass = self._mass << u.kg
+
+        grav = (const.G * mass / (radius ** 2)).to(u.cm/u.s**2).value
+        self.debug("Computed surface gravity: %s", grav)
+        # Convert to log10
+
+        return math.log10(grav)
+
+
+        G = 6.67430e-11
+        logg_value = np.log10(G * self._mass / (self._radius ** 2))
+        self.debug("Computed logg: %s", logg_value)
+        return logg_value
+
 
     def initialize(self, wngrid: npt.NDArray[np.float64]) -> None:
         """Initializes the blackbody spectrum on the given wavenumber grid

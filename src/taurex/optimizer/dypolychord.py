@@ -43,6 +43,8 @@ class dyPolyChordOptimizer(PolyChordOptimizer):
             # log-likelihood function called by polychord
             fit_params_container = np.array(
                 [cube[i] for i in range(len(self.fitting_parameters))])
+            
+            self.update_model(fit_params_container)
             chi_t = self.chisq_trans(fit_params_container, data, datastd)
 
             # print('---------START---------')

@@ -299,6 +299,7 @@ class Optimizer(Logger, Citable):
 
         """
         parameters = np.asarray(parameters)
+        self.update_model(parameters)
         data = self._observed.spectrum
         datastd = self._observed.errorBar
 
@@ -464,7 +465,7 @@ class Optimizer(Logger, Citable):
         """
         from taurex.exceptions import InvalidModelException
 
-        self.update_model(fit_params)
+        #self.update_model(fit_params)
         obs_bins = self._observed.wavenumberGrid
 
         try:

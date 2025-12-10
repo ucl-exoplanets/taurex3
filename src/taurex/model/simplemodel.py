@@ -530,12 +530,10 @@ class SimpleForwardModel(ForwardModel):
             full_depth = np.concatenate(all_depth, axis=-1)
             full_tau = np.concatenate(all_tau, axis=-1)
 
-            # Sort back to original order
-            sort_idx = np.argsort(full_native)
             return (
-                full_native[sort_idx],
-                full_depth[sort_idx],
-                full_tau[sort_idx],
+                full_native,
+                full_depth,
+                full_tau,
                 None,
             )
 

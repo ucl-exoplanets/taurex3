@@ -480,6 +480,7 @@ class SimpleForwardModel(ForwardModel):
 
     @contextmanager
     def partition_mode(self, wngrid=None, npartition=1):
+        """Needed to ensure that when partition mode is closed, the current grid is reset."""
         native_grid = self.nativeWavenumberGrid
         if wngrid is not None:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)
@@ -520,9 +521,7 @@ class SimpleForwardModel(ForwardModel):
             all_tau = []
             for grid in grids:
                 self._current_grid = grid
-                native, depth, tau, extra = self.model(
-                    wngrid=grid, cutoff_grid=False
-                )
+                native, depth, tau, extra = self.model()
                 all_native.append(native)
                 all_depth.append(depth)
                 all_tau.append(tau)

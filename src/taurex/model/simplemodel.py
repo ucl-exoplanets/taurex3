@@ -1,7 +1,7 @@
 """Basic forward model."""
 
 import typing as t
-
+from contextlib import contextmanager
 import numpy as np
 import numpy.typing as npt
 from astropy import units as u
@@ -117,7 +117,7 @@ class SimpleForwardModel(ForwardModel):
         self._sigma_opacities = None
 
         self._native_grid = None
-
+        self._current_grid = None
         if contributions:
             for contrib in contributions:
                 self.add_contribution(contrib)
@@ -473,6 +473,74 @@ class SimpleForwardModel(ForwardModel):
 
         return current_grid
 
+    @property
+    def modelling_grid(self):
+        """Grid to actually perform the modelling."""
+        return self._current_grid if self._current_grid is not None else self.nativeWavenumberGrid
+
+    @contextmanager
+    def partition_mode(self, wngrid=None, npartition=1):
+        native_grid = self.nativeWavenumberGrid
+        if wngrid is not None:
+            native_grid = clip_native_to_wngrid(native_grid, wngrid)
+
+        # Partion the gridd
+
+        grids = np.array_split(native_grid, npartition)
+        try:
+            yield grids
+        finally:
+            self._current_grid = None
+
+
+    def model_partition(self, wngrid=None, npartition=1):
+        """Runs the model in partitions.
+
+        Parameters
+        ----------
+        wngrid:
+            Wavenumber grid, default is to use native grid
+        npartition:
+            Number of partitions to split the grid into
+        Returns
+        -------
+        native_grid:
+            Native wavenumber grid, clipped if ``wngrid`` passed
+
+        depth:
+            Resulting depth
+        tau:
+            Optical depth.
+        extra: ``None``
+            Empty
+        """
+        with self.partition_mode(wngrid, npartition) as grids:
+            all_native = []
+            all_depth = []
+            all_tau = []
+            for grid in grids:
+                self._current_grid = grid
+                native, depth, tau, extra = self.model(
+                    wngrid=grid, cutoff_grid=False
+                )
+                all_native.append(native)
+                all_depth.append(depth)
+                all_tau.append(tau)
+
+            full_native = np.concatenate(all_native, axis=-1)
+            full_depth = np.concatenate(all_depth, axis=-1)
+            full_tau = np.concatenate(all_tau, axis=-1)
+
+            # Sort back to original order
+            sort_idx = np.argsort(full_native)
+            return (
+                full_native[sort_idx],
+                full_depth[sort_idx],
+                full_tau[sort_idx],
+                None,
+            )
+
+
     def model(
         self,
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
@@ -510,7 +578,7 @@ class SimpleForwardModel(ForwardModel):
         self.initialize_profiles()
 
         # Clip grid if necessary
-        native_grid = self.nativeWavenumberGrid
+        native_grid = self.modelling_grid
         if wngrid is not None and cutoff_grid:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)
 

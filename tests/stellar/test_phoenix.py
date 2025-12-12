@@ -11,7 +11,7 @@ def create_fits_file(tp, lg, mtl):
     temp_logg = "%1.1f" % lg
     temp_mtl = "%1.1f" % mtl
     if lg >= 0:
-        temp_logg = f"+{temp_logg}"
+        temp_logg = f"-{temp_logg}"
     if mtl >= 0:
         temp_mtl = f"+{temp_mtl}"
 
@@ -32,7 +32,7 @@ def test_phoenix_find_spectrum(tmpdir):
         phoenix = PhoenixStar(phoenix_path=str(tmpdir))
 
     temp = np.arange(1000, 2000, 100, dtype=np.float64)
-    logg = [-2.0, -1.0, 0.0, 1.0, 2.0, 3.0]
+    logg = [0.0, 1.0, 2.0, 3.0]
     metal = [-1.0, -2.0, 0.0, 1.0, 2.0]
     file_list = []
     test_cases = []

@@ -224,7 +224,7 @@ class PhoenixStar(BlackbodyStar):
                 np.array([np.float64(os.path.basename(k)[3:8]) for k in files]) * 100
             )
             self._Logg_list = np.array(
-                [np.float64(os.path.basename(k)[8:12]) for k in files]
+                [np.float64(os.path.basename(k)[9:12]) for k in files]
             )
             self._Z_list = np.array(
                 [np.float64(os.path.basename(k)[13:16]) for k in files]

@@ -73,7 +73,7 @@ class TemperatureFile(TemperatureArray):
             )
             temperature_arr = arr[:] * convert_t
 
-        super().__init__(tp_array=temperature_arr, p_points=pressure_arr)
+        super().__init__(tp_array=temperature_arr, p_points=pressure_arr, reverse=reverse)
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:

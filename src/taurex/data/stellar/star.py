@@ -14,6 +14,7 @@ from ..citation import Citable
 from ..fittable import Fittable, derivedparam, fitparam
 
 
+
 class Star(Fittable, Logger, Writeable, Citable):
     """A base class that holds information on the star in the model.
     Its implementation is a star that has a blackbody spectrum.

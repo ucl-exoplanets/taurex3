@@ -5,7 +5,7 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
-
+import warnings
 from taurex.cache import GlobalCache
 from taurex.constants import MSOL
 from taurex.output import OutputGroup
@@ -74,6 +74,13 @@ class PhoenixStar(BlackbodyStar):
             metallicity=metallicity,
         )
         self._phoenix_path = phoenix_path
+
+        warnings.warn(
+            "Phoenix Model will be deprecated soon. Use plugin phoenix4all instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
 
         self.retro_version_file = retro_version_file
         # CAN BE OBTAINED FROM:
@@ -224,7 +231,7 @@ class PhoenixStar(BlackbodyStar):
                 np.array([np.float64(os.path.basename(k)[3:8]) for k in files]) * 100
             )
             self._Logg_list = np.array(
-                [np.float64(os.path.basename(k)[8:12]) for k in files]
+                [np.float64(os.path.basename(k)[9:12]) for k in files]
             )
             self._Z_list = np.array(
                 [np.float64(os.path.basename(k)[13:16]) for k in files]

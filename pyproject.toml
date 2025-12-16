@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "taurex"
-version = "3.3.1"
+version = "3.3.3"
 description = "TauREx3"
 authors = ["Ahmed Faris Al-Refaie <ahmed.al-refaie.12@ucl.ac.uk>"]
 license = "BSDv3"

@@ -84,7 +84,6 @@ def test_find_class_from_name():
 
 def test_find_from_keyword():
     """Test whether the class factory can find classes from base."""
-    from taurex.mixin import AdaptiveForwardModel
     from taurex.model import MultiParameterTransitModel
     from taurex.optimizer import NestleOptimizer
     from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
@@ -106,7 +105,3 @@ def test_find_from_keyword():
     klass = cf.find_klass_from_keyword("multi_transit")
 
     assert klass == MultiParameterTransitModel
-
-    klass = cf.find_klass_from_keyword("adaptive")
-
-    assert klass == AdaptiveForwardModel

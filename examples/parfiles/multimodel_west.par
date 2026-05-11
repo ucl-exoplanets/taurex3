@@ -11,13 +11,10 @@ ratio = 0.1756
 profile_type = isothermal
 T = 1200
 
-[Pressure]
-profile_type = Simple
-atm_min_pressure = 1e-5
-atm_max_pressure = 1e5
-nlayers = 80
-
 [Model]
 model_type = transmission
 
     [[Absorption]]
+
+    [[SimpleClouds]]
+    clouds_pressure = 5e2

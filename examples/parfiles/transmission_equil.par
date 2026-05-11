@@ -1,6 +1,6 @@
 [Global]
-xsec_path = /path/to/xsec
-cia_path = /path/to/cia
+xsec_path = examples/tmp/xsec
+cia_path = examples/tmp/cia
 
 [Chemistry]
 chemistry_type = equilibrium
@@ -42,7 +42,7 @@ optimizer = nestle
 num_live_points = 500
 
 [Observation]
-observed_spectrum = /path/to/data.txt
+observed_spectrum = examples/parfiles/quickstart.dat
 
 
 [Fitting]

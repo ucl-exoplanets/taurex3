@@ -48,8 +48,11 @@ The parameter-file-driven entry points are:
 Each region is defined through a separate parameter file listed in ``parfiles``.
 TauREx reads the temperature, chemistry, pressure, and contribution sections from
 each file and combines the resulting spectra with the optional ``fractions`` list.
-If you provide ``N-1`` fractions, the final fraction is inferred automatically so
-that the total remains unity.
+For retrievals, provide ``N-1`` fractions rather than ``N`` if you want TauREx to
+adapt the last region automatically. In that case the final fraction is inferred
+from the remaining weight so that the total remains unity.
+For a complete worked setup, see the multimodel notebook example in
+:ref:`Examples`.
 
 Example composite transmission setup::
 

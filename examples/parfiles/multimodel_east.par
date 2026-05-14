@@ -1,0 +1,17 @@
+[Chemistry]
+chemistry_type = taurex
+fill_gases = H2,He
+ratio = 0.1756
+
+    [[H2O]]
+    gas_type = constant
+    mix_ratio = 3e-3
+
+[Temperature]
+profile_type = isothermal
+T = 2200
+
+[Model]
+model_type = transmission
+
+    [[Absorption]]

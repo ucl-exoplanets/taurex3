@@ -24,3 +24,4 @@ use these notebooks to dig deeper into the same workflow.
     Parameter files <../../examples/08_parameter_files>
     Spectral binning <../../examples/09_binning>
     Fitting parameters and retrievals <../../examples/10_retrievals>
+    Multimodel example <../../examples/11_multimodel>

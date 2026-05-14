@@ -7,7 +7,7 @@ Notebook Examples
 These runnable notebook examples are also grouped under
 :ref:`practical_examples`, alongside the command-line quickstart for new users.
 Each notebook can be viewed in the documentation and run locally in Jupyter.
-The notebook source files live in ``examples/notebooks`` and are referenced here for the docs build.
+The notebook source files live in ``examples/notebooks``.
 
 .. toctree::
     :maxdepth: 1
@@ -22,3 +22,4 @@ The notebook source files live in ``examples/notebooks`` and are referenced here
     Parameter files <08_parameter_files>
     Spectral binning <09_binning>
     Fitting parameters and retrievals <10_retrievals>
+    Multimodel example <11_multimodel>

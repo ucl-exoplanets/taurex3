@@ -26,6 +26,11 @@ Consult each plugins documentation for installation and usage. Generally TauREx
 searches for entry points in ``taurex.plugins`` and adds each component into the
 correct point in the pipeline
 
+Some functionality that originally shipped as standalone plugins has since been
+promoted into the main TauREx codebase. At the moment this includes the
+multimodel composite forward models. Those features no longer require a
+separate plugin installation.
+
 Lets take chemistry for example. Assuming a fresh install,
 we can see what is available to use in TauREx 3 by writing in the command prompt::
 

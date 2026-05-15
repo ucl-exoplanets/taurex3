@@ -1,6 +1,6 @@
 [Global]
-xsec_path = /path/to/xsec
-cia_path = /path/to/cia
+xsec_path = examples/tmp/xsec
+cia_path = examples/tmp/cia
 
 [Chemistry]
 chemistry_type = free
@@ -51,14 +51,14 @@ model_type = transmission
 
 
 [Observation]
-observed_spectrum = path/to/spectra/here.dat
+observed_spectrum = examples/parfiles/quickstart.dat
 
 
 [Optimizer]
 optimizer = multinest
 num_live_points = 200
 # Will create directory if it doesnt exist
-multi_nest_path = ./multinest
+multi_nest_path = examples/parfiles/m
 search_multi_modes = True
 resume = False
 importance_sampling = False

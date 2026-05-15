@@ -1,6 +1,6 @@
 [Global]
-xsec_path = /path/to/xsec
-cia_path = /path/to/cia
+xsec_path = examples/tmp/xsec
+cia_path = examples/tmp/cia
 
 [Chemistry]
 chemistry_type = free
@@ -23,7 +23,7 @@ ratio = 0.172
 [Temperature]
 profile_type = guillot
 T_irr = 1500
-kappa_ir = 0.02
+kappa_irr = 0.02
 kappa_v1 = 0.005
 kappa_v2 = 0.004
 alpha = 0.3
@@ -39,7 +39,7 @@ radius = 1.4
 temperature = 6000
 
 [Observation]
-observed_spectrum = path/to/spectra/here.dat
+observed_spectrum = examples/parfiles/quickstart.dat
 
 [Model]
 model_type = emission

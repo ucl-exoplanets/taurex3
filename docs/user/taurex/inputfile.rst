@@ -103,6 +103,38 @@ However setting ``T`` will throw an error as it doesn't exist anymore::
 This also applies to fitting parameters, profiles provide certain fitting parameters
 and changing the model means that these parameters may not exist anymore.
 
+The ``[Model]`` block can also expand dynamically. A basic single-region setup
+might look like this::
+
+    [Model]
+    model_type = transmission
+
+        [[Absorption]]
+
+If you switch to the integrated multimodel support, the same section accepts
+composite-model keys such as ``parfiles`` and ``fractions``::
+
+    [Model]
+    model_type = multi_transit
+    parfiles = day.par, night.par
+    fractions = 0.7
+
+In that configuration TauREx reads one regional parameter file per entry in
+``parfiles`` and combines the resulting spectra with the supplied weights. If
+you provide only ``N-1`` fraction values, the final weight is inferred so that
+the total remains unity.
+
+That change also expands the fitting-parameter surface. Composite models expose
+shared area-fraction parameters such as ``fr_1`` and region-prefixed component
+parameters such as ``m1_T`` whenever profiles are not coupled between regions::
+
+    [Fitting]
+    fr_1:fit = True
+    m1_T:fit = True
+
+The same pattern applies to ``model_type = multi_eclipse`` and
+``model_type = multi_directimage``.
+
 
 Mixins
 ------

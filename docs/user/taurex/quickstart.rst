@@ -8,6 +8,9 @@ Quickstart
 To get quickly up to speed lets try an example run using TauREx3. We will be using the ``examples/parfiles/quickstart.par``
 file as a starting point and ``examples/parfiles/quickstart.dat`` as our observation. Copy these to a new folder somewhere.
 
+If you would rather work through the same ideas interactively, see the
+:ref:`notebook_walkthroughs`.
+
 Prerequisites
 -------------
 

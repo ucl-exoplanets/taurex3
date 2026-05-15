@@ -1,14 +1,16 @@
-=======================
-The ``taurex`` program
-=======================
+=========================
+``taurex`` Program Reference
+=========================
 
-This section of the documentation deals with
-using the main ``taurex`` program is accessed simply
-by running in the command line::
+This section documents the configuration and reference material for the
+standalone ``taurex`` program. If you are looking for a guided first run,
+start with :ref:`practical_examples`.
+
+The program is accessed from the command line with::
 
     taurex
 
-a help can be accessed by doing::
+A full help message can be accessed with::
 
     taurex --help
 
@@ -20,7 +22,6 @@ a help can be accessed by doing::
 .. toctree::
     :maxdepth: 4
 
-    Quickstart <quickstart>
     Input File Format <inputfile>
     Custom Types <custom>
     Global Settings <global>

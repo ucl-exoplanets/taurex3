@@ -5,19 +5,68 @@
 ===========
 
 This header defines the type of forward model (FM) that will be computed by TauREx3.
-There are only four distinct forward ``model_type``:
+There are several built-in forward ``model_type`` values:
     - ``transmission``
         - Transmission forward model
     - ``emission``
         - Emission forward model
     - ``directimage``
         - Direct-image forward model
+    - ``multi_transit``
+        - Composite transmission model combining multiple 1D regions
+    - ``multi_eclipse``
+        - Composite emission model combining multiple 1D regions
+    - ``multi_directimage``
+        - Composite direct-imaging model combining multiple 1D regions
     - ``custom``
         - User-type forward model, See :ref:`customtypes`
 
 Both emission and direct image also include an optional keyword ``ngauss`` which
 dictates the number of Gaussian quadrate points used in the integration. By default
 this is set to ``ngauss=4``.
+
+Composite Forward Models
+========================
+
+TauREx also includes built-in composite forward models for stitching together
+multiple 1D atmospheric regions into a single weighted spectrum. These were
+previously distributed through the ``taurex-multimodel`` plugin and are now
+available directly in the main package.
+
+The parameter-file-driven entry points are:
+
++-------------------------+-------------------------------------------------------+
+| ``model_type``          | Description                                           |
++-------------------------+-------------------------------------------------------+
+| ``multi_transit``       | Weighted combination of multiple transmission regions |
++-------------------------+-------------------------------------------------------+
+| ``multi_eclipse``       | Weighted combination of multiple emission regions     |
++-------------------------+-------------------------------------------------------+
+| ``multi_directimage``   | Weighted combination of multiple direct-image regions |
++-------------------------+-------------------------------------------------------+
+
+Each region is defined through a separate parameter file listed in ``parfiles``.
+TauREx reads the temperature, chemistry, pressure, and contribution sections from
+each file and combines the resulting spectra with the optional ``fractions`` list.
+For retrievals, provide ``N-1`` fractions rather than ``N`` if you want TauREx to
+adapt the last region automatically. In that case the final fraction is inferred
+from the remaining weight so that the total remains unity.
+For a complete worked setup, see the multimodel notebook example in
+:ref:`Examples`.
+
+Example composite transmission setup::
+
+    [Model]
+    model_type = multi_transit
+    parfiles = day.par, night.par
+    fractions = 0.7
+
+The same pattern applies to ``multi_eclipse`` and ``multi_directimage``.
+
+Two internal helper models are also exposed for advanced use:
+
+- ``emission_radscale`` or ``eclipse_radscale`` for radius-scaled emission regions.
+- ``direct_radscale`` or ``directimage_radscale`` for radius-scaled direct-image regions.
 
 ---------------------------
 

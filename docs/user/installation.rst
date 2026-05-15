@@ -19,6 +19,9 @@ To test for correct setup you can do::
 
     python -c "import taurex; print(taurex.__version__)"
 
+Once installation is complete, the fastest way to try TauREx is through the
+:ref:`practical_examples`.
+
 
 Additionally, to restore the equilbrium chemistry and BHMie from TauREx 3.0 you can
 run::
@@ -56,6 +59,9 @@ Additionally the ``taurex`` program should now be available
 in the command line::
 
     taurex
+
+After that, head to :ref:`practical_examples` for a guided first run or the
+notebook walkthroughs.
 
 To build documentation do::
 

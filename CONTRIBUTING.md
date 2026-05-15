@@ -11,7 +11,7 @@ Here is a list of important resources for contributors:
 - [Issue Tracker]
 - [Code of Conduct]
 
-[BSD license]: https://opensource.org/licenses/BSDv3
+[bsd license]: https://opensource.org/licenses/BSDv3
 [source code]: https://github.com/ucl-exoplanets/taurex3
 [documentation]: https://taurex3.readthedocs.io/
 [issue tracker]: https://github.com/ucl-exoplanets/taurex3/issues

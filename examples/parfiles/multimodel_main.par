@@ -1,0 +1,70 @@
+[Global]
+xsec_path = examples/tmp/xsec
+cia_path = examples/tmp/cia
+
+[Chemistry]
+chemistry_type = taurex
+fill_gases = H2,He
+ratio = 0.1756
+
+    [[H2O]]
+    gas_type = constant
+    mix_ratio = 1e-3
+
+    [[CO2]]
+    gas_type = constant
+    mix_ratio = 1e-2
+
+[Temperature]
+profile_type = isothermal
+T = 1800
+
+[Pressure]
+profile_type = Simple
+atm_min_pressure = 1e-5
+atm_max_pressure = 1e5
+nlayers = 80
+
+[Planet]
+planet_type = Simple
+planet_mass = 0.74
+planet_radius = 1.38
+
+[Star]
+star_type = blackbody
+temperature = 6117
+radius = 1.16
+
+[Model]
+model_type = multi_transit
+parfiles = examples/parfiles/multimodel_east.par,examples/parfiles/multimodel_west.par
+fractions = 0.65,
+
+[Observation]
+observed_spectrum = examples/parfiles/multimodel_observation.dat
+
+[Optimizer]
+optimizer = nestle
+num_live_points = 300
+method = multi
+
+[Fitting]
+
+fr_1:fit = True
+fr_1:bounds = 0.0, 1.0
+
+planet_radius:fit = True
+planet_radius:bounds = 1.0, 1.6
+
+m1_H2O:fit = True
+m1_H2O:bounds = 1e-12, 1e-1
+m2_H2O:fit = True
+m2_H2O:bounds = 1e-12, 1e-1
+
+m1_T:fit = True
+m1_T:bounds = 1000, 2500
+m2_T:fit = True
+m2_T:bounds = 1000, 2500
+
+m2_clouds_pressure:fit = True
+m2_clouds_pressure:bounds = 1e3,1e-2

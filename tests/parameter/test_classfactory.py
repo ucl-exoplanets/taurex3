@@ -34,13 +34,29 @@ def test_load_plugin():
 
 def test_model_detection():
     """Test whether the class factory can detect models."""
-    from taurex.model import DirectImageModel, EmissionModel, TransmissionModel
+    from taurex.model import (
+        DirectImageModel,
+        EmissionModel,
+        MultiDirectImModel,
+        MultiEclipseModel,
+        MultiParameterDirectImModel,
+        MultiParameterEclipseModel,
+        MultiParameterTransitModel,
+        MultiTransitModel,
+        TransmissionModel,
+    )
 
     cf = ClassFactory()
 
     assert TransmissionModel in cf.modelKlasses
     assert EmissionModel in cf.modelKlasses
     assert DirectImageModel in cf.modelKlasses
+    assert MultiTransitModel in cf.modelKlasses
+    assert MultiParameterTransitModel in cf.modelKlasses
+    assert MultiEclipseModel in cf.modelKlasses
+    assert MultiParameterEclipseModel in cf.modelKlasses
+    assert MultiDirectImModel in cf.modelKlasses
+    assert MultiParameterDirectImModel in cf.modelKlasses
 
 
 def test_klass_from_base():
@@ -68,6 +84,7 @@ def test_find_class_from_name():
 
 def test_find_from_keyword():
     """Test whether the class factory can find classes from base."""
+    from taurex.model import MultiParameterTransitModel
     from taurex.optimizer import NestleOptimizer
     from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
 
@@ -84,3 +101,7 @@ def test_find_from_keyword():
     klass = cf.find_klass_from_keyword("nestle")
 
     assert klass == NestleOptimizer
+
+    klass = cf.find_klass_from_keyword("multi_transit")
+
+    assert klass == MultiParameterTransitModel

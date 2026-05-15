@@ -12,3 +12,6 @@ __pycache__/
 .vscode
 .ipynb_checkpoints
 scratch/
+/examples/tmp/
+.venv/
+.docs-preview/

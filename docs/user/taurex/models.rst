@@ -243,6 +243,10 @@ The same contribution works in transmission, emission, and direct-image forward
 models because it supplies a wavelength-dependent extinction profile to the
 standard TauREx contribution pipeline.
 
+The reference grid paper is Voyer & Changeat (2026). If you want ready-made
+cloud grids instead of generating your own, the published dataset is available
+from Zenodo at `10.5281/zenodo.17456673 <https://zenodo.org/records/17456673>`_.
+
 --------
 Keywords
 --------

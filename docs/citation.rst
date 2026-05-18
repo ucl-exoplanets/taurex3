@@ -53,6 +53,32 @@ please cite here:
     }
 
 
+Precomputed Mie cloud grids
+---------------------------
+
+If you use the built-in ``PyMieScattGridExtinction`` contribution, please also
+cite:
+
+.. code-block:: bibtex
+
+    @ARTICLE{2026A&A...707A.127V,
+        author = {{Voyer}, M. and {Changeat}, Q.},
+            title = "{Precomputed aerosol extinction, scattering, and asymmetry grids for scalable atmospheric retrievals}",
+        journal = {Astronomy and Astrophysics},
+        year = 2026,
+        month = mar,
+        volume = {707},
+            eid = {A127},
+        pages = {A127},
+            doi = {10.1051/0004-6361/202558469},
+    archivePrefix = {arXiv},
+        eprint = {2601.14177},
+    primaryClass = {astro-ph.EP},
+        adsurl = {https://ui.adsabs.harvard.edu/abs/2026A&A...707A.127V},
+        adsnote = {Provided by the SAO/NASA Astrophysics Data System}
+    }
+
+
 
 
 

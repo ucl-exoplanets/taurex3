@@ -22,6 +22,13 @@ search PyPI for packages with keywords `taurex <pypi_>`_.
 Using Plugins
 =============
 
+.. note::
+
+    The former ``taurex-instrumentsystematics`` plugin is now integrated into
+    TauREx itself. Its observation loaders are available as the built-in
+    ``spectra_w_offsets`` and ``spectra_instr`` observation types documented in
+    :ref:`userobservation`.
+
 Consult each plugins documentation for installation and usage. Generally TauREx
 searches for entry points in ``taurex.plugins`` and adds each component into the
 correct point in the pipeline

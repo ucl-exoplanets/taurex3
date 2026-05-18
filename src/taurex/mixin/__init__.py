@@ -1,6 +1,5 @@
 """Module for mixin classes."""
 
-from .adaptive import AdaptiveForwardModel
 from .core import (
     AnyMixin,
     ChemistryMixin,
@@ -23,7 +22,6 @@ from .mixins import MakeFreeMixin, TempScaler
 
 __all__ = [
     "Mixin",
-    "AdaptiveForwardModel",
     "StarMixin",
     "TemperatureMixin",
     "PlanetMixin",

@@ -163,19 +163,6 @@ parameters such as ``m1_T`` whenever profiles are not coupled between regions::
 The same pattern applies to ``model_type = multi_eclipse`` and
 ``model_type = multi_directimage``.
 
-Mixins can add model-side keywords as well. For example, the integrated
-``adaptive`` mixin extends ``[Model]`` with wavelength-shift and broadening
-controls::
-
-    [Model]
-    model_type = adaptive+transmission
-    wlshift = 1.0, 0.0
-    wlbroadening_method = box
-    wlbroadening_width = 3
-
-That mixin also adds fitting parameters such as ``wlshift_1``, ``Wbroad``,
-``Wbroad2``, and ``Dbroad``.
-
 
 Mixins
 ------

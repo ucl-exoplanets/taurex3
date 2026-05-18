@@ -59,33 +59,5 @@ This can also work for equlibrium schemes, for example using ACE::
 
 Only the ``free`` chemical scheme does not work as it is redundant.
 
-``adaptive``
-============
-
-Works under: ``[Model]``
-
-The ``adaptive`` mixin adds wavelength shifting and optional low-resolution
-broadening to forward models. It is primarily useful when a retrieval needs to
-fit small wavelength-calibration offsets or simple instrument broadening terms
-without introducing a separate observation-side plugin.
-
-Example::
-
-    [Model]
-    model_type = adaptive+transmission
-    wlshift = 1.0, 0.0
-    wlbroadening_method = box
-    wlbroadening_width = 3
-
-Supported broadening methods include ``box``, ``gaussian_box``,
-``binned_convolution``, and ``binned_convolution_R``.
-
-The mixin exposes the following fitting parameters when enabled:
-
-- ``wlshift_1``, ``wlshift_2``, ... for the wavelength-shift polynomial terms.
-- ``Wbroad`` for the primary broadening coefficient.
-- ``Wbroad2`` for the quadratic broadening coefficient.
-- ``Dbroad`` for the additive/default broadening term.
-
 
 .. _wiki: https://en.wikipedia.org/wiki/Mixin

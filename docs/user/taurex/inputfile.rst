@@ -103,34 +103,6 @@ However setting ``T`` will throw an error as it doesn't exist anymore::
 This also applies to fitting parameters, profiles provide certain fitting parameters
 and changing the model means that these parameters may not exist anymore.
 
-The same expansion happens in the ``[Observation]`` block. A standard observation
-entry might look like this::
-
-    [Observation]
-    observed_spectrum = /path/to/data.dat
-
-If instead you switch to the integrated multi-instrument loader, the accepted
-keys expand to include per-spectrum systematics controls::
-
-    [Observation]
-    observation = spectra_w_offsets
-    path_spectra = /path/spec_1.dat, /path/spec_2.dat
-    offsets = 0.0, 0.0
-    slopes = 0.0, 0.0
-    error_scale = 1.0, 1.0
-
-That change also adds new fitting parameters such as ``Offset_1``, ``Slope_1``
-and ``EScale_1`` that can be configured in ``[Fitting]``::
-
-    [Fitting]
-    Offset_1:fit = True
-    Slope_1:fit = True
-    EScale_1:fit = True
-
-Using ``observation = spectra_instr`` extends the same pattern with optional
-``broadening_profiles`` entries for wavelength-dependent convolution before the
-final binning stage.
-
 The ``[Model]`` block can also expand dynamically. A basic single-region setup
 might look like this::
 

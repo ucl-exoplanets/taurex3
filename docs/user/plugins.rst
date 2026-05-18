@@ -23,11 +23,6 @@ Using Plugins
 
 .. note::
 
-    The former ``taurex-instrumentsystematics`` plugin is now integrated into
-    TauREx itself. Its observation loaders are available as the built-in
-    ``spectra_w_offsets`` and ``spectra_instr`` observation types documented in
-    :ref:`userobservation`.
-
     The former ``taurex-PCQ`` plugin is also now integrated into TauREx. Its
     precomputed-grid cloud contribution is available as the built-in
     ``PyMieScattGridExtinction`` model contribution documented in
@@ -39,8 +34,8 @@ correct point in the pipeline
 
 Some functionality that originally shipped as standalone plugins has since been
 promoted into the main TauREx codebase. At the moment this includes the
-instrument-systematics observation helpers and the multimodel composite forward
-models, plus the PCQ precomputed-grid Mie cloud contribution. Those features no
+multimodel composite forward models, plus the PCQ precomputed-grid Mie cloud
+contribution. Those features no
 longer require a separate plugin installation.
 
 Lets take chemistry for example. Assuming a fresh install,

@@ -17,7 +17,7 @@
 [status]: https://pypi.org/project/taurex/
 [python version]: https://pypi.org/project/taurex
 [read the docs]: https://taurex3.readthedocs.io/
-[dev-docs]: https://escience-taurex.github.io/taurex3/
+[dev-docs]: https://ucl-exoplanets.github.io/taurex3/
 [tests]: https://github.com/ucl-exoplanets/taurex3/actions?workflow=Tests
 [codecov]: https://app.codecov.io/gh/ucl-exoplanets/taurex3
 [pre-commit]: https://github.com/pre-commit/pre-commit

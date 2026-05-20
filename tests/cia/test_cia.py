@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch, mock_open
 from taurex.cia.cia import CIA
+from taurex.cia.hitrancia import HitranCIA
 from taurex.cia.picklecia import PickleCIA
 import numpy as np
 
@@ -64,3 +65,20 @@ class PickleCIATest(unittest.TestCase):
             100000000), self.pop._xsec_grid[-1])
         np.testing.assert_equal(self.pop.cia(
             0.0000001), self.pop._xsec_grid[0])
+
+
+class HitranCIATest(unittest.TestCase):
+
+    def test_skips_malformed_leading_line(self):
+        hitran_data = (
+            "eq-H2 -- eq-H2\n"
+            "H2-H2 20 20 1 200 1.0\n"
+            "20 2.668e-57\n"
+        )
+
+        with patch("builtins.open", mock_open(read_data=hitran_data)):
+            cia = HitranCIA('/unittestfile/H2-H2.cia')
+
+        self.assertEqual(cia.pairName, 'H2-H2')
+        np.testing.assert_equal(cia.temperatureGrid, np.array([200.0]))
+        np.testing.assert_equal(cia.wavenumberGrid, np.array([20.0]))

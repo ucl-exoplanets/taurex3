@@ -415,10 +415,16 @@ class HitranCIA(CIA):
             if line is None or line == "":
                 raise EndOfHitranCIAError
 
+            line = line.replace(" -- ", "--")
             split = line.split()
             if len(split) < 6:
                 self.debug("Skipping malformed HITRAN header line %s", line.rstrip())
                 continue
+
+            pair_name = split[0]
+            if "--" in pair_name:
+                pair_one, pair_two = pair_name.split("--", 1)
+                pair_name = f"{pair_one.split('-')[-1]}-{pair_two.split('-')[-1]}"
 
             try:
                 start_wn = float(split[1])
@@ -430,7 +436,7 @@ class HitranCIA(CIA):
                 self.debug("Skipping malformed HITRAN header line %s", line.rstrip())
                 continue
 
-            self._pair_name = split[0]
+            self._pair_name = pair_name
             break
 
         return start_wn, end_wn, total_points, temperature, max_cia

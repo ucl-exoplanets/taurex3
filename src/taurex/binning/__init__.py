@@ -4,6 +4,7 @@ from .fluxbinner import FluxBinner
 from .nativebinner import NativeBinner
 from .simplebinner import SimpleBinner
 
+
 __all__ = [
     "Binner",
     "BinDownType",

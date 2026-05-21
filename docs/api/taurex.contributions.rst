@@ -68,3 +68,11 @@ Mie Scattering (Flat)
    :members:
    :undoc-members:
    :show-inheritance:
+
+Mie Scattering (Precomputed grids)
+----------------------------------------
+
+.. automodule:: taurex.contributions.pymiescatt_grid
+   :members:
+   :undoc-members:
+   :show-inheritance:

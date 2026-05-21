@@ -224,6 +224,118 @@ Fitting Parameters
 
 ---------------------------
 
+Mie scattering (Precomputed grids)
+===================================
+``[[PyMieScattGridExtinction]]``
+
+Computes cloud extinction from precomputed :math:`Q_\mathrm{ext}` grids,
+promoting the former ``taurex-PCQ`` plugin into the main TauREx codebase.
+This is useful when you want PyMieScatt-style cloud retrievals without paying
+ the cost of recomputing Mie efficiencies for every model evaluation.
+
+Each species points to an HDF5 grid file containing:
+
+- ``radius_grid`` in microns
+- ``wavenumber_grid`` in :math:`cm^{-1}`
+- ``Qext`` or ``Qext_grid`` with shape ``(n_radius, n_wavenumber)``
+
+The same contribution works in transmission, emission, and direct-image forward
+models because it supplies a wavelength-dependent extinction profile to the
+standard TauREx contribution pipeline.
+
+The reference grid paper is Voyer & Changeat (2026). If you want ready-made
+cloud grids instead of generating your own, the published dataset is available
+from Zenodo at `10.5281/zenodo.17456673 <https://zenodo.org/records/17456673>`_.
+
+--------
+Keywords
+--------
+
++------------------------------------+--------------+--------------------------------------------------------------+
+| Variable                           | Type         | Description                                                  |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``species``                        | :obj:`list`  | Names used to label each cloud species and its fit params    |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_species_path``               | :obj:`list`  | Paths to the precomputed aerosol grid files                  |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_radius_distribution`` | :obj:`str` | ``normal``, ``budaj``, or ``deirmendjian`` particle sampling |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_mean_radius``       | :obj:`list`  | Mean particle radius in um                                   |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_logstd_radius``     | :obj:`list`  | Log-normal width used for ``normal`` and sampling control    |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_paramA/B/C/D``      | :obj:`list`  | Shape parameters for the ``deirmendjian`` distribution       |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_radius_Nsampling``  | :obj:`int`   | Number of radius samples used to integrate the distribution  |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_radius_Dsampling``  | :obj:`float` | Width of the sampled radius interval in log space            |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_mix_ratio``         | :obj:`list`  | Particle number density in :math:`m^{-3}`                    |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_midP``                       | :obj:`list`  | Cloud centre pressure in Pa, or ``-1`` for the full column   |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_rangeP``                     | :obj:`list`  | Cloud vertical extent in log-pressure space                  |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_altitude_distrib``  | :obj:`str`   | ``exp_decay`` or ``linear`` vertical particle profile        |
++------------------------------------+--------------+--------------------------------------------------------------+
+| ``mie_particle_altitude_decay``    | :obj:`list`  | Decay exponent used by ``exp_decay``                         |
++------------------------------------+--------------+--------------------------------------------------------------+
+
+------------------
+Fitting Parameters
+------------------
+
+The contribution registers both shared and per-species fitting parameters.
+The main ones are:
+
++----------------------+--------------+--------------------------------------------------+
+| Parameter            | Type         | Description                                      |
++----------------------+--------------+--------------------------------------------------+
+| ``Rmean_share``      | :obj:`float` | Shared particle radius applied to all species    |
++----------------------+--------------+--------------------------------------------------+
+| ``Rlogstd_share``    | :obj:`float` | Shared log-width for supported distributions     |
++----------------------+--------------+--------------------------------------------------+
+| ``X_share``          | :obj:`float` | Shared particle number density                   |
++----------------------+--------------+--------------------------------------------------+
+| ``midP_share``       | :obj:`float` | Shared cloud centre pressure                     |
++----------------------+--------------+--------------------------------------------------+
+| ``rangeP_share``     | :obj:`float` | Shared log-pressure extent                       |
++----------------------+--------------+--------------------------------------------------+
+| ``decayP_share``     | :obj:`float` | Shared exponential-decay index                   |
++----------------------+--------------+--------------------------------------------------+
+| ``Rmean_<species>``  | :obj:`float` | Per-species particle radius                      |
++----------------------+--------------+--------------------------------------------------+
+| ``Rlogstd_<species>``| :obj:`float` | Per-species log-width                            |
++----------------------+--------------+--------------------------------------------------+
+| ``X_<species>``      | :obj:`float` | Per-species particle number density              |
++----------------------+--------------+--------------------------------------------------+
+| ``midP_<species>``   | :obj:`float` | Per-species cloud centre pressure                |
++----------------------+--------------+--------------------------------------------------+
+| ``rangeP_<species>`` | :obj:`float` | Per-species cloud extent                         |
++----------------------+--------------+--------------------------------------------------+
+| ``decayP_<species>`` | :obj:`float` | Per-species exponential-decay index              |
++----------------------+--------------+--------------------------------------------------+
+
+Example parameter-file usage::
+
+    [Model]
+    model_type = transmission
+
+        [[Absorption]]
+
+        [[PyMieScattGridExtinction]]
+        species = Mg2SiO4_glass, SiO2
+        mie_species_path = /path/Mg2SiO4_glass.h5, /path/SiO2.h5
+        mie_particle_radius_distribution = budaj
+        mie_particle_mean_radius = 0.1, 0.5
+        mie_particle_mix_ratio = 1e8, 5e7
+        mie_midP = 1e5, 1e3
+        mie_rangeP = 2.0, 1.0
+        mie_particle_altitude_distrib = exp_decay
+        mie_particle_altitude_decay = -4.0, -5.0
+
+---------------------------
+
 Mie scattering (BH)
 ======================
 ``[[BHMie]]``

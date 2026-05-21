@@ -11,6 +11,7 @@ from taurex.data.spectrum.observed import ObservedSpectrum
 from taurex.data.spectrum.spectrum import BaseSpectrum
 from taurex.data.spectrum.taurex import TaurexSpectrum
 
+
 test_data_with_bin = np.array(
     [
         [7.27555920e00, 1.45008637e-02, 7.42433558e-05, 4.76957670e-01],
@@ -171,7 +172,8 @@ class TaurexSpectrumTest(unittest.TestCase):
         import os
 
         from taurex.output.hdf5 import HDF5Output
-        from taurex.util import compute_bin_edges, wnwidth_to_wlwidth
+        from taurex.util import compute_bin_edges
+        from taurex.util import wnwidth_to_wlwidth
 
         file_path = os.path.join(self.test_dir, "test.hdf5")
 

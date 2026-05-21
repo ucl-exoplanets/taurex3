@@ -5,4 +5,10 @@ from .observed import ObservedSpectrum
 from .spectrum import BaseSpectrum
 from .taurex import TaurexSpectrum
 
-__all__ = ["BaseSpectrum", "ObservedSpectrum", "ArraySpectrum", "TaurexSpectrum"]
+
+__all__ = [
+    "BaseSpectrum",
+    "ObservedSpectrum",
+    "ArraySpectrum",
+    "TaurexSpectrum",
+]

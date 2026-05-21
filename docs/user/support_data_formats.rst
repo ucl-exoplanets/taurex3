@@ -50,6 +50,20 @@ are:
 More formats can be included through :ref:`plugins`
 
 
+Cloud Grid Files
+~~~~~~~~~~~~~~~~
+
+The built-in ``PyMieScattGridExtinction`` contribution reads precomputed cloud
+grids from HDF5 files. Each file must contain:
+
+- ``radius_grid`` with particle radii in microns
+- ``wavenumber_grid`` in :math:`cm^{-1}`
+- ``Qext`` or ``Qext_grid`` with shape ``(n_radius, n_wavenumber)``
+
+These files are external science data products rather than TauREx-native output
+files, but they can now be used directly without installing a separate plugin.
+
+
 Collisionally Induced Absorption
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

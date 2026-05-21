@@ -2,6 +2,7 @@
 import unittest
 from unittest.mock import patch, mock_open
 from taurex.cia.cia import CIA
+from taurex.cia.hitrancia import HitranCIA
 from taurex.cia.picklecia import PickleCIA
 import numpy as np
 
@@ -64,3 +65,43 @@ class PickleCIATest(unittest.TestCase):
             100000000), self.pop._xsec_grid[-1])
         np.testing.assert_equal(self.pop.cia(
             0.0000001), self.pop._xsec_grid[0])
+
+
+class HitranCIATest(unittest.TestCase):
+
+    def test_reads_problematic_headers(self):
+        test_cases = [
+            (
+                (
+                    "eq-H2 -- eq-H2\n"
+                    "H2-H2 20 20 1 200 1.0\n"
+                    "20 2.668e-57\n"
+                ),
+                np.array([200.0]),
+                np.array([20.0]),
+            ),
+            (
+                (
+                    "eq-H2 -- eq-H2 0.250000 2400.0000 8 40.000 3.683e-44 -.999 34\n"
+                    "0.2500 4.706E-51\n"
+                    "0.5000 1.957E-50\n"
+                    "0.7500 4.401E-50\n"
+                    "1.0000 7.983E-50\n"
+                    "1.2500 1.399E-49\n"
+                    "1.5000 1.878E-49\n"
+                    "1.7500 2.471E-49\n"
+                    "2.0000 3.407E-49\n"
+                ),
+                np.array([40.0]),
+                np.array([0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]),
+            ),
+        ]
+
+        for hitran_data, temperature_grid, wavenumber_grid in test_cases:
+            with self.subTest(header=hitran_data.splitlines()[0]):
+                with patch("builtins.open", mock_open(read_data=hitran_data)):
+                    cia = HitranCIA('/unittestfile/H2-H2.cia')
+
+                self.assertEqual(cia.pairName, 'H2-H2')
+                np.testing.assert_equal(cia.temperatureGrid, temperature_grid)
+                np.testing.assert_equal(cia.wavenumberGrid, wavenumber_grid)

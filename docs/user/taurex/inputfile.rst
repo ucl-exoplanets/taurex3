@@ -159,9 +159,18 @@ and ``EScale_1`` that can be configured in ``[Fitting]``::
     Slope_1:fit = True
     EScale_1:fit = True
 
-Using ``observation = spectra_instr`` extends the same pattern with optional
-``broadening_profiles`` entries for wavelength-dependent convolution before the
-final binning stage.
+Instrument response handling is now configured on the binner rather than on the
+model. That means the same convolution and wavelength-calibration settings can
+be shared by instruments as well as retrieval binning::
+
+    [Binning]
+    bin_type = observed
+    broadening_type = stsci_fits
+    broadening_profiles = /path/profile_1.fits, /path/profile_2.fits
+    wlshift = 0.0, 0.0
+
+The legacy ``observation = spectra_instr`` form remains available as a
+backwards-compatible shortcut for the same observation-plus-binner setup.
 
 
 Mixins

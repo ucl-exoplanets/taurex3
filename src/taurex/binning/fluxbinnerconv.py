@@ -27,6 +27,7 @@ class FluxBinnerConv(Binner):
         wlgrid_widths: t.Sequence[npt.NDArray[np.float64]],
         broadening_profiles: t.Optional[t.Sequence[str]] = None,
         broadening_type: str = "stsci_fits",
+        wlshift: t.Optional[t.Union[float, t.Sequence[float]]] = 0.0,
         max_wlbroadening: t.Optional[float] = None,
         factor_cut: int = 5,
         wlres: float = 15000,
@@ -36,7 +37,11 @@ class FluxBinnerConv(Binner):
         if len(wlgrids) != len(wlgrid_widths):
             raise ValueError("wlgrids and wlgrid_widths must have the same length")
 
-        self._wlgrids = [np.asarray(grid, dtype=np.float64) for grid in wlgrids]
+        self._wlshifts = self._normalize_wlshift(wlshift, len(wlgrids))
+        self._wlgrids = [
+            np.asarray(grid, dtype=np.float64) + shift
+            for grid, shift in zip(wlgrids, self._wlshifts)
+        ]
         self._wlgrid_widths = [
             np.asarray(widths, dtype=np.float64) for widths in wlgrid_widths
         ]
@@ -64,6 +69,22 @@ class FluxBinnerConv(Binner):
             self._profiles, self._grid_fbs = self.load_stsci_profiles(
                 self._broadening_profiles
             )
+
+    @staticmethod
+    def _normalize_wlshift(
+        wlshift: t.Optional[t.Union[float, t.Sequence[float]]],
+        grid_count: int,
+    ) -> t.List[float]:
+        if wlshift is None:
+            return [0.0] * grid_count
+
+        if isinstance(wlshift, (list, tuple, np.ndarray)):
+            shifts = [float(shift) for shift in wlshift]
+            if len(shifts) != grid_count:
+                raise ValueError("wlshift must match the number of wavelength grids")
+            return shifts
+
+        return [float(wlshift)] * grid_count
 
     def load_stsci_profiles(
         self, files: t.Sequence[str]

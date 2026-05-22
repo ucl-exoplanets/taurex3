@@ -219,6 +219,57 @@ class _OffsetSpectrumBase(BaseSpectrum):
                 bounds,
             )
 
+    def _create_convolution_binner(
+        self,
+        broadening_profiles: t.Optional[t.Sequence[str]] = None,
+        broadening_type: str = "stsci_fits",
+        wlshift: t.Optional[t.Union[float, t.Sequence[float]]] = 0.0,
+        max_wlbroadening: float = 0.1,
+        factor_cut: int = 5,
+        wlres: float = 15000,
+    ) -> FluxBinnerConv:
+        return FluxBinnerConv(
+            wlgrids=[spectrum[:, 0] for spectrum in self._raw],
+            wlgrid_widths=self._raw_bin_widths,
+            broadening_profiles=broadening_profiles,
+            broadening_type=broadening_type,
+            wlshift=wlshift,
+            max_wlbroadening=max_wlbroadening,
+            factor_cut=factor_cut,
+            wlres=wlres,
+        )
+
+    def create_binner(self, **kwargs: t.Any):
+        """Create a binner for the combined observation.
+
+        Multi-spectrum observations can optionally promote response-function
+        handling into the binner layer by passing convolution settings here.
+        """
+
+        if not kwargs:
+            return super().create_binner()
+
+        broadening_profiles = kwargs.get("broadening_profiles")
+        broadening_type = kwargs.get("broadening_type", "stsci_fits")
+        wlshift = kwargs.get("wlshift", 0.0)
+        max_wlbroadening = kwargs.get("max_wlbroadening", 0.1)
+        factor_cut = kwargs.get("factor_cut", 5)
+        wlres = kwargs.get("wlres", 15000)
+
+        if broadening_type == "none" and broadening_profiles is None:
+            shifts = wlshift if isinstance(wlshift, (list, tuple)) else [wlshift]
+            if all(float(shift) == 0.0 for shift in shifts):
+                return super().create_binner()
+
+        return self._create_convolution_binner(
+            broadening_profiles=broadening_profiles,
+            broadening_type=broadening_type,
+            wlshift=wlshift,
+            max_wlbroadening=max_wlbroadening,
+            factor_cut=factor_cut,
+            wlres=wlres,
+        )
+
 
 class OffsetSpectra(_OffsetSpectrumBase):
     """Multiple observed spectra with offset, slope, and error-scale parameters."""
@@ -262,17 +313,20 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
             slope_type=slope_type,
         )
 
-    def create_binner(self) -> FluxBinnerConv:
+    def create_binner(self, **kwargs: t.Any) -> FluxBinnerConv:
         """Create a multi-grid binner for the instrument spectra."""
 
-        return FluxBinnerConv(
-            wlgrids=[spectrum[:, 0] for spectrum in self._raw],
-            wlgrid_widths=self._raw_bin_widths,
-            broadening_profiles=self._broadening_profiles,
-            broadening_type=self._profile_type,
-            max_wlbroadening=self._max_wlbroadening,
-            factor_cut=self._factor_cut,
-            wlres=self._wlres,
+        return self._create_convolution_binner(
+            broadening_profiles=kwargs.get(
+                "broadening_profiles", self._broadening_profiles
+            ),
+            broadening_type=kwargs.get("broadening_type", self._profile_type),
+            wlshift=kwargs.get("wlshift", self._wlshift),
+            max_wlbroadening=kwargs.get(
+                "max_wlbroadening", self._max_wlbroadening
+            ),
+            factor_cut=kwargs.get("factor_cut", self._factor_cut),
+            wlres=kwargs.get("wlres", self._wlres),
         )
 
     @classmethod

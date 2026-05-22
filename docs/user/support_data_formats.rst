@@ -44,7 +44,9 @@ are:
 
 - Text based 3/4-column data
 - Multi-file text observations with fitted offsets/slopes via ``spectra_w_offsets``
-- Multi-file text observations with optional convolution via ``spectra_instr``
+- Multi-file text observations with optional response-function binning via
+    ``spectra_w_offsets`` plus ``[Binning]`` overrides, or the legacy
+    ``spectra_instr`` shortcut
 - ``.pickle`` Outputs from Iraclis_
 
 More formats can be included through :ref:`plugins`

@@ -42,7 +42,10 @@ Multi-Instrument Systematics
 
 TauREx also includes built-in observation loaders for combining multiple
 ASCII spectra and fitting simple per-instrument systematics directly in the
-``[Observation]`` block.
+``[Observation]`` block. Instrument-response handling now lives on the
+active binner, so convolution and wavelength-shift settings can be configured
+independently of the observation loader and then reused by any instrument that
+consumes that binner.
 
 Two observation keywords are available:
 
@@ -51,7 +54,7 @@ Two observation keywords are available:
 +--------------------------+---------------------------------------------------------------+
 | ``spectra_w_offsets``    | Multiple spectra with per-spectrum offsets, slopes and errors |
 +--------------------------+---------------------------------------------------------------+
-| ``spectra_instr``        | Same as above, with optional broadening-profile convolution   |
+| ``spectra_instr``        | Backwards-compatible alias with built-in response binning     |
 +--------------------------+---------------------------------------------------------------+
 
 These are selected through the generic ``observation`` field::
@@ -77,12 +80,17 @@ spectrum:
 This allows a retrieval configuration such as::
 
     [Observation]
-    observation = spectra_instr
+    observation = spectra_w_offsets
     path_spectra = /path/spec_1.dat, /path/spec_2.dat
     offsets = 0.0, 0.0
     slopes = 0.0, 0.0
     error_scale = 1.0, 1.0
+
+    [Binning]
+    bin_type = observed
+    broadening_type = stsci_fits
     broadening_profiles = /path/profile_1.fits, /path/profile_2.fits
+    wlshift = 0.0, 0.0
 
     [Fitting]
     Offset_1:fit = True
@@ -90,9 +98,14 @@ This allows a retrieval configuration such as::
     Slope_1:fit = True
     Slope_2:fit = True
 
-For ``spectra_instr``, the optional ``broadening_profiles`` entries may point
-to STScI-style FITS files containing ``WAVELENGTH`` and ``R`` columns, or to
-two-column text files containing wavelength and resolving power.
+The optional ``broadening_profiles`` entries may point to STScI-style FITS
+files containing ``WAVELENGTH`` and ``R`` columns, or to two-column text files
+containing wavelength and resolving power. ``wlshift`` accepts either a single
+shift applied to every input spectrum or one shift per spectrum.
+
+If you are migrating an older setup, ``observation = spectra_instr`` remains
+available and creates the same convolution-aware binner directly from the
+``[Observation]`` block.
 
 
 .. _taurexspectrum:

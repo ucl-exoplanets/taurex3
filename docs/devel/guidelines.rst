@@ -35,14 +35,26 @@ Unit-testing
 Unittesting is important in preserving sanity
 and code integrity. For TauREx 3 we employ
 pytest_. When bugfixing, ensure
-unittests pass. In the root directory do::
+unittests pass.
+
+For a direct unit test run in the root directory do::
 
     pytest tests/
 
-To run all unit tests in TauREx3
+If you prefer to install the test dependencies directly with ``pip``, use::
+
+  python -m pip install -e .[test]
+  pytest
+
+If you use ``nox``, keep in mind that running ``nox`` executes more than the
+unit tests. The default sessions also include formatting and linting checks,
+and may include additional validation such as doctest-style checks. To run only
+the unit test session, use::
+
+  nox --session=tests
 
 When building new features, create new unittests and
-include them in the ``test/`` directory,
+include them in the ``tests/`` directory,
 any future collaborations from other developers are less
 likely to break your feature unexpectedly when they have
 something to easily test against.
@@ -52,13 +64,18 @@ Some rules:
 - No `extra` files should be included. Instead
   have the unit test generate them on the spot.
 
-- We recommended hypothesis_ for bug finding
+- We recommend hypothesis_ for bug finding.
 
 Coding conventions
 ==================
 
 Code should follow the PEP8_ standard. This can be
-facilitated with a linter such as flake8_
+facilitated with a linter such as flake8_. Contributors should also run
+pre-commit_ before opening a pull request, either as an installed git hook or
+manually from the repository root::
+
+    python -m pip install -e .[lint]
+    pre-commit run --all-files --hook-stage=manual
 
 Source control
 ==============
@@ -100,3 +117,4 @@ For contributions we employ the Fork-and-Pull_ model:
 .. _Pull-Request: https://help.github.com/articles/creating-a-pull-request/
 .. _pytest: https://docs.pytest.org/en/stable/
 .. _hypothesis: https://hypothesis.readthedocs.io/en/latest/quickstart.html
+.. _pre-commit: https://pre-commit.com/

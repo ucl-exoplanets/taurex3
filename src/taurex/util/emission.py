@@ -6,7 +6,11 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import KBOLTZ, PI, PLANCK, SPDLIGT
+from taurex.constants import KBOLTZ
+from taurex.constants import PI
+from taurex.constants import PLANCK
+from taurex.constants import SPDLIGT
+
 
 # NUMBA Functions
 try:
@@ -28,45 +32,45 @@ try:
         )
 
     @numba.njit(fastmath=True, parallel=False)
-    def black_body_numba(lamb: npt.NDArray[np.float64], temp: float):
+    def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum using numba."""
-        wl = _convert_lamb(lamb)
+        wl = _convert_lamb(wn)
         return _black_body_vec(wl, temp)
 
     @numba.njit(fastmath=True, parallel=False)
-    def black_body_numba_II(lamb, temp):  # noqa: N802
+    def black_body_numba_II(wn, temp):  # noqa: N802
         """Compute black body spectrum (alt algo) using numba."""
-        n = lamb.shape[0]
-        out = np.zeros_like(lamb)
+        n = wn.shape[0]
+        out = np.zeros_like(wn)
         conversion = 10000 * 1e-6
         # for n in range(N):
-        #     wl[n] = 10000*1e-6/lamb[n]
+        #     wl[n] = 10000*1e-6/wn[n]
 
         factor = PI * (2.0 * PLANCK * SPDLIGT**2) * 1e-6 / conversion**5
         c2 = PLANCK * SPDLIGT / (KBOLTZ * temp) / conversion
 
         for x in range(n):
-            out[x] = factor * lamb[x] ** 5 / (math.exp(c2 * lamb[x]) - 1)
+            out[x] = factor * wn[x] ** 5 / (math.exp(c2 * wn[x]) - 1)
 
         return out
 
 except ImportError:
     print("Numba not installed, using numpy instead")
 
-    def black_body_numba(lamb: npt.NDArray[np.float64], temp: float):
+    def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum using numpy (numba not available)."""
-        return black_body_numpy(lamb, temp)
+        return black_body_numpy(wn, temp)
 
-    def black_body_numba_II(lamb: npt.NDArray[np.float64], temp: float):  # noqa: N802
+    def black_body_numba_II(wn: npt.NDArray[np.float64], temp: float):  # noqa: N802
         """Compute black body spectrum using numpy (numba not available)."""
-        return black_body_numpy(lamb, temp)
+        return black_body_numpy(wn, temp)
 
 
-def black_body_numexpr(lamb: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
+def black_body_numexpr(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     """Compute black body spectrum using numexpr."""
     import numexpr as ne
 
-    wl = ne.evaluate("10000*1e-6/lamb")  # noqa: F841
+    wl = ne.evaluate("10000*1e-6/wn")  # noqa: F841
 
     return ne.evaluate(
         "(PI* (2.0*PLANCK*SPDLIGT**2)/(wl)**5) * (1.0/(exp((PLANCK * SPDLIGT)"
@@ -74,20 +78,20 @@ def black_body_numexpr(lamb: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     )
 
 
-def black_body_numpy(lamb: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
+def black_body_numpy(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     """Compute black body spectrum using numpy.
 
     Parameters
     ----------
-    lamb : npt.NDArray
-        Wavelengths in microns
+    wn : npt.NDArray
+        Wavenumbers in cm^-1
     temp : npt.NDArray
         Temperature in Kelvin
 
     Returns
     -------
     npt.NDArray
-        Black body spectrum
+        Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
 
     """
     h = 6.62606957e-34
@@ -97,16 +101,16 @@ def black_body_numpy(lamb: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
 
     temp = np.atleast_1d(temp)
 
-    lamb = np.atleast_1d(lamb)
+    wn = np.atleast_1d(wn)
 
     temp_ = temp.ravel()
-    lamb_ = lamb.ravel()
+    wn_ = wn.ravel()
 
-    final_shape = temp_.shape + lamb_.shape
+    final_shape = temp_.shape + wn_.shape
 
     temp_ = np.broadcast_to(temp_[:, None], final_shape)
-    lamb_ = np.broadcast_to(lamb_, final_shape)
-    wl = 10000 / lamb_
+    wn_ = np.broadcast_to(wn_, final_shape)
+    wl = 10000 / wn_  # wl is in um
     exponent = np.exp((h * c) / (wl * 1e-6 * k * temp_))
     bb = (pi * (2.0 * h * c**2) / (wl * 1e-6) ** 5) * (1.0 / (exponent - 1))
     final = bb * 1e-6
@@ -115,10 +119,10 @@ def black_body_numpy(lamb: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
         final = final.squeeze(axis=0)
     else:
         final = final.reshape(temp.shape + (-1,))
-    if lamb.size == 1:
+    if wn.size == 1:
         final = final.squeeze(axis=-1)
     elif final.ndim > 1:
-        final = final.reshape(final.shape[:-1] + lamb.shape)
+        final = final.reshape(final.shape[:-1] + wn.shape)
 
     return final
 

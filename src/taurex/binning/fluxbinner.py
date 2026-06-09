@@ -126,6 +126,8 @@ class FluxBinner(Binner):
 
         if old_spect_width is None:
             old_spect_width = compute_bin_edges(old_spect_wn)[-1]
+        else:
+            old_spect_width = old_spect_width[sorted_input]
 
         old_spect_min = old_spect_wn - old_spect_width / 2
         old_spect_max = old_spect_wn + old_spect_width / 2

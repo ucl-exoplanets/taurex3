@@ -542,7 +542,7 @@ def main():  # noqa: C901
     # Get the spectrum
     observation = pp.generate_observation()
 
-    binning = pp.generate_binning()
+    binning = pp.generate_binning(observation=observation)
 
     # Generate a model from the input
     model = pp.generate_appropriate_model(obs=observation)
@@ -630,6 +630,8 @@ def main():  # noqa: C901
         optimizer = pp.generate_optimizer()
         optimizer.set_model(model)
         optimizer.set_observed(observation)
+        if binning not in (None, "native", "observed"):
+            optimizer.set_binner(binning)
         pp.setup_optimizer(optimizer)
 
         start_time = time.time()

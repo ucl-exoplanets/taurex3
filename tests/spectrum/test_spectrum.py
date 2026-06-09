@@ -7,7 +7,11 @@ from unittest.mock import patch
 
 import numpy as np
 
+from taurex.binning import FluxBinnerConv
+from taurex.binning import FluxBinner
 from taurex.data.spectrum.observed import ObservedSpectrum
+from taurex.data.spectrum.offsetspectrum import OffsetSpectra
+from taurex.data.spectrum.offsetspectrum import OffsetSpectraCont
 from taurex.data.spectrum.spectrum import BaseSpectrum
 from taurex.data.spectrum.taurex import TaurexSpectrum
 
@@ -208,3 +212,81 @@ class TaurexSpectrumTest(unittest.TestCase):
         np.testing.assert_array_equal(ts.wavelengthGrid, wlgrid)
         np.testing.assert_array_equal(ts.errorBar, error)
         np.testing.assert_array_almost_equal(ts.binWidths, wnwidth)
+
+
+class OffsetSpectraContTest(unittest.TestCase):
+    def setUp(self):
+        self.test_dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.test_dir)
+
+    def _create_spectrum_file(self, filename, data):
+        import os
+
+        file_path = os.path.join(self.test_dir, filename)
+        np.savetxt(file_path, data)
+        return file_path
+
+    def test_multi_spectrum_systematics(self):
+        first = np.array(
+            [
+                [1.0, 10.0, 0.1, 0.05],
+                [1.2, 12.0, 0.2, 0.05],
+            ]
+        )
+        second = np.array(
+            [
+                [2.0, 20.0, 0.3, 0.10],
+                [2.3, 23.0, 0.4, 0.10],
+            ]
+        )
+
+        first_file = self._create_spectrum_file("first.dat", first)
+        second_file = self._create_spectrum_file("second.dat", second)
+
+        spectrum = OffsetSpectraCont(
+            path_spectra=[first_file, second_file],
+            offsets=[0.5, -0.5],
+            slopes=[1.0, -1.0],
+            error_scale=[2.0, 0.5],
+            broadening_type="none",
+        )
+
+        expected_flux = np.array([10.4, 12.6, 19.65, 22.35])
+        expected_error = np.array([0.2, 0.4, 0.15, 0.2])
+
+        np.testing.assert_allclose(spectrum.spectrum, expected_flux)
+        np.testing.assert_allclose(spectrum.errorBar, expected_error)
+        self.assertEqual(spectrum["Offset_1"], 0.5)
+        self.assertEqual(spectrum["Slope_2"], -1.0)
+        self.assertIsInstance(spectrum.create_binner(), FluxBinnerConv)
+
+    def test_offset_spectra_uses_plain_binner_until_overridden(self):
+        first = np.array(
+            [
+                [1.0, 10.0, 0.1, 0.05],
+                [1.2, 12.0, 0.2, 0.05],
+            ]
+        )
+        second = np.array(
+            [
+                [2.0, 20.0, 0.3, 0.10],
+                [2.3, 23.0, 0.4, 0.10],
+            ]
+        )
+
+        first_file = self._create_spectrum_file("plain_first.dat", first)
+        second_file = self._create_spectrum_file("plain_second.dat", second)
+
+        spectrum = OffsetSpectra(path_spectra=[first_file, second_file])
+
+        self.assertIsInstance(spectrum.create_binner(), FluxBinner)
+
+        shifted_binner = spectrum.create_binner(
+            broadening_type="none", wlshift=[0.01, -0.02]
+        )
+
+        self.assertIsInstance(shifted_binner, FluxBinnerConv)
+        np.testing.assert_allclose(shifted_binner._wlgrids[0], first[:, 0] + 0.01)
+        np.testing.assert_allclose(shifted_binner._wlgrids[1], second[:, 0] - 0.02)

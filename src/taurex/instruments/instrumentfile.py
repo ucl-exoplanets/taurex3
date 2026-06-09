@@ -4,7 +4,7 @@ import typing as t
 
 import numpy as np
 
-from taurex.binning import BinDownType, FluxBinner
+from taurex.binning import BinDownType, Binner, FluxBinner
 from taurex.model import ForwardModel
 from taurex.types import ModelOutputType, PathLike
 from taurex.util import wnwidth_to_wlwidth
@@ -28,6 +28,7 @@ class InstrumentFile(Instrument):
         delimiter: t.Optional[str] = None,
         skiprows: t.Optional[int] = 0,
         use_cols: t.Optional[t.Tuple[int, ...]] = None,
+        binner: t.Optional[Binner] = None,
     ) -> None:
         super().__init__()
 
@@ -54,7 +55,7 @@ class InstrumentFile(Instrument):
 
         self.create_wn_widths()
 
-        self._binner = FluxBinner(self._wngrid, wngrid_width=self._wnwidths)
+        self._binner = binner or FluxBinner(self._wngrid, wngrid_width=self._wnwidths)
 
     def create_wn_widths(self) -> None:
         """Covert wavelength widths to wavenumber widths."""

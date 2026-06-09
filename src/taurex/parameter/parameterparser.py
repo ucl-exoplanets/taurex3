@@ -179,6 +179,9 @@ class ParameterParser(Logger):
                 ):
                     inst = self.create_snr(_bin, inst_config)
                     return inst, num_obs
+            if binner is not None:
+                inst_config = dict(inst_config)
+                inst_config.setdefault("binner", binner)
             inst = create_instrument(inst_config)
             return inst, num_obs
         else:
@@ -329,7 +332,7 @@ class ParameterParser(Logger):
 
         return binning_class(wngrid), wngrid
 
-    def generate_binning(self):
+    def generate_binning(self, observation=None):
         config = self._raw_config.dict()
         if "Binning" in config:
             binning_config = config["Binning"]
@@ -339,6 +342,20 @@ class ParameterParser(Logger):
                 if bin_type == "native":
                     return "native"
                 elif bin_type == "observed":
+                    observed_kwargs = {
+                        key: value
+                        for key, value in binning_config.items()
+                        if key != "bin_type"
+                    }
+                    if observed_kwargs:
+                        if observation is None or observation == "self":
+                            raise ValueError(
+                                "Observed binning overrides require a concrete observation"
+                            )
+                        return (
+                            observation.create_binner(**observed_kwargs),
+                            observation.wavenumberGrid,
+                        )
                     return "observed"
                 elif bin_type == "manual":
                     return self.create_manual_binning(binning_config)

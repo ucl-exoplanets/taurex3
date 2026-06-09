@@ -70,7 +70,7 @@ class SNRInstrument(Instrument):
         if binner is None:
             binner = model.defaultBinner()
 
-        wngrid, spectrum, error, grid_width = self._binner.bin_model(model_res)
+        wngrid, spectrum, error, grid_width = binner.bin_model(model_res)
 
         signal = spectrum.max() - spectrum.min()
 

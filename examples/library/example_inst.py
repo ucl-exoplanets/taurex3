@@ -1,3 +1,5 @@
+"""Example implementation of an instrument."""
+
 import numpy as np
 
 from taurex.binning import FluxBinner
@@ -6,8 +8,8 @@ from taurex.util import wnwidth_to_wlwidth
 
 
 class ExampleInstrument(Instrument):
-    """
-    An example implementation of an instrument
+    """An example implementation of an instrument.
+
     An instument function thats uses the WFC3
     spectral grid and applies a gaussian noise
     with a scale ``noise_scale`` for each spectrum

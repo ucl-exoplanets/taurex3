@@ -1,4 +1,5 @@
 """Handles how priors are defined for retrievals."""
+
 import enum
 import math
 import typing as t

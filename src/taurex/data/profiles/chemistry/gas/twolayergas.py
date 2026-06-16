@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.output import OutputGroup
-from taurex.util import molecule_texlabel, movingaverage
+from taurex.util import molecule_texlabel
+from taurex.util import movingaverage
 
 from .gas import Gas
 

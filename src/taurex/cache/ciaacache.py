@@ -1,4 +1,5 @@
 """Contains caching class for Collisionally Induced Absorption files."""
+
 import typing as t
 
 from taurex.core import Singleton

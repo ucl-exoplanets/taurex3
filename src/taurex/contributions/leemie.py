@@ -1,4 +1,5 @@
 """Mie scattering using Lee et al. 2013 formalism."""
+
 import typing as t
 
 import numpy as np
@@ -9,6 +10,7 @@ from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
 
 from .contribution import Contribution
+
 
 if t.TYPE_CHECKING:
     from taurex.model.model import ForwardModel

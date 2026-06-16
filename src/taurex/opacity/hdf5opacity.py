@@ -11,7 +11,8 @@ from taurex.cache import GlobalCache
 from taurex.mpi import allocate_as_shared
 from taurex.types import PathLike
 
-from .interpolateopacity import InterpModeType, InterpolatingOpacity
+from .interpolateopacity import InterpModeType
+from .interpolateopacity import InterpolatingOpacity
 
 
 class HDF5Opacity(InterpolatingOpacity):

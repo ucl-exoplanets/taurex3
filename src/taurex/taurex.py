@@ -268,7 +268,8 @@ def show_plugins():
 
 def output_citations(model, instrument, optimizer):  # noqa: C901
     from taurex.cache import OpacityCache
-    from taurex.mpi import barrier, get_rank
+    from taurex.mpi import barrier
+    from taurex.mpi import get_rank
 
     barrier()
     bib_tex = None
@@ -286,7 +287,8 @@ def output_citations(model, instrument, optimizer):  # noqa: C901
         print("\n")
         print("TauREx-Related")
         print("--------------\n")
-        from taurex._citation import __citations__, taurex_citation
+        from taurex._citation import __citations__
+        from taurex._citation import taurex_citation
 
         citation_string += __citations__
         all_citations.extend(taurex_citation.citations())
@@ -369,7 +371,8 @@ def main():  # noqa: C901
     import numpy as np
 
     from taurex.log import setLogLevel
-    from taurex.log.logger import TauRexHandler, root_logger
+    from taurex.log.logger import TauRexHandler
+    from taurex.log.logger import root_logger
     from taurex.mpi import get_rank
     from taurex.output.hdf5 import HDF5Output
     from taurex.parameter import ParameterParser
@@ -647,7 +650,8 @@ def main():  # noqa: C901
 
     if args.save_spectrum is not None:
         # with open(args.save_spectrum, 'w') as f:
-        from taurex.util import compute_bin_edges, wnwidth_to_wlwidth
+        from taurex.util import compute_bin_edges
+        from taurex.util import wnwidth_to_wlwidth
 
         save_wnwidth = compute_bin_edges(wngrid)[1]
         save_wl = 10000 / wngrid

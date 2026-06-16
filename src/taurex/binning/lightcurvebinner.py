@@ -1,3 +1,5 @@
+"""Binner for lightcurve models."""
+
 import typing as t
 
 import numpy as np
@@ -6,7 +8,8 @@ import numpy.typing as npt
 from taurex import OutputSize
 from taurex.types import ModelOutputType
 
-from .binner import BinDownType, Binner
+from .binner import BinDownType
+from .binner import Binner
 
 
 class LightcurveBinner(Binner):

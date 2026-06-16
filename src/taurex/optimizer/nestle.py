@@ -1,4 +1,5 @@
 """Retrieval using nestle library."""
+
 import time
 import typing as t
 
@@ -9,9 +10,11 @@ import numpy.typing as npt
 from taurex.model import ForwardModel
 from taurex.output import OutputGroup
 from taurex.spectrum import BaseSpectrum
-from taurex.util import quantile_corner, recursively_save_dict_contents_to_output
+from taurex.util import quantile_corner
+from taurex.util import recursively_save_dict_contents_to_output
 
-from .optimizer import FitParamOutput, Optimizer
+from .optimizer import FitParamOutput
+from .optimizer import Optimizer
 
 
 class NestleStatsOutput(t.TypedDict):

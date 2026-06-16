@@ -1,4 +1,5 @@
 """Module contains classes that handle loading of HITRAN cia files"""
+
 import typing as t
 
 import numpy as np

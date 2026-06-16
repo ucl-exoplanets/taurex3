@@ -6,7 +6,10 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.log import Logger
-from taurex.types import AnyValType, ArrayType, ScalarType
+from taurex.types import AnyValType
+from taurex.types import ArrayType
+from taurex.types import ScalarType
+
 
 MetadataType = t.Dict[str, AnyValType]
 """Type for metadata"""

@@ -1,4 +1,5 @@
 """Base Gas class."""
+
 import typing as t
 
 import numpy as np

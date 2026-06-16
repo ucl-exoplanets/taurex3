@@ -1,4 +1,5 @@
 """Two point gas profile."""
+
 import math
 import typing as t
 

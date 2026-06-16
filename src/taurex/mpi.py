@@ -4,14 +4,17 @@ Most functions will do nothing if mpi4py is not present and will simply
 replicate expected behaviour. This allows for MPI and non-MPI code to be
 run without any changes (In theory...).
 """
+
 import enum
 import logging
 import typing as t
-from functools import lru_cache, wraps
+from functools import lru_cache
+from functools import wraps
 
 import numpy as np
 
 from .types import AnyValType
+
 
 T = t.TypeVar("T", bound=AnyValType)
 

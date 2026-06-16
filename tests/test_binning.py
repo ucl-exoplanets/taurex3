@@ -3,7 +3,10 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import booleans
 
-from taurex.binning import Binner, FluxBinner, NativeBinner, SimpleBinner
+from taurex.binning import Binner
+from taurex.binning import FluxBinner
+from taurex.binning import NativeBinner
+from taurex.binning import SimpleBinner
 
 from .strategies import wngrid_spectra
 
@@ -33,15 +36,13 @@ def test_simplebinner(spectra):
 
     assert np.mean(sp) == pytest.approx(np.mean(spectra[1]), rel=0.1)
 
+
 def test_native_binner():
     """Test native binning."""
 
-    
-
     nb = NativeBinner()
 
-    wngrid, spectra = np.linspace(1,100,100), np.random.rand(100)
-
+    wngrid, spectra = np.linspace(1, 100, 100), np.random.rand(100)
 
     res = nb.bindown(wngrid, spectra)
 

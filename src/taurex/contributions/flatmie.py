@@ -1,4 +1,5 @@
 """Module for computing flat Mie opacity."""
+
 import typing as t
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Opacity integration of collision-induced absorption."""
+
 import typing as t
 
 import numpy as np
@@ -9,6 +10,7 @@ from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
 
 from .contribution import Contribution
+
 
 contribute_cia: t.Callable[
     [

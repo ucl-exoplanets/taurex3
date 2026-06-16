@@ -1,5 +1,4 @@
 import numpy as np
-
 import pytest
 
 
@@ -17,7 +16,9 @@ def test_pymiescatt_grid_accepts_qext_grid_dataset(tmp_path):
     grid_path = tmp_path / "cloud_grid.h5"
     with h5py.File(grid_path, "w") as handle:
         handle.create_dataset("radius_grid", data=np.array([0.05, 0.1, 0.2]))
-        handle.create_dataset("wavenumber_grid", data=np.array([1000.0, 2000.0, 3000.0]))
+        handle.create_dataset(
+            "wavenumber_grid", data=np.array([1000.0, 2000.0, 3000.0])
+        )
         handle.create_dataset(
             "Qext_grid",
             data=np.array(
@@ -40,7 +41,9 @@ def test_pymiescatt_grid_accepts_qext_grid_dataset(tmp_path):
         mie_particle_altitude_decay=[-2.0],
     )
 
-    components = list(contribution.prepare_each(DummyModel(), np.array([1500.0, 2500.0])))
+    components = list(
+        contribution.prepare_each(DummyModel(), np.array([1500.0, 2500.0]))
+    )
 
     assert components[0][0] == "PyMieScattGridExt"
     assert contribution.sigma_xsec.shape == (4, 2)
@@ -50,8 +53,8 @@ def test_pymiescatt_grid_accepts_qext_grid_dataset(tmp_path):
 def test_pymiescatt_grid_rejects_invalid_distribution(tmp_path):
     import h5py
 
-    from taurex.contributions.pymiescatt_grid import InvalidPyMieScattGridException
     from taurex.contributions import PyMieScattGridExtinctionContribution
+    from taurex.contributions.pymiescatt_grid import InvalidPyMieScattGridException
 
     grid_path = tmp_path / "cloud_grid.h5"
     with h5py.File(grid_path, "w") as handle:

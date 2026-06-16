@@ -7,9 +7,12 @@ import h5py
 import numpy as np
 
 from taurex.mpi import only_master_rank
-from taurex.types import ArrayType, ScalarType
+from taurex.types import ArrayType
+from taurex.types import ScalarType
 
-from .output import MetadataType, Output, OutputGroup
+from .output import MetadataType
+from .output import Output
+from .output import OutputGroup
 
 
 class HDF5OutputGroup(OutputGroup):

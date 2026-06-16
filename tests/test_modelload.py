@@ -6,12 +6,10 @@ from unittest.mock import patch
 import h5py
 import numpy as np
 
-from taurex.util.hdf5 import (
-    load_chemistry_from_hdf5,
-    load_gas_from_hdf5,
-    load_pressure_from_hdf5,
-    load_temperature_from_hdf5,
-)
+from taurex.util.hdf5 import load_chemistry_from_hdf5
+from taurex.util.hdf5 import load_gas_from_hdf5
+from taurex.util.hdf5 import load_pressure_from_hdf5
+from taurex.util.hdf5 import load_temperature_from_hdf5
 
 
 class HDFTester(unittest.TestCase):
@@ -205,7 +203,8 @@ class StarLoadTest(HDFTester):
 class ChemistryLoadTest(HDFTester):
     def test_taurex_chemistry(self):
         from taurex.cache import OpacityCache
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
 
         molecules = ["H2O", "CH4"]
         mix_ratios = [1e-2, 1e-8]
@@ -309,8 +308,10 @@ class ContribLoadTest(HDFTester):
 class ModelLoadTest(HDFTester):
     def test_transmission(self):
         from taurex.cache import OpacityCache
-        from taurex.contributions import AbsorptionContribution, RayleighContribution
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.contributions import AbsorptionContribution
+        from taurex.contributions import RayleighContribution
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
         from taurex.model import TransmissionModel
         from taurex.util.hdf5 import load_model_from_hdf5
 
@@ -347,8 +348,10 @@ class ModelLoadTest(HDFTester):
 
     def test_emission(self):
         from taurex.cache import OpacityCache
-        from taurex.contributions import AbsorptionContribution, RayleighContribution
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.contributions import AbsorptionContribution
+        from taurex.contributions import RayleighContribution
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
         from taurex.model import EmissionModel
         from taurex.util.hdf5 import load_model_from_hdf5
 
@@ -386,8 +389,10 @@ class ModelLoadTest(HDFTester):
 
     def test_directimage(self):
         from taurex.cache import OpacityCache
-        from taurex.contributions import AbsorptionContribution, RayleighContribution
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.contributions import AbsorptionContribution
+        from taurex.contributions import RayleighContribution
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
         from taurex.model import DirectImageModel
         from taurex.util.hdf5 import load_model_from_hdf5
 

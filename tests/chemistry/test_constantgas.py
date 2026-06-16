@@ -1,12 +1,14 @@
-from taurex.chemistry import ConstantGas
-from ..strategies import molecule_vmr
-from hypothesis import given
-from hypothesis.strategies import integers, floats
 import numpy as np
+from hypothesis import given
+from hypothesis.strategies import floats
+from hypothesis.strategies import integers
+
+from taurex.chemistry import ConstantGas
+
+from ..strategies import molecule_vmr
 
 
-@given(molecule=molecule_vmr(), nlayers=integers(1, 300),
-       new_value=floats(1e-30, 1e0))
+@given(molecule=molecule_vmr(), nlayers=integers(1, 300), new_value=floats(1e-30, 1e0))
 def test_constant_gas(molecule, nlayers, new_value):
 
     mol, vmr = molecule
@@ -35,4 +37,3 @@ def test_constant_gas(molecule, nlayers, new_value):
     cg.initialize_profile(nlayers=nlayers)
     mix_profile = cg.mixProfile
     assert np.all(mix_profile == new_value)
-

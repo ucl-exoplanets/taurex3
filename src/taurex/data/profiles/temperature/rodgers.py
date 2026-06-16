@@ -1,4 +1,5 @@
 """Rodgers 2000 temperature profile."""
+
 import typing as t
 
 import numpy as np

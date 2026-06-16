@@ -1,7 +1,9 @@
 """Taurex logging module."""
+
 import io
 import logging
 import typing as t
+
 
 logging.getLogger("taurex").addHandler(logging.NullHandler())
 """Root logger for taurex"""

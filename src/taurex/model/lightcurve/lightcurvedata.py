@@ -1,4 +1,5 @@
 """Lightcurve data class."""
+
 import logging
 import typing as t
 
@@ -6,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.log import Logger
-from taurex.output import OutputGroup, Writeable
+from taurex.output import OutputGroup
+from taurex.output import Writeable
 
 
 class LightCurveInstrumentData(t.TypedDict):

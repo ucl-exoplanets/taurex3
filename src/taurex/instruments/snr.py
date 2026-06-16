@@ -1,10 +1,12 @@
 """Instrument implementation for SNR noise model."""
+
 import math
 import typing as t
 
 import numpy as np
 
-from taurex.binning import BinDownType, Binner
+from taurex.binning import BinDownType
+from taurex.binning import Binner
 from taurex.model import ForwardModel
 from taurex.types import ModelOutputType
 

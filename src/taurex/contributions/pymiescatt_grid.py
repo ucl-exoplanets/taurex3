@@ -12,6 +12,7 @@ from taurex.output import OutputGroup
 
 from .contribution import Contribution
 
+
 if t.TYPE_CHECKING:
     from taurex.model.model import ForwardModel
 else:
@@ -117,7 +118,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
         self._species_count = len(self._species)
 
         if self._species_count == 0:
-            raise InvalidPyMieScattGridException("At least one species must be provided")
+            raise InvalidPyMieScattGridException(
+                "At least one species must be provided"
+            )
 
         self._mie_species_path = _broadcast_param(
             mie_species_path, self._species_count, "mie_species_path"
@@ -204,9 +207,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
             f"{path} must contain a 'Qext' or 'Qext_grid' dataset"
         )
 
-    def load_input_files(
-        self, paths: t.Sequence[str]
-    ) -> t.Tuple[
+    def load_input_files(self, paths: t.Sequence[str]) -> t.Tuple[
         t.List[npt.NDArray[np.float64]],
         t.List[npt.NDArray[np.float64]],
         t.List[npt.NDArray[np.float64]],
@@ -218,7 +219,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
         for path in paths:
             with h5py.File(path, "r") as grid_file:
                 try:
-                    radius_grid = np.asarray(grid_file["radius_grid"][()], dtype=np.float64)
+                    radius_grid = np.asarray(
+                        grid_file["radius_grid"][()], dtype=np.float64
+                    )
                     wavenumber_grid = np.asarray(
                         grid_file["wavenumber_grid"][()], dtype=np.float64
                     )
@@ -272,7 +275,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_particle_mean_radius)
 
         def write_rmean_share(self, value):
-            self._mie_particle_mean_radius[:] = [value] * len(self._mie_particle_mean_radius)
+            self._mie_particle_mean_radius[:] = [value] * len(
+                self._mie_particle_mean_radius
+            )
 
         self.add_fittable_param(
             param_name,
@@ -292,7 +297,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return np.mean(self._mie_particle_std_radius)
 
             def write_rstd_share(self, value):
-                self._mie_particle_std_radius[:] = [value] * len(self._mie_particle_std_radius)
+                self._mie_particle_std_radius[:] = [value] * len(
+                    self._mie_particle_std_radius
+                )
 
             self.add_fittable_param(
                 param_name,
@@ -311,7 +318,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_particle_mix_ratio)
 
         def write_x_share(self, value):
-            self._mie_particle_mix_ratio[:] = [value] * len(self._mie_particle_mix_ratio)
+            self._mie_particle_mix_ratio[:] = [value] * len(
+                self._mie_particle_mix_ratio
+            )
 
         self.add_fittable_param(
             param_name,
@@ -545,11 +554,13 @@ class PyMieScattGridExtinctionContribution(Contribution):
                     10 ** (np.log10(mean_radius) - self._Dsampling * log_rsigma),
                     self._Nsampling,
                 )
-                weights = self._mie_particle_paramA[specie_idx] * (
-                    radii_log ** self._mie_particle_paramB[specie_idx]
-                ) * np.exp(
-                    -self._mie_particle_paramC[specie_idx]
-                    * (radii_log ** self._mie_particle_paramD[specie_idx])
+                weights = (
+                    self._mie_particle_paramA[specie_idx]
+                    * (radii_log ** self._mie_particle_paramB[specie_idx])
+                    * np.exp(
+                        -self._mie_particle_paramC[specie_idx]
+                        * (radii_log ** self._mie_particle_paramD[specie_idx])
+                    )
                 )
             else:
                 log_rsigma = self._mie_particle_std_radius[specie_idx]
@@ -619,9 +630,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 mix = self._mie_particle_mix_ratio[specie_idx] * (
                     pressure_profile / bottom_pressure
                 ) ** (-decay)
-                sigma_xsec_int[cloud_filter, :] = sigma_mie[None, :] * mix[
-                    cloud_filter, None
-                ]
+                sigma_xsec_int[cloud_filter, :] = (
+                    sigma_mie[None, :] * mix[cloud_filter, None]
+                )
             else:
                 sigma_xsec_int[cloud_filter, :] = (
                     sigma_mie[None, :] * self._mie_particle_mix_ratio[specie_idx]
@@ -634,12 +645,16 @@ class PyMieScattGridExtinctionContribution(Contribution):
 
     def write(self, output: OutputGroup) -> OutputGroup:
         contrib = super().write(output)
-        contrib.write_array("particle_mean_radius", np.array(self._mie_particle_mean_radius))
+        contrib.write_array(
+            "particle_mean_radius", np.array(self._mie_particle_mean_radius)
+        )
         if self._mie_particle_radius_distribution != "budaj":
             contrib.write_array(
                 "particle_std_radius", np.array(self._mie_particle_std_radius)
             )
-        contrib.write_array("particle_mix_ratio", np.array(self._mie_particle_mix_ratio))
+        contrib.write_array(
+            "particle_mix_ratio", np.array(self._mie_particle_mix_ratio)
+        )
         contrib.write_array("particle_midP", np.array(self._mie_midP))
         contrib.write_array("particle_rangeP", np.array(self._mie_rangeP))
         contrib.write_string_array("cloud_species", self._species)

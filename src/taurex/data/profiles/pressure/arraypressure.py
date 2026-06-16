@@ -1,4 +1,5 @@
 """Pressure profile from array."""
+
 import typing as t
 
 import numpy as np

@@ -7,6 +7,7 @@ from taurex.log import Logger
 
 from .globalcache import GlobalCache
 
+
 if t.TYPE_CHECKING:
     from ..opacity import Opacity
 else:

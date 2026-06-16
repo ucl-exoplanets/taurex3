@@ -1,4 +1,5 @@
 """Includes some useful definitions and enums"""
+
 from enum import IntEnum
 
 

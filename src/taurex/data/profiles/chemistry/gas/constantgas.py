@@ -1,4 +1,5 @@
 """Constant gas profile."""
+
 import typing as t
 
 import numpy as np

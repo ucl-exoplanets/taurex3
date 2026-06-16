@@ -1,10 +1,14 @@
+"""Module for the native binner class."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
 from taurex import OutputSize
-from taurex.binning import BinDownType, BinnedSpectrumType, Binner
+from taurex.binning import BinDownType
+from taurex.binning import BinnedSpectrumType
+from taurex.binning import Binner
 from taurex.types import ModelOutputType
 
 

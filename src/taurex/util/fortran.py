@@ -6,11 +6,15 @@ import sys
 import tempfile
 import typing as t
 from contextlib import contextmanager
-from queue import Empty, Full, Queue
+from queue import Empty
+from queue import Full
+from queue import Queue
 
 from taurex.log import Logger
 
-from .module import getattr_recursive, runfunc_recursive, setattr_recursive
+from .module import getattr_recursive
+from .module import runfunc_recursive
+from .module import setattr_recursive
 
 
 @contextmanager

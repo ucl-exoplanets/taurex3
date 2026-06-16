@@ -1,4 +1,5 @@
 """Test main contribution function."""
+
 import numpy as np
 import pytest
 
@@ -52,15 +53,17 @@ def test_contribute_consistent():
 def test_leemie_no_break():
     """Tests if LeeMie breaks the optimizer."""
 
+    from taurex.contributions import AbsorptionContribution
+    from taurex.contributions import LeeMieContribution
     from taurex.model import TransmissionModel
-    from taurex.contributions import LeeMieContribution, AbsorptionContribution
     from taurex.optimizer import NestleOptimizer
+
     tm = TransmissionModel(nlayers=100)
     tm.add_contribution(AbsorptionContribution())
     tm.add_contribution(LeeMieContribution())
-    #tm.model()
-    #opt = NestleOptimizer()
+    # tm.model()
+    # opt = NestleOptimizer()
 
-    #opt.set_model(tm)
+    # opt.set_model(tm)
 
     assert True

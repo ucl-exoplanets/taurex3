@@ -1,8 +1,10 @@
 """Defines constants used in taurex"""
+
 import astropy.constants as c
 import numpy as np
 
 from taurex.util import conversion_factor
+
 
 AMU = conversion_factor("u", "kg")
 KBOLTZ = c.k_B.value

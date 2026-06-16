@@ -1,8 +1,12 @@
-import pytest
-import tempfile
-from taurex.parameter.classfactory import ClassFactory
-from taurex.parameter import ParameterParser
 import os
+import tempfile
+
+import pytest
+
+from taurex.parameter import ParameterParser
+from taurex.parameter.classfactory import ClassFactory
+
+
 # cf = ClassFactory()
 
 # @pytest.fixture(autouse=True)
@@ -17,7 +21,7 @@ import os
 # def test_temperature_keyword(test_input, expected, tmp_input):
 
 #     pp = ParameterParser()
-    
+
 #     for i in test_input:
 #         param = f"""
 # [Temperature]
@@ -42,7 +46,7 @@ import os
 # def test_chemistry_keyword(test_input, expected, tmp_input):
 
 #     pp = ParameterParser()
-    
+
 #     for i in test_input:
 #         param = f"""
 # [Chemistry]
@@ -68,7 +72,7 @@ import os
 # def test_chemistry_keyword(test_input, expected, tmp_input):
 
 #     pp = ParameterParser()
-    
+
 #     for i in test_input:
 #         param = f"""
 # [Chemistry]

@@ -8,17 +8,15 @@ from taurex.log import Logger
 from taurex.optimizer import Optimizer
 from taurex.types import PathLike
 
-from .factory import (
-    create_chemistry,
-    create_instrument,
-    create_model,
-    create_observation,
-    create_optimizer,
-    create_planet,
-    create_pressure_profile,
-    create_star,
-    create_temperature_profile,
-)
+from .factory import create_chemistry
+from .factory import create_instrument
+from .factory import create_model
+from .factory import create_observation
+from .factory import create_optimizer
+from .factory import create_planet
+from .factory import create_pressure_profile
+from .factory import create_star
+from .factory import create_temperature_profile
 
 
 class ParameterParser(Logger):
@@ -65,7 +63,9 @@ class ParameterParser(Logger):
 
     def setup_globals(self):  # noqa: C901
         """Setup global cache from input file."""
-        from taurex.cache import CIACache, GlobalCache, OpacityCache
+        from taurex.cache import CIACache
+        from taurex.cache import GlobalCache
+        from taurex.cache import OpacityCache
 
         config = self._raw_config.dict()
 
@@ -282,7 +282,8 @@ class ParameterParser(Logger):
 
         import numpy as np
 
-        from taurex.binning import FluxBinner, SimpleBinner
+        from taurex.binning import FluxBinner
+        from taurex.binning import SimpleBinner
 
         binning_class = SimpleBinner
 

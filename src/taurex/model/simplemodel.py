@@ -18,6 +18,7 @@ from taurex.util import clip_native_to_wngrid
 
 from .model import ForwardModel
 
+
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution
 else:
@@ -135,7 +136,8 @@ class SimpleForwardModel(ForwardModel):
         """Compute an initial molecular profile."""
         import warnings
 
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
 
         warnings.warn(
             "This method is deprecated and will be removed in a "
@@ -201,7 +203,8 @@ class SimpleForwardModel(ForwardModel):
             self._temperature_profile = Isothermal()
 
         if self._chemistry is None:
-            from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+            from taurex.data.profiles.chemistry import ConstantGas
+            from taurex.data.profiles.chemistry import TaurexChemistry
 
             tc = TaurexChemistry()
             self.warning(

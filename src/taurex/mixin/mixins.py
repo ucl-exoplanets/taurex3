@@ -6,9 +6,11 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.chemistry import Gas
-from taurex.core import FittingType, fitparam
+from taurex.core import FittingType
+from taurex.core import fitparam
 
-from . import ChemistryMixin, TemperatureMixin
+from . import ChemistryMixin
+from . import TemperatureMixin
 
 
 class MakeFreeMixin(ChemistryMixin):

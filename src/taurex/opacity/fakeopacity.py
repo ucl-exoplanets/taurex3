@@ -1,4 +1,5 @@
 """Opacity for testing purposes."""
+
 import typing as t
 
 import numpy as np

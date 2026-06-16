@@ -1,4 +1,5 @@
 """Gas from an array."""
+
 import typing as t
 
 import numpy as np

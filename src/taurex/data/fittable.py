@@ -1,7 +1,9 @@
 """This module relates to defining fitting parameters in TauREx3."""
 
 import typing as t
-from functools import partial, wraps
+from functools import partial
+from functools import wraps
+
 
 T = t.TypeVar("T")
 """Generic type."""

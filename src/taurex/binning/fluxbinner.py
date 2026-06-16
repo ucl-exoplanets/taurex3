@@ -1,4 +1,4 @@
-"""Module for the flux binner class"""
+"""Module for the flux binner class."""
 
 import typing as t
 
@@ -9,7 +9,9 @@ from taurex import OutputSize
 from taurex.util import compute_bin_edges
 
 from ..types import ModelOutputType
-from .binner import BinDownType, BinnedSpectrumType, Binner
+from .binner import BinDownType
+from .binner import BinnedSpectrumType
+from .binner import Binner
 
 
 class FluxBinner(Binner):

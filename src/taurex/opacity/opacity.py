@@ -1,4 +1,5 @@
 """Base class for computing opacities."""
+
 import typing as t
 
 import numpy as np

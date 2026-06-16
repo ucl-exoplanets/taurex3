@@ -1,4 +1,5 @@
 """General utility functions."""
+
 import re
 import typing as t
 
@@ -7,7 +8,9 @@ import numpy.typing as npt
 from astropy import units as u
 
 from taurex.output.output import OutputGroup
-from taurex.types import AnyValType, ScalarType
+from taurex.types import AnyValType
+from taurex.types import ScalarType
+
 
 mass = {
     "H": 1.00794,

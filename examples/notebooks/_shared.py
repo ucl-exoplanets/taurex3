@@ -1,26 +1,44 @@
+"""Shared functions for example notebooks."""
+
 from __future__ import annotations
 
-from pathlib import Path
 import sys
+from pathlib import Path
 from urllib.request import urlretrieve
 
+
 EXOMOL_URLS = {
-    "H2O": "https://exomol.com/db/H2O/1H2-16O/POKAZATEL/1H2-16O__POKAZATEL__R15000_0.3-50mu.xsec.TauREx.h5",
-    "CO2": "https://exomol.com/db/CO2/12C-16O2/UCL-4000/12C-16O2__UCL-4000.R15000_0.3-50mu.xsec.TauREx.h5",
-    "CH4": "https://exomol.com/db/CH4/12C-1H4/MM/12C-1H4__MM.R15000_0.3-50mu.xsec.TauREx.h5",
-    "NH3": "https://exomol.com/db/NH3/14N-1H3/CoYuTe/14N-1H3__CoYuTe.R15000_0.3-50mu.xsec.TauREx.h5",
+    "H2O": (
+        "https://exomol.com/db/H2O/1H2-16O/POKAZATEL/"
+        "1H2-16O__POKAZATEL__R15000_0.3-50mu.xsec.TauREx.h5"
+    ),
+    "CO2": (
+        "https://exomol.com/db/CO2/12C-16O2/UCL-4000/"
+        "12C-16O2__UCL-4000.R15000_0.3-50mu.xsec.TauREx.h5"
+    ),
+    "CH4": (
+        "https://exomol.com/db/CH4/12C-1H4/MM/"
+        "12C-1H4__MM.R15000_0.3-50mu.xsec.TauREx.h5"
+    ),
+    "NH3": (
+        "https://exomol.com/db/NH3/14N-1H3/CoYuTe/"
+        "14N-1H3__CoYuTe.R15000_0.3-50mu.xsec.TauREx.h5"
+    ),
 }
 
 CIA_URLS = {
-    "H2-H2_eq_2018.cia": "https://hitran.org/data/CIA/alternate/H2-H2_eq_2018.cia",
-    "H2-He_eq_2011.cia": "https://hitran.org/data/CIA/alternate/H2-He_eq_2011.cia",
+    "H2-H2_eq_2018.cia": ("https://hitran.org/data/CIA/alternate/H2-H2_eq_2018.cia"),
+    "H2-He_eq_2011.cia": ("https://hitran.org/data/CIA/alternate/H2-He_eq_2011.cia"),
 }
 
 
 def find_project_root(start_path: Path | None = None) -> Path:
+    """Find the project root directory."""
     current = start_path or Path.cwd()
     for candidate in [current, *current.parents]:
-        if (candidate / "pyproject.toml").exists() and (candidate / "src" / "taurex").exists():
+        if (candidate / "pyproject.toml").exists() and (
+            candidate / "src" / "taurex"
+        ).exists():
             return candidate
     raise FileNotFoundError("Could not locate the TauREx project root.")
 
@@ -39,6 +57,7 @@ CIA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def download_file(url: str, destination: Path) -> Path:
+    """Download a file from a URL."""
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
         return destination
@@ -47,6 +66,7 @@ def download_file(url: str, destination: Path) -> Path:
 
 
 def ensure_opacity_data(download: bool = False) -> None:
+    """Ensure opacity data is available."""
     required_xsec = [XSEC_DIR / url.rsplit("/", 1)[-1] for url in EXOMOL_URLS.values()]
     required_cia = [CIA_DIR / filename for filename in CIA_URLS]
 
@@ -60,26 +80,34 @@ def ensure_opacity_data(download: bool = False) -> None:
     if missing:
         missing_list = "\n".join(str(path) for path in missing)
         raise FileNotFoundError(
-            "Missing opacity data. Run ensure_opacity_data(download=True) first:\n" + missing_list
+            "Missing opacity data. Run ensure_opacity_data(download=True) first:\n"
+            + missing_list
         )
 
-    from taurex.cache import CIACache, OpacityCache
+    from taurex.cache import CIACache
+    from taurex.cache import OpacityCache
 
     OpacityCache().set_opacity_path(str(XSEC_DIR))
     CIACache().set_cia_path(str(CIA_DIR))
 
 
-def build_base_components(download: bool = False, nlayers: int = 100) -> dict[str, object]:
+def build_base_components(
+    download: bool = False, nlayers: int = 100
+) -> dict[str, object]:
+    """Build base components for the model."""
     ensure_opacity_data(download=download)
 
-    from taurex.chemistry import ConstantGas, TaurexChemistry
+    from taurex.chemistry import ConstantGas
+    from taurex.chemistry import TaurexChemistry
     from taurex.planet import Planet
     from taurex.pressure import SimplePressureProfile
     from taurex.stellar import BlackbodyStar
     from taurex.temperature import Isothermal
 
     iso_t = Isothermal(T=2000.0)
-    press = SimplePressureProfile(nlayers=nlayers, atm_min_pressure=1e-5, atm_max_pressure=1e5)
+    press = SimplePressureProfile(
+        nlayers=nlayers, atm_min_pressure=1e-5, atm_max_pressure=1e5
+    )
     chemistry = TaurexChemistry(fill_gases=["H2", "He"], ratio=0.1756)
     chemistry.addGas(ConstantGas(molecule_name="H2O", mix_ratio=1e-3))
     chemistry.addGas(ConstantGas(molecule_name="CH4", mix_ratio=1e-4))
@@ -117,7 +145,10 @@ def build_transmission_model(
     download: bool = False,
     nlayers: int = 100,
 ) -> dict[str, object]:
-    from taurex.contributions import AbsorptionContribution, CIAContribution, RayleighContribution
+    """Build a transmission model."""
+    from taurex.contributions import AbsorptionContribution
+    from taurex.contributions import CIAContribution
+    from taurex.contributions import RayleighContribution
     from taurex.model import TransmissionModel
 
     context = build_base_components(download=download, nlayers=nlayers)
@@ -146,7 +177,10 @@ def build_emission_model(
     download: bool = False,
     nlayers: int = 100,
 ) -> dict[str, object]:
-    from taurex.contributions import AbsorptionContribution, CIAContribution, RayleighContribution
+    """Build an emission model."""
+    from taurex.contributions import AbsorptionContribution
+    from taurex.contributions import CIAContribution
+    from taurex.contributions import RayleighContribution
     from taurex.model import EmissionModel
 
     context = build_base_components(download=download, nlayers=nlayers)

@@ -1,4 +1,5 @@
 """Base instrument model class."""
+
 import typing as t
 
 from taurex.binning import BinDownType

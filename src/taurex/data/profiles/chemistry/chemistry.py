@@ -5,10 +5,12 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from taurex.cache import GlobalCache, OpacityCache
+from taurex.cache import GlobalCache
+from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
 from taurex.data.citation import Citable
-from taurex.data.fittable import Fittable, derivedparam
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import derivedparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable

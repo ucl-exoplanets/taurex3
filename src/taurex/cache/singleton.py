@@ -1,4 +1,4 @@
-"""Just contains a singleton class. Pretty useful"""
+"""Just contains a singleton class. Pretty useful."""
 
 
 class Singleton:
@@ -16,5 +16,5 @@ class Singleton:
         return it
 
     def init(self, *args, **kwds):
-        """Override to act as an init"""
+        """Override to act as an init."""
         pass

@@ -2,7 +2,8 @@ import pytest
 
 
 def test_priors_validate():
-    from taurex.util.fitting import MalformedPriorInputError, validate_priors
+    from taurex.util.fitting import MalformedPriorInputError
+    from taurex.util.fitting import validate_priors
 
     validate_priors("(hello)")
     validate_priors("((hello),(there))")

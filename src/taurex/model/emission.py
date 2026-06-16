@@ -1,4 +1,5 @@
 """Radiative transfer modeeling of eclipses."""
+
 import typing as t
 
 import numpy as np
@@ -16,6 +17,7 @@ from taurex.temperature import TemperatureProfile
 from taurex.util.emission import black_body
 
 from .simplemodel import OneDForwardModel
+
 
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution

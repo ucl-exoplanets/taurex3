@@ -2,7 +2,8 @@
 
 import typing as t
 
-from taurex.chemistry import Chemistry, Gas
+from taurex.chemistry import Chemistry
+from taurex.chemistry import Gas
 from taurex.contributions import Contribution
 from taurex.instruments import Instrument
 from taurex.log import setup_log
@@ -14,7 +15,9 @@ from taurex.spectrum import BaseSpectrum
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 
-from ..core import Citable, Fittable
+from ..core import Citable
+from ..core import Fittable
+
 
 if t.TYPE_CHECKING:
     # Useful for type checking but not for runtime
@@ -56,8 +59,7 @@ M = t.TypeVar("M", bound="Mixin")
 class MixinProtocol(t.Protocol):
     """Mixin protocol."""
 
-    def __init_mixin__(self, **kwargs: t.Dict[str, t.Any]) -> None:
-        ...
+    def __init_mixin__(self, **kwargs: t.Dict[str, t.Any]) -> None: ...
 
 
 def mixed_init(self, **kwargs: t.Dict[str, t.Any]) -> None:

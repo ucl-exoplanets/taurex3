@@ -1,11 +1,17 @@
-import pytest
-from hypothesis import given, settings, note
-from hypothesis.strategies import floats, lists
-from ..strategies import molecule_vmr, TPs
-from taurex.chemistry import TaurexChemistry
-from taurex.chemistry import ConstantGas
-from taurex.exceptions import InvalidModelException
 import numpy as np
+import pytest
+from hypothesis import given
+from hypothesis import note
+from hypothesis import settings
+from hypothesis.strategies import floats
+from hypothesis.strategies import lists
+
+from taurex.chemistry import ConstantGas
+from taurex.chemistry import TaurexChemistry
+from taurex.exceptions import InvalidModelException
+
+from ..strategies import TPs
+from ..strategies import molecule_vmr
 
 
 @given(ratio=floats(min_value=0.0, max_value=0.9), tp=TPs())

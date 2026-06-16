@@ -1,4 +1,5 @@
 """Rayleigh scattering contribution."""
+
 import typing as t
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Module for all things planet."""
+
 import math
 import typing as t
 from warnings import warn
@@ -6,14 +7,19 @@ from warnings import warn
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import AU, MJUP, RJUP, G
+from taurex.constants import AU
+from taurex.constants import MJUP
+from taurex.constants import RJUP
+from taurex.constants import G
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
 from taurex.util import conversion_factor
 
 from .citation import Citable
-from .fittable import Fittable, derivedparam, fitparam
+from .fittable import Fittable
+from .fittable import derivedparam
+from .fittable import fitparam
 
 
 class BasePlanet(Fittable, Logger, Writeable, Citable):

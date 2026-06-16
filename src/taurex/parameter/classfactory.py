@@ -14,6 +14,7 @@ from taurex.log import Logger
 from taurex.mixin import Mixin
 from taurex.types import PathLike
 
+
 try:
     EPType = importlib.metadata.EntryPoints
 except AttributeError:
@@ -98,19 +99,17 @@ class ClassFactory(Singleton):
 
     def setup_batteries_included(self) -> None:
         """Collect all the classes that are built into TauREx 3."""
-        from taurex import (
-            chemistry,
-            contributions,
-            instruments,
-            model,
-            opacity,
-            optimizer,
-            planet,
-            pressure,
-            spectrum,
-            stellar,
-            temperature,
-        )
+        from taurex import chemistry
+        from taurex import contributions
+        from taurex import instruments
+        from taurex import model
+        from taurex import opacity
+        from taurex import optimizer
+        from taurex import planet
+        from taurex import pressure
+        from taurex import spectrum
+        from taurex import stellar
+        from taurex import temperature
         from taurex.core import priors
         from taurex.opacity import ktables
 
@@ -289,7 +288,9 @@ class ClassFactory(Singleton):
         return self._collect_classes(module, Instrument)
 
     def _collect_model(self, module: ModuleType):
-        from taurex.model import ForwardModel, OneDForwardModel, SimpleForwardModel
+        from taurex.model import ForwardModel
+        from taurex.model import OneDForwardModel
+        from taurex.model import SimpleForwardModel
 
         return self._collect_classes(module, ForwardModel)
 
@@ -383,7 +384,8 @@ class ClassFactory(Singleton):
     @property
     def class_dict(self) -> t.Dict[t.Type[t.Any], t.Set[t.Type[t.Any]]]:
         """Returns a dictionary of all classes that are available in TauREx 3."""
-        from taurex.chemistry import Chemistry, Gas
+        from taurex.chemistry import Chemistry
+        from taurex.chemistry import Gas
         from taurex.contributions import Contribution
         from taurex.core.priors import Prior
         from taurex.instruments import Instrument

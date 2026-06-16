@@ -1,12 +1,15 @@
 """Instrument loaded from file."""
+
 import math
 import typing as t
 
 import numpy as np
 
-from taurex.binning import BinDownType, FluxBinner
+from taurex.binning import BinDownType
+from taurex.binning import FluxBinner
 from taurex.model import ForwardModel
-from taurex.types import ModelOutputType, PathLike
+from taurex.types import ModelOutputType
+from taurex.types import PathLike
 from taurex.util import wnwidth_to_wlwidth
 
 from .instrument import Instrument

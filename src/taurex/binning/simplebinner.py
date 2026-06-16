@@ -1,5 +1,9 @@
+"""Simple binning module."""
+
 from taurex import OutputSize
-from taurex.util import bindown, compute_bin_edges, wnwidth_to_wlwidth
+from taurex.util import bindown
+from taurex.util import compute_bin_edges
+from taurex.util import wnwidth_to_wlwidth
 
 from .binner import Binner
 

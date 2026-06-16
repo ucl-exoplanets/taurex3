@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.binning.lightcurvebinner import LightcurveBinner
-from taurex.model.lightcurve.lightcurvedata import LCDataType, LightCurveData
+from taurex.model.lightcurve.lightcurvedata import LCDataType
+from taurex.model.lightcurve.lightcurvedata import LightCurveData
 from taurex.output import OutputGroup
 from taurex.types import PathLike
 

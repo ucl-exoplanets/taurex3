@@ -34,17 +34,15 @@ def test_load_plugin():
 
 def test_model_detection():
     """Test whether the class factory can detect models."""
-    from taurex.model import (
-        DirectImageModel,
-        EmissionModel,
-        MultiDirectImModel,
-        MultiEclipseModel,
-        MultiParameterDirectImModel,
-        MultiParameterEclipseModel,
-        MultiParameterTransitModel,
-        MultiTransitModel,
-        TransmissionModel,
-    )
+    from taurex.model import DirectImageModel
+    from taurex.model import EmissionModel
+    from taurex.model import MultiDirectImModel
+    from taurex.model import MultiEclipseModel
+    from taurex.model import MultiParameterDirectImModel
+    from taurex.model import MultiParameterEclipseModel
+    from taurex.model import MultiParameterTransitModel
+    from taurex.model import MultiTransitModel
+    from taurex.model import TransmissionModel
 
     cf = ClassFactory()
 
@@ -61,7 +59,9 @@ def test_model_detection():
 
 def test_klass_from_base():
     """Test whether the class factory can find classes from base."""
-    from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
+    from taurex.temperature import Guillot2010
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     cf = ClassFactory()
 
@@ -87,7 +87,9 @@ def test_find_from_keyword():
     from taurex.contributions import PyMieScattGridExtinctionContribution
     from taurex.model import MultiParameterTransitModel
     from taurex.optimizer import NestleOptimizer
-    from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
+    from taurex.temperature import Guillot2010
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     cf = ClassFactory()
     # with base

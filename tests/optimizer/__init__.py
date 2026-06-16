@@ -1,8 +1,11 @@
-from taurex.model import ForwardModel
-from taurex.core import fitparam, derivedparam
 import numpy as np
-from taurex.spectrum import BaseSpectrum
+
 from taurex.binning import Binner
+from taurex.core import derivedparam
+from taurex.core import fitparam
+from taurex.model import ForwardModel
+from taurex.spectrum import BaseSpectrum
+
 
 class LineModel(ForwardModel):
 
@@ -13,8 +16,7 @@ class LineModel(ForwardModel):
 
         self._x = np.linspace(1, 100, 50)
 
-
-    @fitparam(param_name='c')
+    @fitparam(param_name="c")
     def c(self):
         return self._c
 
@@ -22,7 +24,7 @@ class LineModel(ForwardModel):
     def c(self, value):
         self._c = value
 
-    @fitparam(param_name='m')
+    @fitparam(param_name="m")
     def m(self):
         return self._m
 
@@ -33,14 +35,14 @@ class LineModel(ForwardModel):
     def model(self, wngrid=None, cutoff_grid=True):
         if wngrid is None:
             wngrid = self._x
-        return wngrid, self._m*wngrid + self._c, None, None
+        return wngrid, self._m * wngrid + self._c, None, None
 
     def build(self):
         pass
-    
+
     def initialize_profiles(self):
         pass
-    
+
     @property
     def chemistry(self):
         class Dummy:
@@ -51,9 +53,10 @@ class LineModel(ForwardModel):
         test = Dummy()
         return test
 
-    @derivedparam(param_name='mplusc')
+    @derivedparam(param_name="mplusc")
     def mplusc(self):
         return self._m + self._c
+
 
 class LineObs(BaseSpectrum):
 
@@ -66,12 +69,12 @@ class LineObs(BaseSpectrum):
         return NativeBinner()
 
     def __init__(self, m, c, N):
-        super().__init__('LineObs')
+        super().__init__("LineObs")
         self._m = m
         self._c = c
         self._x = np.linspace(1, 100, N)
-        self._y = self._m*self._x + self._c
-        self._yerr = 0.1+0.1*np.random.rand(N)
+        self._y = self._m * self._x + self._c
+        self._yerr = 0.1 + 0.1 * np.random.rand(N)
         self._y += self._yerr * np.random.randn(N)
 
     @property
@@ -85,7 +88,6 @@ class LineObs(BaseSpectrum):
     @property
     def errorBar(self):
         return self._yerr
-
 
 
 class LineObsWithParams(BaseSpectrum):
@@ -99,13 +101,13 @@ class LineObsWithParams(BaseSpectrum):
         return NativeBinner()
 
     def __init__(self, m, c, N):
-        super().__init__('LineObs')
+        super().__init__("LineObs")
         self._m = m
         self._c = c
         self._lol = 40
         self._x = np.linspace(1, 100, N)
-        self._y = self._m*self._x + self._c
-        self._yerr = 0.1+0.1*np.random.rand(N)
+        self._y = self._m * self._x + self._c
+        self._yerr = 0.1 + 0.1 * np.random.rand(N)
         self._y += self._yerr * np.random.randn(N)
 
     @property
@@ -120,7 +122,7 @@ class LineObsWithParams(BaseSpectrum):
     def errorBar(self):
         return self._yerr
 
-    @fitparam(param_name='lol')
+    @fitparam(param_name="lol")
     def lol(self):
         return self._lol
 

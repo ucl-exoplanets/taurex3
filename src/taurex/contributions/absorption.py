@@ -1,15 +1,18 @@
 """Handling of molecular absorption."""
+
 import math
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.cache import GlobalCache, OpacityCache
+from taurex.cache import GlobalCache
+from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
 from taurex.model.model import ForwardModel
 
 from .contribution import Contribution
+
 
 contribute_ktau: t.Callable[
     [

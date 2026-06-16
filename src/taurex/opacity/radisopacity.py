@@ -1,4 +1,5 @@
 """Opacity module using RADIS code"""
+
 import typing as t
 from functools import lru_cache
 

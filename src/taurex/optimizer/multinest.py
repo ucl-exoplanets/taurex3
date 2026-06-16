@@ -9,18 +9,20 @@ import numpy.typing as npt
 
 from taurex import OutputSize
 from taurex.model import ForwardModel
-from taurex.mpi import barrier, get_rank
+from taurex.mpi import barrier
+from taurex.mpi import get_rank
 from taurex.output import OutputGroup
 from taurex.spectrum import BaseSpectrum
-from taurex.types import AnyValType, PathLike
-from taurex.util import (
-    quantile_corner,
-    read_error_into_dict,
-    read_table,
-    recursively_save_dict_contents_to_output,
-)
+from taurex.types import AnyValType
+from taurex.types import PathLike
+from taurex.util import quantile_corner
+from taurex.util import read_error_into_dict
+from taurex.util import read_table
+from taurex.util import recursively_save_dict_contents_to_output
 
-from .optimizer import FitParam, Optimizer
+from .optimizer import FitParam
+from .optimizer import Optimizer
+
 
 NestMarginalOutput = t.TypedDict(
     "NestMarginalOutput",

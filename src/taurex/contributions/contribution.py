@@ -11,6 +11,7 @@ from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
 
+
 if t.TYPE_CHECKING:
     from taurex.model.model import ForwardModel
 else:

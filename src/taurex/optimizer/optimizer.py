@@ -9,14 +9,21 @@ import numpy.typing as npt
 
 from taurex import OutputSize
 from taurex.cache import GlobalCache
-from taurex.core import DerivedType, FittingType
-from taurex.core.priors import LogUniform, Prior, PriorMode, Uniform
+from taurex.core import DerivedType
+from taurex.core import FittingType
+from taurex.core.priors import LogUniform
+from taurex.core.priors import Prior
+from taurex.core.priors import PriorMode
+from taurex.core.priors import Uniform
 from taurex.data.citation import Citable
-from taurex.log import Logger, disableLogging, enableLogging
+from taurex.log import Logger
+from taurex.log import disableLogging
+from taurex.log import enableLogging
 from taurex.model import ForwardModel
 from taurex.output import OutputGroup
 from taurex.spectrum import BaseSpectrum
 from taurex.types import AnyValType
+
 
 SQRTPI = np.sqrt(2 * np.pi)
 
@@ -465,7 +472,7 @@ class Optimizer(Logger, Citable):
         """
         from taurex.exceptions import InvalidModelException
 
-        #self.update_model(fit_params)
+        # self.update_model(fit_params)
         obs_bins = self._observed.wavenumberGrid
 
         try:

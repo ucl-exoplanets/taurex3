@@ -6,7 +6,9 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.binning import Binner
-from taurex.core import DerivedType, Fittable, FittingType
+from taurex.core import DerivedType
+from taurex.core import Fittable
+from taurex.core import FittingType
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable

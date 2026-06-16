@@ -1,11 +1,10 @@
 """Alias for pressure profiles."""
 
-from taurex.data.profiles.pressure import (
-    ArrayPressureProfile,
-    FilePressureProfile,
-    PressureProfile,
-    SimplePressureProfile,
-)
+from taurex.data.profiles.pressure import ArrayPressureProfile
+from taurex.data.profiles.pressure import FilePressureProfile
+from taurex.data.profiles.pressure import PressureProfile
+from taurex.data.profiles.pressure import SimplePressureProfile
+
 
 __all__ = [
     "PressureProfile",

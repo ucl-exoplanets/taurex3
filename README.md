@@ -38,7 +38,7 @@ Please see the [Documentation] for details.
 ## Contributing
 
 Contributions are very welcome.
-For local development you can use either Poetry or plain ``pip`` installs.
+For local development you can use either Poetry or plain `pip` installs.
 The supported commands for tests and linting are documented in the [Contributor Guide].
 To learn more, see the [Contributor Guide].
 

@@ -1,4 +1,5 @@
 """Handling of .pickle/.db CIA files."""
+
 import pickle  # noqa: S403
 import typing as t
 from pathlib import Path

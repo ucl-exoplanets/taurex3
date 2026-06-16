@@ -1,6 +1,5 @@
 """Optimized Math functions used in taurex"""
 
-
 import typing as t
 
 import numpy as np
@@ -9,10 +8,12 @@ import numpy.typing as npt
 from taurex.log import setup_log
 from taurex.types import AnyValType
 
+
 _log = setup_log(__name__)
 
 try:
-    from .math_numba import intepr_bilin_numba_II, interp_lin_numba
+    from .math_numba import intepr_bilin_numba_II
+    from .math_numba import interp_lin_numba
 
     numba_enabled = True
 except ImportError:

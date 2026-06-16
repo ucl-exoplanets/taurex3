@@ -10,6 +10,7 @@ from taurex.log import Loggable
 from taurex.types import ModelOutputType
 from taurex.util import compute_bin_edges
 
+
 BinDownType = t.Tuple[
     npt.NDArray[np.float64],
     npt.NDArray[np.float64],

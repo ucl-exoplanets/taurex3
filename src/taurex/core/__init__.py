@@ -1,13 +1,15 @@
 """Core classes for Taurex."""
-from taurex.data.citation import Citable, to_bibtex, unique_citations_only
-from taurex.data.fittable import (
-    DerivedType,
-    Fittable,
-    FittingType,
-    derivedparam,
-    fitparam,
-)
+
+from taurex.data.citation import Citable
+from taurex.data.citation import to_bibtex
+from taurex.data.citation import unique_citations_only
+from taurex.data.fittable import DerivedType
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import FittingType
+from taurex.data.fittable import derivedparam
+from taurex.data.fittable import fitparam
 from taurex.output.output import Output
+
 
 """Just contains a singleton class. Pretty useful"""
 

@@ -35,7 +35,8 @@ def test_lin(test_input, expected):
 @hypothesis.settings(deadline=None)  # This requires a compilation stage initially
 def test_bilin(temp, press, x11, x12, x21, x22):
     """Test bilinear interpolation"""
-    from taurex.util.math import intepr_bilin, interp_lin_only
+    from taurex.util.math import intepr_bilin
+    from taurex.util.math import interp_lin_only
 
     p_min, p_max = 0.0, 1.0
     t_min, t_max = 0.0, 1.0

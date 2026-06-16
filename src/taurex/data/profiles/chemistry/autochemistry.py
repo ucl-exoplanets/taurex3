@@ -1,4 +1,5 @@
 """Chemistry that automatically seperates out active and inactive gases."""
+
 import typing as t
 
 import numpy as np

@@ -1,4 +1,5 @@
 """Temperature profile loaded from array."""
+
 import typing as t
 
 import numpy as np

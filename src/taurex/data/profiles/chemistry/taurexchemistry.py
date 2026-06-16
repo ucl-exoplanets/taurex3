@@ -1,13 +1,16 @@
 """Main free chemistry model."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.core import FittingType, derivedparam
+from taurex.core import FittingType
+from taurex.core import derivedparam
 from taurex.exceptions import InvalidModelException
 from taurex.output import OutputGroup
-from taurex.util import has_duplicates, molecule_texlabel
+from taurex.util import has_duplicates
+from taurex.util import molecule_texlabel
 
 from .autochemistry import AutoChemistry
 from .gas.gas import Gas

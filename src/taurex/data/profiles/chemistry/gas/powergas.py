@@ -10,6 +10,7 @@ from taurex.util import molecule_texlabel
 
 from .gas import Gas
 
+
 ProfileType = t.Literal["auto", "H2", "H2O", "TiO", "VO", "H-", "Na", "K"]
 """Profile type for power law."""
 

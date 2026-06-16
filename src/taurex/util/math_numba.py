@@ -1,10 +1,12 @@
 """Math functions for Numba."""
+
 # flake8: noqa
 import math
 
 import numba
 import numpy as np
-from numba import float64, vectorize
+from numba import float64
+from numba import vectorize
 
 
 @numba.vectorize([float64(float64, float64, float64, float64)])

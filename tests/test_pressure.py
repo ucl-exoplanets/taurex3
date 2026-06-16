@@ -2,10 +2,13 @@
 
 import numpy as np
 import pytest
-from hypothesis import example, given
-from hypothesis.strategies import floats, integers
+from hypothesis import example
+from hypothesis import given
+from hypothesis.strategies import floats
+from hypothesis.strategies import integers
 
-from taurex.pressure import PressureProfile, SimplePressureProfile
+from taurex.pressure import PressureProfile
+from taurex.pressure import SimplePressureProfile
 
 
 @given(nlayers=integers())

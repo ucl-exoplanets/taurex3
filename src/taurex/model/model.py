@@ -1,14 +1,20 @@
 """Class for forward spectral modeling."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
 from taurex.binning import Binner
-from taurex.core import Citable, DerivedType, Fittable, FittingType
+from taurex.core import Citable
+from taurex.core import DerivedType
+from taurex.core import Fittable
+from taurex.core import FittingType
 from taurex.log import Logger
-from taurex.output import OutputGroup, Writeable
+from taurex.output import OutputGroup
+from taurex.output import Writeable
 from taurex.types import ModelOutputType
+
 
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution

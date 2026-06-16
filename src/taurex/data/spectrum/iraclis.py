@@ -1,4 +1,5 @@
 """Spectra from Iraclis pickle data."""
+
 import pickle  # noqa: S403
 import typing as t
 

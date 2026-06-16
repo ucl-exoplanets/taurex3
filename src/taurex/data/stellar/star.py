@@ -1,18 +1,22 @@
 """Base stellar class."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import MSOL, RSOL
+from taurex.constants import MSOL
+from taurex.constants import RSOL
 from taurex.data.fittable import Fittable
 from taurex.log import Logger
-from taurex.output import OutputGroup, Writeable
+from taurex.output import OutputGroup
+from taurex.output import Writeable
 from taurex.util.emission import black_body
 
 from ..citation import Citable
-from ..fittable import Fittable, derivedparam, fitparam
-
+from ..fittable import Fittable
+from ..fittable import derivedparam
+from ..fittable import fitparam
 
 
 class Star(Fittable, Logger, Writeable, Citable):

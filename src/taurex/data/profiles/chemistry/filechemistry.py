@@ -1,4 +1,5 @@
 """Chemistry from file module."""
+
 import typing as t
 
 import numpy as np

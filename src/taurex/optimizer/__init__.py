@@ -1,5 +1,8 @@
-from .optimizer import Optimizer
+"""Optimizer module."""
+
 from .nestle import NestleOptimizer
+from .optimizer import Optimizer
+
 
 try:
     from .multinest import MultiNestOptimizer

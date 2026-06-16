@@ -1,4 +1,5 @@
 """Opacity for hydrogen ion."""
+
 import typing as t
 import warnings
 

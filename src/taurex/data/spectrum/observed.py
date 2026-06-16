@@ -1,5 +1,8 @@
-from .array import ArraySpectrum
+"""Module for loading an observed spectrum from a text file."""
+
 import numpy as np
+
+from .array import ArraySpectrum
 
 
 class ObservedSpectrum(ArraySpectrum):
@@ -25,7 +28,6 @@ class ObservedSpectrum(ArraySpectrum):
 
         super().__init__(np.loadtxt(self._filename))
 
-
     @classmethod
-    def input_keywords(self):
-        return ['dat-file', 'observed', 'text']
+    def input_keywords(cls):
+        return ["dat-file", "observed", "text"]

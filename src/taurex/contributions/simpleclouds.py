@@ -1,4 +1,5 @@
 """Flat Cloud scattering."""
+
 import typing as t
 
 import numpy as np

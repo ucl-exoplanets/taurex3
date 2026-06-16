@@ -7,14 +7,12 @@ import pypolychord
 from pypolychord.priors import UniformPrior
 from pypolychord.settings import PolyChordSettings
 
-from taurex.util import (
-    quantile_corner,
-    read_error_into_dict,
-    read_error_line,
-    read_table,
-    recursively_save_dict_contents_to_output,
-    weighted_avg_and_std,
-)
+from taurex.util import quantile_corner
+from taurex.util import read_error_into_dict
+from taurex.util import read_error_line
+from taurex.util import read_table
+from taurex.util import recursively_save_dict_contents_to_output
+from taurex.util import weighted_avg_and_std
 
 from .optimizer import Optimizer
 

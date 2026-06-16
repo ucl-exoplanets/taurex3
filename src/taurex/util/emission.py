@@ -6,7 +6,11 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import KBOLTZ, PI, PLANCK, SPDLIGT
+from taurex.constants import KBOLTZ
+from taurex.constants import PI
+from taurex.constants import PLANCK
+from taurex.constants import SPDLIGT
+
 
 # NUMBA Functions
 try:

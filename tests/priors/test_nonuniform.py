@@ -1,6 +1,8 @@
 import unittest
 
-from taurex.util.fitting import MalformedPriorInputError, parse_priors, validate_priors
+from taurex.util.fitting import MalformedPriorInputError
+from taurex.util.fitting import parse_priors
+from taurex.util.fitting import validate_priors
 
 
 class TestParsing(unittest.TestCase):

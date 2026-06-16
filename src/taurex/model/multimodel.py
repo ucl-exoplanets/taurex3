@@ -27,6 +27,7 @@ from .emission import contribute_ktau_emission
 from .model import ForwardModel
 from .transmission import TransmissionModel
 
+
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution
     from taurex.output import OutputGroup
@@ -68,7 +69,9 @@ class MultiChemistry:
         }
 
     @property
-    def inactiveGasMixProfile(self) -> t.Dict[str, npt.NDArray[np.float64]]:  # noqa: N802
+    def inactiveGasMixProfile(
+        self,
+    ) -> t.Dict[str, npt.NDArray[np.float64]]:  # noqa: N802
         return {
             f"region{index}": profile
             for index, profile in enumerate(self._inactive_profiles)
@@ -114,7 +117,9 @@ archivePrefix = {arXiv},
 
     def __init__(
         self,
-        temperature_profiles: t.Optional[t.Sequence[t.Optional[TemperatureProfile]]] = None,
+        temperature_profiles: t.Optional[
+            t.Sequence[t.Optional[TemperatureProfile]]
+        ] = None,
         chemistry: t.Optional[t.Sequence[t.Optional[Chemistry]]] = None,
         pressure_min: t.Optional[t.Union[float, t.Sequence[float]]] = None,
         pressure_max: t.Optional[t.Union[float, t.Sequence[float]]] = None,
@@ -123,7 +128,9 @@ archivePrefix = {arXiv},
         planet: t.Optional[Planet] = None,
         star: t.Optional[Star] = None,
         observation: t.Optional[BaseSpectrum] = None,
-        contributions: t.Optional[t.Sequence[t.Optional[t.Sequence[Contribution]]]] = None,
+        contributions: t.Optional[
+            t.Sequence[t.Optional[t.Sequence[Contribution]]]
+        ] = None,
         fractions: t.Optional[t.Sequence[float]] = None,
         use_cuda: bool = False,
     ) -> None:
@@ -160,7 +167,9 @@ archivePrefix = {arXiv},
             pressure_max, region_count, 1e6
         )
         self._nlayers = self._normalize_scalar_or_sequence(nlayers, region_count, 100)
-        self._contribution_sets = self._normalize_contributions(contributions, region_count)
+        self._contribution_sets = self._normalize_contributions(
+            contributions, region_count
+        )
 
         self.activeGases: t.List[str] = []
         self._active_chems: t.List[npt.NDArray[np.float64]] = []
@@ -195,7 +204,9 @@ archivePrefix = {arXiv},
             return [default] * count
         normalized = list(value)
         if len(normalized) != count:
-            raise ValueError("Multimodel input lengths must match the number of regions")
+            raise ValueError(
+                "Multimodel input lengths must match the number of regions"
+            )
         return normalized
 
     @staticmethod
@@ -210,7 +221,9 @@ archivePrefix = {arXiv},
             return [value] * count
         normalized = list(value)
         if len(normalized) != count:
-            raise ValueError("Multimodel scalar inputs must match the number of regions")
+            raise ValueError(
+                "Multimodel scalar inputs must match the number of regions"
+            )
         return normalized
 
     @staticmethod
@@ -270,7 +283,9 @@ archivePrefix = {arXiv},
             self._pressures.append(model.pressureProfile.copy())
 
     @staticmethod
-    def change_fit_values(value: t.Tuple[t.Any, ...], prefix: str) -> t.Tuple[t.Any, ...]:
+    def change_fit_values(
+        value: t.Tuple[t.Any, ...], prefix: str
+    ) -> t.Tuple[t.Any, ...]:
         name, latex, fget, fset, mode, to_fit, bounds = value
         return f"{prefix}_{name}", f"{prefix}_{latex}", fget, fset, mode, to_fit, bounds
 
@@ -319,6 +334,7 @@ archivePrefix = {arXiv},
         fraction_bounds = (0.0, 1.0)
         fit_count = len(self._fractions) - 1 if self.autofrac else len(self._fractions)
         for index in range(fit_count):
+
             def read_fraction(self, index=index):
                 return self._fractions[index]
 
@@ -446,8 +462,8 @@ archivePrefix = {arXiv},
                         self._fitting_parameters[key] = value
                     else:
                         prefix = f"m{index + 1}"
-                        self._fitting_parameters[f"{prefix}_{key}"] = self.change_fit_values(
-                            value, prefix
+                        self._fitting_parameters[f"{prefix}_{key}"] = (
+                            self.change_fit_values(value, prefix)
                         )
 
         contribution_fits = self.determine_coupled_contributions(self.contrClasses)
@@ -458,8 +474,8 @@ archivePrefix = {arXiv},
                     self._fitting_parameters[key] = value
                 else:
                     prefix = f"m{index + 1}"
-                    self._fitting_parameters[f"{prefix}_{key}"] = self.change_fit_values(
-                        value, prefix
+                    self._fitting_parameters[f"{prefix}_{key}"] = (
+                        self.change_fit_values(value, prefix)
                     )
 
     def build(self) -> None:
@@ -515,20 +531,26 @@ archivePrefix = {arXiv},
         final_flux = self.compute_final_flux(native_fluxes)
         final_tau = None
         if native_taus:
-            final_tau = np.average(np.array(native_taus), axis=0, weights=self._fractions)
+            final_tau = np.average(
+                np.array(native_taus), axis=0, weights=self._fractions
+            )
         return native_grid, final_flux, final_tau, None
 
     def compute_final_flux(
         self, native_fluxes: t.Sequence[npt.NDArray[np.float64]]
     ) -> npt.NDArray[np.float64]:
-        return np.sum(np.array(native_fluxes) * np.array(self._fractions)[:, None], axis=0)
+        return np.sum(
+            np.array(native_fluxes) * np.array(self._fractions)[:, None], axis=0
+        )
 
     def compute_error(
         self,
         samples: t.Callable[[], t.Iterable[float]],
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
-    ) -> t.Tuple[t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]]:
+    ) -> t.Tuple[
+        t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]
+    ]:
         from taurex.util.math import OnlineVariance
 
         tp_profiles = OnlineVariance()
@@ -592,7 +614,9 @@ archivePrefix = {arXiv},
 class MultiEclipseModel(MultiTransitModel):
     """Weighted combination of multiple emission submodels."""
 
-    def __init__(self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any) -> None:
+    def __init__(
+        self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any
+    ) -> None:
         self._radius_scaling = radius_scaling
         super().__init__(*args, **kwargs)
 
@@ -647,7 +671,9 @@ class EmissionModelRadiusScale(EmissionModel):
             for contribution in self.contribution_list
             if not isinstance(contribution, mol_type)
         ]
-        contribution_types = [type(contribution) for contribution in self.contribution_list]
+        contribution_types = [
+            type(contribution) for contribution in self.contribution_list
+        ]
         molecular = None
         if mol_type in contribution_types:
             molecular = self.contribution_list[contribution_types.index(mol_type)]
@@ -732,15 +758,29 @@ class EmissionModelRadiusScale(EmissionModel):
 
             dtau_calc = np.exp(-dtau * _mu)
             layer_tau_calc = np.exp(-layer_tau * _mu)
-            if molecular is not None and weights is not None and k_dtau is not None and k_layer is not None:
+            if (
+                molecular is not None
+                and weights is not None
+                and k_dtau is not None
+                and k_layer is not None
+            ):
                 dtau_calc *= np.sum(np.exp(-k_dtau * _mu[:, None]) * weights, axis=-1)
-                layer_tau_calc *= np.sum(np.exp(-k_layer * _mu[:, None]) * weights, axis=-1)
+                layer_tau_calc *= np.sum(
+                    np.exp(-k_layer * _mu[:, None]) * weights, axis=-1
+                )
 
             intensity += planck * (layer_tau_calc - dtau_calc)
 
             dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
-            if molecular is not None and weights is not None and k_dtau is not None and k_layer is not None:
+            layer_tau_calc = (
+                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            )
+            if (
+                molecular is not None
+                and weights is not None
+                and k_dtau is not None
+                and k_layer is not None
+            ):
                 if k_dtau.min() < self._clamp:
                     dtau_calc *= np.sum(np.exp(-k_dtau) * weights, axis=-1)
                 if k_layer.min() < self._clamp:
@@ -804,7 +844,9 @@ class EmissionModelRadiusScale(EmissionModel):
 
             dtau += layer_tau
             dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            layer_tau_calc = (
+                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            )
             _tau = layer_tau_calc - dtau_calc
             tau[layer] += _tau if isinstance(_tau, float) else _tau[0]
 
@@ -826,7 +868,9 @@ class EmissionModelRadiusScale(EmissionModel):
 class MultiDirectImModel(MultiTransitModel):
     """Weighted combination of multiple direct-imaging submodels."""
 
-    def __init__(self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any) -> None:
+    def __init__(
+        self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any
+    ) -> None:
         self._radius_scaling = radius_scaling
         super().__init__(*args, **kwargs)
 
@@ -851,7 +895,9 @@ class MultiDirectImModel(MultiTransitModel):
 class DirectImageRadiusScaleModel(EmissionModelRadiusScale):
     """Direct-image variant of the radius-scaled emission model."""
 
-    def compute_final_flux(self, f_total: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def compute_final_flux(
+        self, f_total: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
         return compute_direct_image_final_flux(
             f_total, self._planet.fullRadius, self._star.distance * 3.08567758e16
         )
@@ -922,9 +968,7 @@ archivePrefix = {arXiv},
             return super().defaultBinner()
         return self._multimodel.defaultBinner()
 
-    def read_parameters(
-        self, parfile: t.Optional[str]
-    ) -> t.Tuple[
+    def read_parameters(self, parfile: t.Optional[str]) -> t.Tuple[
         t.Optional[TemperatureProfile],
         t.Optional[Chemistry],
         PressureProfile,
@@ -1041,7 +1085,9 @@ archivePrefix = {arXiv},
         samples: t.Callable[[], t.Iterable[float]],
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
-    ) -> t.Tuple[t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]]:
+    ) -> t.Tuple[
+        t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]
+    ]:
         return self._multimodel.compute_error(samples, wngrid=wngrid, binner=binner)
 
     def write(self, output: OutputGroup) -> OutputGroup:

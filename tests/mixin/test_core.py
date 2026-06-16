@@ -1,4 +1,5 @@
 """Test core mixin functions."""
+
 from taurex.mixin import core
 
 

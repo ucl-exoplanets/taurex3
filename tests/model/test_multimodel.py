@@ -30,7 +30,9 @@ def test_parameter_multitransit_setup_keywords():
     from taurex.model import MultiParameterTransitModel
     from taurex.pressure import SimplePressureProfile
 
-    pressure = SimplePressureProfile(nlayers=50, atm_min_pressure=1e-5, atm_max_pressure=1e5)
+    pressure = SimplePressureProfile(
+        nlayers=50, atm_min_pressure=1e-5, atm_max_pressure=1e5
+    )
     model = MultiParameterTransitModel(pressure_profile=pressure, parfiles=[])
 
     keywords = model.setup_keywords()

@@ -1,13 +1,17 @@
 import math
 
 import pytest
-from hypothesis import given, note
+from hypothesis import given
+from hypothesis import note
 from hypothesis import strategies as st
 
-from taurex.core.priors import LogUniform, Uniform
+from taurex.core.priors import LogUniform
+from taurex.core.priors import Uniform
 from taurex.optimizer import Optimizer
 
-from . import LineModel, LineObs, LineObsWithParams
+from . import LineModel
+from . import LineObs
+from . import LineObsWithParams
 
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))
@@ -94,7 +98,8 @@ def test_optimizer_fittingparams_with_obs(m, c):
 
 
 def test_optimizer_setprior():
-    from taurex.core.priors import Gaussian, Uniform
+    from taurex.core.priors import Gaussian
+    from taurex.core.priors import Uniform
 
     lm = LineModel()
     lm.m = 1.0

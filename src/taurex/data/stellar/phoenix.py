@@ -1,11 +1,13 @@
 """Module for loading in PHOENIX spectra."""
+
 import math
 import os
 import typing as t
+import warnings
 
 import numpy as np
 import numpy.typing as npt
-import warnings
+
 from taurex.cache import GlobalCache
 from taurex.constants import MSOL
 from taurex.output import OutputGroup
@@ -80,7 +82,6 @@ class PhoenixStar(BlackbodyStar):
             DeprecationWarning,
             stacklevel=2,
         )
-
 
         self.retro_version_file = retro_version_file
         # CAN BE OBTAINED FROM:

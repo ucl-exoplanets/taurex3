@@ -1,11 +1,12 @@
 import pytest
+
 from taurex.parameter.classfactory import ClassFactory
+
 
 cf = ClassFactory()
 
 
-@pytest.mark.parametrize(
-    "test_input", list(cf.priorKlasses))
+@pytest.mark.parametrize("test_input", list(cf.priorKlasses))
 def test_priors(test_input):
     from taurex.core.priors import PriorMode
 

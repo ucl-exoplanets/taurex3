@@ -1,4 +1,4 @@
-"""Handles loading of classes from plugins and built-in classes"""
+"""Handles loading of classes from plugins and built-in classes."""
 
 # flake8: noqa:N802
 
@@ -31,20 +31,20 @@ def entry_points(*, group: str) -> EPType:  # type: ignore[name-defined]
 
 
 class InputKeywordMethod(t.Protocol):
-    """Protocol for classes that have input_keywords()"""
+    """Protocol for classes that have input_keywords()."""
 
     @classmethod
     def input_keywords(cls) -> t.Sequence[str]:
-        """Returns a list of input keywords"""
+        """Returns a list of input keywords."""
         ...
 
 
 class DiscoverMethod(t.Protocol):
-    """Protocol for classes that have discover() methods"""
+    """Protocol for classes that have discover() methods."""
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Any]]:
-        """Returns a list of input keywords"""
+        """Returns a list of input keywords."""
         ...
 
 
@@ -55,9 +55,10 @@ MixinT = t.TypeVar("MixinT", bound=Mixin)
 
 
 class ClassFactory(Singleton):
-    """A singleton factory the discovers new classes from plugins."""
+    """A singleton factory that discovers new classes from plugins."""
 
     def init(self) -> None:
+        """Initialize the class factory."""
         self.log = Logger("ClassFactory")
 
         self.extension_paths = []
@@ -68,6 +69,7 @@ class ClassFactory(Singleton):
         paths: t.Optional[t.List[PathLike]] = None,
         reload: t.Optional[bool] = True,
     ) -> None:
+        """Set extension paths."""
         self.extension_paths = [pathlib.Path(p) for p in paths] if paths else []
         if reload:
             self.reload_plugins()
@@ -163,7 +165,6 @@ class ClassFactory(Singleton):
 
     def discover_plugins(self) -> t.Tuple[t.Dict[str, ModuleType], t.Dict[str, str]]:
         """Discover all the plugins that are available from entry points."""
-
         plugins = {}
         failed_plugins = {}
 
@@ -418,7 +419,6 @@ class ClassFactory(Singleton):
 
     def list_from_base(self, klass_type: t.Type[t.Any]) -> t.List[t.Type[t.Any]]:
         """Returns a list of classes that are a subclass of klass_type."""
-
         return self.class_dict[klass_type]
 
     @property

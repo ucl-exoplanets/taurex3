@@ -1,10 +1,8 @@
+"""Test direct image model."""
+
 import numpy as np
-import pytest
 from hypothesis import given
-from hypothesis import note
-from hypothesis import settings
 from hypothesis.strategies import floats
-from hypothesis.strategies import lists
 
 from taurex.constants import get_constant
 from taurex.util import conversion_factor
@@ -13,14 +11,16 @@ from taurex.util import conversion_factor
 @given(
     T_planet=floats(500, 1500),
     planet_radius=floats(
-        0.7 * get_constant("R_earth", unit="m"), 1.5 * get_constant("R_jup", unit="m")
+        0.7 * get_constant("R_earth", unit="m"),
+        1.5 * get_constant("R_jup", unit="m"),
     ),
     system_distance=floats(
-        1 * conversion_factor("pc", "m"), 100 * conversion_factor("pc", "m")
+        1 * conversion_factor("pc", "m"),
+        100 * conversion_factor("pc", "m"),
     ),
 )
 def test_direct_image_final_flux(T_planet, planet_radius, system_distance):
-
+    """Test direct image final flux."""
     from taurex.model.directimage import compute_direct_image_final_flux
     from taurex.util.emission import black_body
 

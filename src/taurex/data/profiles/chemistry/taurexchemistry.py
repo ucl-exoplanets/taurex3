@@ -25,8 +25,8 @@ class InvalidChemistryException(InvalidModelException):
 class TaurexChemistry(AutoChemistry):
     """The standard chemical model used in Taurex.
 
-    This allows for the combinationof different mixing profiles for each molecule.
-    Lets take an example
+    This allows for the combinationof different mixing profiles for each
+    molecule. Lets take an example
     profile, we want an atmosphere with a constant mixing of ``H2O`` but two
     layer mixing for ``CH4``.
     First we initialize our chemical model:
@@ -34,8 +34,8 @@ class TaurexChemistry(AutoChemistry):
         >>> chemistry = TaurexChemistry()
 
     Then we can add our molecules using the :func:`addGas` method. Lets start
-    with ``H2O``, since its a constant profile for all layers of the atmosphere
-    we thus add
+    with ``H2O``, since its a constant profile for all layers of the
+    atmosphere we thus add
     the :class:`~taurex.data.profiles.chemistry.gas.constantgas.ConstantGas`
     object:
 
@@ -45,8 +45,11 @@ class TaurexChemistry(AutoChemistry):
     the chemical model by using the correct profile (in this case
     :class:`~taurex.data.profiles.chemistry.gas.twolayergas.TwoLayerGas`):
 
-        >>> chemistry.addGas(TwoLayerGas('CH4',mix_ratio_surface=1e-4,
-                                         mix_ratio_top=1e-8))
+        >>> chemistry.addGas(TwoLayerGas(
+            'CH4',
+            mix_ratio_surface=1e-4,
+            mix_ratio_top=1e-8,
+        ))
 
     Chaining is also supported:
 
@@ -71,7 +74,6 @@ class TaurexChemistry(AutoChemistry):
 
         Parameters
         ----------
-
         fill_gases : str or :obj:`list`
             Either a single gas or list of gases to fill the atmosphere with
             default: ``['H2','He']``
@@ -79,7 +81,8 @@ class TaurexChemistry(AutoChemistry):
         ratio : float or :obj:`list`
             If a bunch of molecules are used to fill an atmosphere, whats the
             ratio between them?
-            The first fill gas is considered the main one with others defined as
+            The first fill gas is considered the main one with others defined
+            as
             ``molecule / main_molecule``
             default: ``0.17567``
 
@@ -128,29 +131,6 @@ class TaurexChemistry(AutoChemistry):
         self.determine_active_inactive()
         self.setup_derived_params(derived_ratios)
 
-    # def determine_mix_mask(self):
-
-    #     try:
-    #         self._active, self._active_mask = zip(*[(m, i) for i, m in
-    #                                                     enumerate(self.gases)
-    #                                                     if m in
-    #                                                     self.availableActive])
-    #     except ValueError:
-    #         self.debug('No active gases detected')
-    #         self._active, self._active_mask = [], None
-
-    #     try:
-    #         self._inactive, self._inactive_mask = zip(*[(m, i) for i, m in
-    #                                                         enumerate(self.gases)
-    #                                                         if m not in
-    #                                                         self.availableActive])
-    #     except ValueError:
-    #         self.debug('No inactive gases detected')
-    #         self._inactive, self._inactive_mask = [], None
-
-    #     self._active_mask = np.array(self._active_mask)
-    #     self._inactive_mask = np.array(self._inactive_mask)
-
     def setup_fill_params(self) -> None:
         """Generate fill gas parameters."""
         if not hasattr(self._fill_gases, "__len__") or len(self._fill_gases) < 2:
@@ -158,13 +138,18 @@ class TaurexChemistry(AutoChemistry):
 
         main_gas = self._fill_gases[0]
 
-        for idx, value in enumerate(zip(self._fill_gases[1:], self._fill_ratio)):
+        for idx, value in enumerate(
+            zip(self._fill_gases[1:], self._fill_ratio, strict=True)
+        ):
             gas, ratio = value
             mol_name = f"{gas}_{main_gas}"
             param_name = mol_name
             param_tex = "{}/{}".format(
                 molecule_texlabel(gas), molecule_texlabel(main_gas)
             )
+
+            bounds = [1.0e-12, 0.1]
+            default_fit = False
 
             def read_mol(self, idx=idx):
                 return self._fill_ratio[idx]
@@ -177,15 +162,19 @@ class TaurexChemistry(AutoChemistry):
 
             fget.__doc__ = f"{gas}/{main_gas} ratio (volume)"
 
-            bounds = [1.0e-12, 0.1]
-
-            default_fit = False
             self.add_fittable_param(
                 param_name, param_tex, fget, fset, "log", default_fit, bounds
             )
 
     def setup_derived_params(self, ratio_list: t.List[str]) -> None:
-        """Generate derived parameters."""
+        """Generate derived parameters.
+
+        Parameters
+        ----------
+        ratio_list : t.List[str]
+            List of element ratio strings (e.g. "C/O").
+
+        """
         for elem_ratio in ratio_list:
             elem1, elem2 = elem_ratio.split("/")
             mol_name = f"{elem1}_{elem2}_ratio"
@@ -204,30 +193,11 @@ class TaurexChemistry(AutoChemistry):
             compute = True
             self.add_derived_param(param_name, param_tex, fget, compute)
 
-    # def compute_mu_profile(self, nlayers):
-    #     """
-    #     Computes molecular weight of atmosphere
-    #     for each layer
-
-    #     Parameters
-    #     ----------
-    #     nlayers: int
-    #         Number of layers
-    #     """
-    #     from taurex.util import get_molecular_weight
-    #     self.mu_profile = np.zeros(shape=(nlayers,))
-    #     if self.mixProfile is not None:
-    #         mix_profile = self.mixProfile
-    #         for idx, gasname in enumerate(self.gases):
-    #             self.mu_profile += mix_profile[idx] * \
-    #                 get_molecular_weight(gasname)
-
     def isActive(self, gas: str) -> bool:  # noqa: N802
         """Determines if the gas is absorbing.
 
         Parameters
         ----------
-
         gas: str
             Name of molecule
 
@@ -252,7 +222,6 @@ class TaurexChemistry(AutoChemistry):
             on next initialization call.
 
         """
-
         if gas.molecule in [x.molecule for x in self._gases]:
             self.error("Gas already exists %s", gas.molecule)
             raise ValueError("Gas already exists")
@@ -260,7 +229,9 @@ class TaurexChemistry(AutoChemistry):
         self.debug("Gas %s fill gas: %s", gas.molecule, self._fill_gases)
         if gas.molecule in self._fill_gases:
             self.error(
-                "Gas %s is already a fill gas: %s", gas.molecule, self._fill_gases
+                "Gas %s is already a fill gas: %s",
+                gas.molecule,
+                self._fill_gases,
             )
             raise ValueError("Gas already exists")
 
@@ -280,23 +251,14 @@ class TaurexChemistry(AutoChemistry):
         """Mixing profile of all gases."""
         return self._mix_profile
 
-    # @property
-    # def activeGases(self):
-    #     return self._active
-
-    # @property
-    # def inactiveGases(self):
-    #     return self._inactive
-
     def compute_elements_mix(self) -> t.Dict[str, npt.NDArray[np.float64]]:
         """Determines the elemental mix of the atmosphere."""
         from taurex.util import split_molecule_elements
 
         element_dict = {}
 
-        for g, m in zip(self.gases, self.mixProfile):
-            avg_mix = m
-            s = [], []
+        for g, m in zip(self.gases, self.mixProfile, strict=False):
+            s = {}, {}
             if g != "e-":
                 s = split_molecule_elements(g)
             else:
@@ -305,7 +267,7 @@ class TaurexChemistry(AutoChemistry):
 
             for elements, count in s.items():
                 val = element_dict.get(elements, 0.0)
-                element_dict[elements] = val + count * avg_mix
+                element_dict[elements] = val + count * m
 
         return element_dict
 
@@ -361,7 +323,6 @@ class TaurexChemistry(AutoChemistry):
         float:
             Element ratio
         """
-
         element_dict = self.compute_elements_mix()
         elem1, elem2 = elem_ratio.split("/")
 
@@ -375,12 +336,12 @@ class TaurexChemistry(AutoChemistry):
         return element_dict[elem1].sum() / element_dict[elem2].sum()
 
     def fitting_parameters(self) -> t.Dict[str, FittingType]:
-        """Overrides the fitting parameters to return
+        """Overrides the fitting parameters to return.
+
         one with all the gas profile parameters as well
 
         Returns
         -------
-
         fit_param:
             Dictionary of fitting parameters
 
@@ -403,7 +364,7 @@ class TaurexChemistry(AutoChemistry):
         """Initialize the chemistry.
 
         Parameters
-        -----------
+        ----------
         nlayers : int
             number of layers
         temperature_profile : np.ndarray
@@ -420,7 +381,10 @@ class TaurexChemistry(AutoChemistry):
 
         for gas in self._gases:
             gas.initialize_profile(
-                nlayers, temperature_profile, pressure_profile, altitude_profile
+                nlayers,
+                temperature_profile,
+                pressure_profile,
+                altitude_profile,
             )
             mix_profile.append(gas.mixProfile)
 
@@ -453,7 +417,19 @@ class TaurexChemistry(AutoChemistry):
         super().compute_mu_profile(nlayers)
 
     def fill_atmosphere(self, mixratio_remainder: float) -> t.List[float]:
-        """Fills the atmosphere with the fill gases."""
+        """Fills the atmosphere with the fill gases.
+
+        Parameters
+        ----------
+        mixratio_remainder : float
+            The remaining mixing ratio to fill.
+
+        Returns
+        -------
+        t.List[float]
+            Mixing ratios of the fill gases.
+
+        """
         fill = []
 
         if len(self._fill_gases) == 1:
@@ -462,37 +438,24 @@ class TaurexChemistry(AutoChemistry):
             main_molecule = mixratio_remainder * (1 / (1 + sum(self._fill_ratio)))
 
             fill.append(main_molecule)
-            for _, ratio in zip(self._fill_gases[1:], self._fill_ratio):
+            for _, ratio in zip(self._fill_gases[1:], self._fill_ratio, strict=True):
                 second_molecule = ratio * main_molecule
                 fill.append(second_molecule)
         return fill
 
-    # @property
-    # def activeGasMixProfile(self):
-    #     """
-    #     Active gas layer by layer mix profile
-
-    #     Returns
-    #     -------
-    #     active_mix_profile : :obj:`array`
-
-    #     """
-    #     return self.mixProfile[self._active_mask]
-
-    # @property
-    # def inactiveGasMixProfile(self):
-    #     """
-    #     Inactive gas layer by layer mix profile
-
-    #     Returns
-    #     -------
-    #     inactive_mix_profile : :obj:`array`
-
-    #     """
-    #     return self.mixProfile[self._inactive_mask]
-
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write chemistry to output group."""
+        """Write chemistry to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         gas_entry = super().write(output)
         if isinstance(self._fill_gases, float):
             gas_entry.write_scalar("ratio", self._fill_ratio)

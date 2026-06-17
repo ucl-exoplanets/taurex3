@@ -17,10 +17,10 @@ class PriorMode(enum.Enum):
 
 
 class Prior(Logger):
-    """Defines a prior function"""
+    """Defines a prior function."""
 
     def __init__(self) -> None:
-        """Initialise prior"""
+        """Initialise prior."""
         super().__init__(self.__class__.__name__)
         self._prior_mode = PriorMode.LINEAR
 

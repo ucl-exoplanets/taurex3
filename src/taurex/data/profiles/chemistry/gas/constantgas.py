@@ -27,7 +27,7 @@ class ConstantGas(Gas):
         """Initialize constant gas profile.
 
         Parameters
-        -----------
+        ----------
         molecule_name : str
             Name of molecule
 
@@ -42,9 +42,7 @@ class ConstantGas(Gas):
 
     @property
     def mixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
-
-        Mixing profile
+        """Mixing profile.
 
         Returns
         -------
@@ -52,7 +50,6 @@ class ConstantGas(Gas):
             Mix ratio for molecule at each layer
 
         """
-
         return self._mix_array
 
     def initialize_profile(
@@ -65,7 +62,7 @@ class ConstantGas(Gas):
         """Initialize the mixing profile.
 
         Parameters
-        -----------
+        ----------
         nlayers: int
             Number of layers in atmosphere
         temperature_profile: :obj:`array`
@@ -87,10 +84,12 @@ class ConstantGas(Gas):
         :func:`taurex.fitting.fittable.Fittable.add_fittable_param`
 
         """
-
         mol_name = self.molecule
         param_name = self.molecule
         param_tex = molecule_texlabel(mol_name)
+
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
 
         def read_mol(self):
             return self._mix_ratio
@@ -103,15 +102,23 @@ class ConstantGas(Gas):
         fget = read_mol
         fset = write_mol
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
             param_name, param_tex, fget, fset, "log", default_fit, bounds
         )
 
     def write(self, output: OutputGroup):
-        """Write constant gas profile to output."""
+        """Write constant gas profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         gas_entry = super().write(output)
         gas_entry.write_scalar("mix_ratio", self._mix_ratio)
 
@@ -119,4 +126,5 @@ class ConstantGas(Gas):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str]:
+        """Return input keywords for this gas."""
         return ("constant",)

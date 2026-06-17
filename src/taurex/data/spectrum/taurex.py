@@ -1,3 +1,5 @@
+"""Module for loading spectrums from Taurex HDF5 files."""
+
 import typing as t
 
 import numpy as np

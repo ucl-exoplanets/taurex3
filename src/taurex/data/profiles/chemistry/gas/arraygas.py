@@ -22,11 +22,10 @@ class ArrayGas(Gas):
         molecule_name: t.Optional[str] = "H2O",
         mix_ratio_array: t.Optional[t.List[float]] = None,
     ) -> None:
-        super().__init__(self.__class__.__name__, molecule_name)
         """Initialize gas profile from an array.
 
         Parameters
-        -----------
+        ----------
         molecule_name : str
             Name of molecule
 
@@ -35,6 +34,7 @@ class ArrayGas(Gas):
 
 
         """
+        super().__init__(self.__class__.__name__, molecule_name)
         mix_ratio_array = mix_ratio_array or [1e-2, 1e-6]
         self._mix_ratio_array = np.array(mix_ratio_array)
 
@@ -48,7 +48,6 @@ class ArrayGas(Gas):
             Mix ratio for molecule at each layer
 
         """
-
         return self._mix_array
 
     def initialize_profile(
@@ -61,7 +60,7 @@ class ArrayGas(Gas):
         """Initialize the gas profile.
 
         Parameters
-        -----------
+        ----------
         nlayers : int
             Number of layers in the atmosphere
         temperature_profile : :obj:`array`
@@ -85,10 +84,16 @@ class ArrayGas(Gas):
     def write(self, output: OutputGroup) -> OutputGroup:
         """Write parameters to output.
 
-
         Parameters
         ----------
         output: :class:`~taurex.output.output.Output`
+            output group to write to
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            Modified output group
+
         """
         gas_entry = super().write(output)
         gas_entry.write_array("mix_ratio_array", self._mix_ratio_array)

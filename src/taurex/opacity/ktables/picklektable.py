@@ -26,6 +26,7 @@ class PickleKTable(KTable, InterpolatingOpacity):
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Tuple[pathlib.Path, InterpModeType]]]:
+        """Discover opacities from pickle files."""
         import pathlib
 
         from taurex.cache import GlobalCache

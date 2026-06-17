@@ -8,19 +8,18 @@ import numpy.typing as npt
 from taurex.constants import MSOL
 from taurex.constants import RSOL
 from taurex.data.fittable import Fittable
+from taurex.data.fittable import fitparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output import Writeable
 from taurex.util.emission import black_body
 
 from ..citation import Citable
-from ..fittable import Fittable
-from ..fittable import derivedparam
-from ..fittable import fitparam
 
 
 class Star(Fittable, Logger, Writeable, Citable):
     """A base class that holds information on the star in the model.
+
     Its implementation is a star that has a blackbody spectrum.
 
     """
@@ -38,7 +37,6 @@ class Star(Fittable, Logger, Writeable, Citable):
 
         Parameters
         ----------
-
         temperature: float, optional
             Stellar temperature in Kelvin
 
@@ -95,17 +93,17 @@ class Star(Fittable, Logger, Writeable, Citable):
         default_fit=False,
         default_bounds=[1, 22],
     )
-    def distanceSystem(self) -> float:
+    def distanceSystem(self) -> float:  # noqa: N802
         """Distance from Earth to the System (in pc)."""
         return self.distance
 
     @distanceSystem.setter
-    def distanceSystem(self, value: float) -> None:
+    def distanceSystem(self, value: float) -> None:  # noqa: N802
         """Set distance from Earth to System (in pc)."""
         self.distance = value
 
     def initialize(self, wngrid: npt.NDArray[np.float64]) -> None:
-        """Initializes the blackbody spectrum on the given wavenumber grid
+        """Initializes the blackbody spectrum on the given wavenumber grid.
 
         Parameters
         ----------
@@ -121,7 +119,18 @@ class Star(Fittable, Logger, Writeable, Citable):
         return self.sed
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write to output group."""
+        """Write to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         star = output.create_group("Star")
         star.write_string("star_type", self.__class__.__name__)
         star.write_scalar("temperature", self.temperature)
@@ -142,8 +151,9 @@ class Star(Fittable, Logger, Writeable, Citable):
 
 
 class BlackbodyStar(Star):
-    """Alias for the base star type"""
+    """Alias for the base star type."""
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for Blackbody star."""
         return ("blackbody",)

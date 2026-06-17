@@ -11,7 +11,7 @@ from .spectrum import BaseSpectrum
 
 
 class ArraySpectrum(BaseSpectrum):
-    """Loads an observed spectrum from an array
+    """Loads an observed spectrum from an array.
 
     Loads spectrum and computes bin
     edges and bin widths. Spectrum shape(nbins, 3-4) with 3-4 columns with
@@ -29,9 +29,8 @@ class ArraySpectrum(BaseSpectrum):
     def __init__(self, spectrum: t.Optional[npt.NDArray[np.float64]] = None):
         """Initialize.
 
-
         Parameters
-        -----------
+        ----------
         spectrum:
             Array of shape (nbins, 3-4) with 3-4 columns, with ordering:
             1. wavelength (um)
@@ -53,13 +52,13 @@ class ArraySpectrum(BaseSpectrum):
         self._wnwidths = wnwidth_to_wlwidth(self.wavelengthGrid, self._bin_widths)
 
     def _sort_spectrum(self) -> None:
-        """Sorts the spectrum by wavelength"""
+        """Sorts the spectrum by wavelength."""
         self._obs_spectrum = self._obs_spectrum[
             self._obs_spectrum[:, 0].argsort(axis=0)[::-1]
         ]
 
     def _process_spectrum(self) -> None:
-        """Seperate out the observed data, error, grid and binwidths
+        """Seperate out the observed data, error, grid and binwidths.
 
         If bin widths are not present then they are
         calculated here
@@ -96,7 +95,7 @@ class ArraySpectrum(BaseSpectrum):
 
     @property
     def wavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Wavenumber grid in cm-1"""
+        """Wavenumber grid in cm-1."""
         return 10000 / self.wavelengthGrid
 
     @property
@@ -106,7 +105,7 @@ class ArraySpectrum(BaseSpectrum):
 
     @property
     def binWidths(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """bin widths."""
+        """Bin widths."""
         return self._wnwidths
 
     @property

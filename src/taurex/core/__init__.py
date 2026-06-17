@@ -15,14 +15,16 @@ from taurex.output.output import Output
 
 
 class Singleton:
-    """
-    A singleton for your usage. When inheriting do not implement __init__ instead
+    """A singleton for your usage.
+
+    When inheriting do not implement __init__ instead
     override :func:`init`
 
 
     """
 
     def __new__(cls, *args, **kwds):
+        """Create a singleton class."""
         it = cls.__dict__.get("__it__")
         if it is not None:
             return it
@@ -31,7 +33,7 @@ class Singleton:
         return it
 
     def init(self, *args, **kwds):
-        """Override to act as an init"""
+        """Override to act as an init."""
         pass
 
 

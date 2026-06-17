@@ -15,6 +15,14 @@ except ImportError:
     pass
 
 try:
-    from .dypolychord import dyPolyChordOptimizer
+    from .dypolychord import DyPolyChordOptimizer
 except ImportError:
     pass
+
+__all__ = [
+    "NestleOptimizer",
+    "Optimizer",
+    "MultiNestOptimizer",
+    "PolyChordOptimizer",
+    "DyPolyChordOptimizer",
+]

@@ -1,3 +1,5 @@
+"""Module for creating objects from configuration dictionaries."""
+
 import typing as t
 from functools import partial
 
@@ -250,6 +252,7 @@ def create_generic(
 
 
 def create_prior(prior: str) -> Prior:
+    """Create prior from input string."""
     from taurex.util.fitting import parse_priors
 
     prior_name, args = parse_priors(prior)

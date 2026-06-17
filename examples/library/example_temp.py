@@ -14,7 +14,7 @@ class ExampleTemperature(TemperatureProfile):
         T(layer) = Ae^{damping*log(P(layer))}
 
     This is completely arbitrary and has no physical
-    meaning but serves as an example of how one could implement it
+    meaning but serves as an example of how one could implement it.
 
     We will also create a fitting parameter "A_temp"
     with a log space default to fit the A_parameter
@@ -31,7 +31,6 @@ class ExampleTemperature(TemperatureProfile):
 
     Parameters
     ----------
-
     A_param: float
         Our 'A' parameter. Will become a keyword
         in our input file
@@ -44,13 +43,29 @@ class ExampleTemperature(TemperatureProfile):
     """
 
     def __init__(self, A_param=200.0, damping=0.3):
+        """Initialize ExampleTemperature."""
         super().__init__(self.__class__.__name__)
-
         self._A_param = A_param
         self._damping = damping
 
+        # Demonstrating programmatic parameter adding
+        param_name = "A_temp"
+        param_latex = "$A_{T}$"
+        bounds = [1e-20, 200]
+
+        def read_A(self):
+            return self._A_param
+
+        def write_A(self, value):
+            self._A_param = value
+
+        self.add_fittable_param(
+            param_name, param_latex, read_A, write_A, "log", False, bounds
+        )
+
     def initialize_profile(self, planet=None, nlayers=100, pressure_profile=None):
-        """
+        """Initialize profile.
+
         Here we create our initialize profile. This is
         called before each run of the forward model.
         """
@@ -64,6 +79,7 @@ class ExampleTemperature(TemperatureProfile):
 
     @property
     def profile(self):
+        """Temperature profile."""
         # Here we must return the final temperature profile
         return self._temperature_array
 
@@ -78,6 +94,7 @@ class ExampleTemperature(TemperatureProfile):
         default_mode="log",
     )  # By default, fit in log (unless changed by user)
     def parameterA(self):
+        """Parameter A for temperature profile."""
         return self._A_param
 
     # We must also define a setter
@@ -88,6 +105,7 @@ class ExampleTemperature(TemperatureProfile):
     # Now a less verbose version for the damping
     @fitparam(param_name="damping_factor", param_latex="$D$", default_mode="linear")
     def dampingFactor(self):
+        """Damping factor for temperature profile."""
         return self._damping
 
     @dampingFactor.setter

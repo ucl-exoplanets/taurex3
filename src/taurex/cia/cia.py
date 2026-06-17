@@ -9,9 +9,7 @@ from taurex.log import Logger
 
 
 class CIA(Logger):
-    """
-
-    *Abstract class*
+    """*Abstract class*.
 
     This is the base class for collisionally induced absorption opacities.
     To function in Taurex3, it requires concrete implementations of:
@@ -32,14 +30,23 @@ class CIA(Logger):
     """
 
     def __init__(self, name: str, pair_name: str) -> None:
+        """Initialize CIA.
+
+        Parameters
+        ----------
+        name : str
+            Name to use for logging
+        pair_name : str
+            pair of molecules this class represents. e.g. 'H2-H2' or 'H2-He'
+
+        """
         super().__init__(name)
 
         self._pair_name = pair_name
 
     @property
     def pairName(self) -> str:  # noqa: N802
-        """
-        The assigned pair of molecules of this CIA
+        """The assigned pair of molecules of this CIA.
 
         Returns
         -------
@@ -52,8 +59,7 @@ class CIA(Logger):
 
     @property
     def pairOne(self) -> str:  # noqa: N802
-        """
-        The name of the first molecule in the pair
+        """The name of the first molecule in the pair.
 
         Returns
         -------
@@ -61,13 +67,11 @@ class CIA(Logger):
             First molecule in the pair
 
         """
-
         return self._pair_name.split("-")[0]
 
     @property
     def pairTwo(self) -> str:  # noqa: N802
-        """
-        The name of the second molecule in the pair
+        """The name of the second molecule in the pair.
 
         Returns
         -------
@@ -75,11 +79,10 @@ class CIA(Logger):
             Second molecule in the pair
 
         """
-
         return self._pair_name.split("-")[-1]
 
     def compute_cia(self, temperature: float) -> npt.NDArray[np.float64]:
-        """Computes the collisionaly induced cross-section for a given temeprature.
+        """Computes the collisionally induced cross-section for a given temperature.
 
         Unimplemented, this must be implemented in any derived class to be
         considered compatible in Taurex3
@@ -88,7 +91,8 @@ class CIA(Logger):
             1. It must accept temperature in Kelvin (K)
             2. If the temperature falls outside of :func:`temperatureGrid`
                 it must be set to zero
-            3. The returned array must be of equal size to :func:`wavenumberGrid`
+            3. The returned array must be of equal size to
+               :func:`wavenumberGrid`
 
 
         Parameters
@@ -143,16 +147,15 @@ class CIA(Logger):
             Only if derived class does not implement this
 
         """
-
         raise NotImplementedError
 
     def cia(
         self, temperature: float, wngrid: t.Optional[npt.NDArray[np.float64]] = None
     ):
-        """For a given temperature, computes the appropriate cross section.
+        """Compute cross-section for a given temperature.
+
         If wavenumber grid ( :obj:`wngrid` ) is provided then the
-        cross-section is interpolated
-        to it.
+        cross-section is interpolated to it.
 
         Parameters
         ----------
@@ -170,7 +173,6 @@ class CIA(Logger):
             or interpolated on :obj:`wngrid` if supplied
 
         """
-
         orig = self.compute_cia(temperature)
         if wngrid is None:
             return orig

@@ -5,12 +5,15 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import PI
-
 from .emission import EmissionModel
 
 
-def compute_direct_image_final_flux(f_total, planet_radius, star_distance):
+def compute_direct_image_final_flux(
+    f_total: npt.NDArray[np.float64],
+    planet_radius: float,
+    star_distance: float,
+) -> npt.NDArray[np.float64]:
+    """Compute the final flux at the observer."""
     return f_total * (planet_radius**2) / (star_distance**2)
 
 

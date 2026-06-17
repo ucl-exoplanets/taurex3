@@ -1,3 +1,5 @@
+"""Module for opacity interpolation."""
+
 import typing as t
 
 import numpy as np

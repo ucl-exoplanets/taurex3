@@ -44,20 +44,28 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         """Initialise a planet.
 
         Parameters
-        -----------
-
+        ----------
         planet_mass: float, optional
             mass in terms of Jupiter mass of the planet
+
         planet_radius: float, optional
             radius in terms of Jupiter radii of the planet
+
         planet_sma: float, optional
             Semi-major axis in AU
+
+        planet_distance: float, optional
+            Semi-major axis in AU (Deprecated)
+
         impact_param: float, optional
             Impact parameter
+
         orbital_period: float, optional
             Orbital period in days
+
         albedo: float, optional
             Planetary albedo
+
         transit_time: float, optional
             Transit time in seconds
 
@@ -66,39 +74,104 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         Fittable.__init__(self)
         self.set_planet_mass(planet_mass, "Mjup")
         self.set_planet_radius(planet_radius, "Rjup")
-        self.set_planet_semimajoraxis(planet_sma or planet_distance)
+        self.set_planet_semimajoraxis(
+            planet_distance if planet_sma is None else planet_sma
+        )
         self._impact = impact_param
         self._orbit_period = orbital_period
         self._albedo = albedo
         self._transit_time = transit_time
 
     def set_planet_radius(self, value: float, unit: t.Optional[str] = "Rjup") -> None:
-        """Set planet radius."""
+        """Set planet radius.
+
+        Parameters
+        ----------
+        value : float
+            Radius value
+        unit : str, optional
+            Unit of the value, by default "Rjup"
+
+        """
         factor = conversion_factor(unit, "m")
         self._radius = value * factor
 
     def set_planet_mass(self, value: float, unit="Mjup") -> None:
-        """Set planet mass."""
+        """Set planet mass.
+
+        Parameters
+        ----------
+        value : float
+            Mass value
+        unit : str, optional
+            Unit of the value, by default "Mjup"
+
+        """
         factor = conversion_factor(unit, "kg")
         self._mass = value * factor
 
     def set_planet_semimajoraxis(self, value: float, unit="AU") -> None:
-        """Set planet semi major axis."""
+        """Set planet semi major axis.
+
+        Parameters
+        ----------
+        value : float
+            Semi-major axis value
+        unit : str, optional
+            Unit of the value, by default "AU"
+
+        """
         factor = conversion_factor(unit, "m")
         self._distance = value * factor
 
     def get_planet_radius(self, unit: t.Optional[str] = "Rjup") -> float:
-        """Get planet radius in specified unit (default is Rjup)."""
+        """Get planet radius in specified unit (default is Rjup).
+
+        Parameters
+        ----------
+        unit : str, optional
+            Unit to convert to, by default "Rjup"
+
+        Returns
+        -------
+        float
+            Planet radius in the specified unit
+
+        """
         factor = conversion_factor("m", unit)
         return self._radius * factor
 
     def get_planet_mass(self, unit: t.Optional[str] = "Mjup") -> float:
-        """Get planet mass in specified unit (default is Mjup)."""
+        """Get planet mass in specified unit (default is Mjup).
+
+        Parameters
+        ----------
+        unit : str, optional
+            Unit to convert to, by default "Mjup"
+
+        Returns
+        -------
+        float
+            Planet mass in the specified unit
+
+        """
         factor = conversion_factor("kg", unit)
         return self._mass * factor
 
     def get_planet_semimajoraxis(self, unit: t.Optional[str] = "AU") -> float:
-        """Get planet semi major axis in specified unit (default is AU)."""
+        """Get planet semi major axis in specified unit (default is AU).
+
+        Parameters
+        ----------
+        unit : str, optional
+            Unit to convert to, by default "AU"
+
+        Returns
+        -------
+        float
+            Planet semi-major axis in the specified unit
+
+        """
         factor = conversion_factor("m", unit)
         return self._distance * factor
 
@@ -114,7 +187,14 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
 
     @mass.setter
     def mass(self, value: float) -> None:
-        """Set planet mass in Jupiter mass."""
+        """Set planet mass in Jupiter mass.
+
+        Parameters
+        ----------
+        value : float
+            Planet mass in Jupiter mass
+
+        """
         self.set_planet_mass(value, unit="Mjup")
 
     @fitparam(
@@ -129,12 +209,19 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
 
     @radius.setter
     def radius(self, value: float) -> None:
-        """Set planet radius in Jupiter radii."""
+        """Set planet radius in Jupiter radii.
+
+        Parameters
+        ----------
+        value : float
+            Planet radius in Jupiter radii
+
+        """
         self.set_planet_radius(value, unit="Rjup")
 
     @property
     def fullRadius(self) -> float:  # noqa: N802
-        """Planet radius in metres
+        """Planet radius in metres.
 
         Deprecated, use :func:`get_planet_radius` instead
 
@@ -190,7 +277,14 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
 
     @distance.setter
     def distance(self, value: float) -> None:
-        """Set planet semi major axis from parent star (AU)."""
+        """Set planet semi major axis from parent star (AU).
+
+        Parameters
+        ----------
+        value : float
+            Semi-major axis in AU
+
+        """
         self.set_planet_semimajoraxis(value, unit="AU")
 
     @fitparam(
@@ -200,12 +294,19 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         default_bounds=[1, 2],
     )
     def semiMajorAxis(self) -> float:  # noqa: N802
-        """Planet semi major axis from parent star (AU) (ALIAS)"""
+        """Planet semi major axis from parent star (AU) (ALIAS)."""
         return self.get_planet_semimajoraxis(unit="AU")
 
     @semiMajorAxis.setter
     def semiMajorAxis(self, value: float) -> None:  # noqa: N802
-        """Set planet semi major axis from parent star (AU) (ALIAS)"""
+        """Set planet semi major axis from parent star (AU) (ALIAS).
+
+        Parameters
+        ----------
+        value : float
+            Semi-major axis in AU
+
+        """
         self.set_planet_semimajoraxis(value, unit="AU")
 
     @property
@@ -216,7 +317,7 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         )
 
     def gravity_at_height(self, height: float) -> float:
-        """Gravity at height (m) from planet in ms-2
+        """Gravity at height (m) from planet in ms-2.
 
         Parameters
         ----------
@@ -234,7 +335,19 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         )
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write planet information to output group."""
+        """Write planet information to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            The written output group.
+
+        """
         planet = output.create_group("Planet")
 
         planet.write_string("planet_type", self.__class__.__name__)
@@ -246,14 +359,14 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         planet.write_scalar("albedo", self.albedo)
         planet.write_scalar("transit_time", self.transitTime)
 
-        planet.write_scalar("mass_kg", self.mass)
-        planet.write_scalar("radius_m", self.radius)
+        planet.write_scalar("mass_kg", self.get_planet_mass(unit="kg"))
+        planet.write_scalar("radius_m", self.get_planet_radius(unit="m"))
         planet.write_scalar("surface_gravity", self.gravity)
         return planet
 
     @derivedparam(param_name="logg", param_latex="log(g)", compute=False)
     def logg(self) -> float:
-        """Surface gravity (m2/s) in log10"""
+        """Surface gravity (m2/s) in log10."""
         return math.log10(self.gravity)
 
     def calculate_scale_properties(
@@ -268,18 +381,21 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
-        """Solve hydrostatic for altitude, gravity and scale height of the atmosphere.
+        """Solve hydrostatic for altitude, gravity and scale height.
 
         Parameters
         ----------
         temperature: array_like
-            Ttaurex.utilch layer in K
+            Temperature at each layer in K
 
         pressure_levels: array_like
             Pressure at each layer boundary in Pa
 
         mu: array_like
-            mean moleculer weight for each layer in kg
+            mean molecular weight for each layer in kg
+
+        length_units: str
+            Units of length for scaleheight and altitude calculation.
 
         Returns
         -------
@@ -293,7 +409,6 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
             dz in length units
 
         """
-
         from taurex.constants import KBOLTZ
         from taurex.util import conversion_factor
 
@@ -339,11 +454,33 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         tangent: npt.NDArray[np.float64],
         vector_coord_sys: t.Optional[t.Literal["cartesian"]] = "cartesian",
     ):
-        """Compute path length through atmosphere."""
+        """Compute path length through atmosphere.
+
+        Parameters
+        ----------
+        altitudes : npt.NDArray[np.float64]
+            Altitude boundaries.
+        viewer : npt.NDArray[np.float64]
+            Viewing vector.
+        tangent : npt.NDArray[np.float64]
+            Tangent vector.
+        vector_coord_sys : str, optional
+            Coordinate system of the vectors, by default "cartesian".
+
+        Returns
+        -------
+        result : list
+            Path lengths at each layer.
+
+        """
         from taurex.util.geometry import compute_path_length_3d
 
         result = compute_path_length_3d(
-            self.fullRadius, altitudes, viewer, tangent, coordinates=vector_coord_sys
+            self.fullRadius,
+            altitudes,
+            viewer,
+            tangent,
+            coordinates=vector_coord_sys,
         )
 
         return result
@@ -367,10 +504,10 @@ class Planet(BasePlanet):
 
 
 class Earth(Planet):
-    """An implementation for earth"""
+    """An implementation for earth."""
 
     def __init__(self):
-        """Initialise earth"""
+        """Initialise earth."""
         Planet.__init__(self, 5.972e24, 6371000)
 
     @classmethod
@@ -389,8 +526,13 @@ class Mars(Planet):
         radius = (0.532 * u.R_earth).to(u.jupiterRad)
         mass = (0.107 * u.M_earth).to(u.jupiterMass)
         distance = 1.524
-        Planet.__init__(mass=mass.value, radius=radius.value, distance=distance)
+        Planet.__init__(
+            mass=mass.value,
+            radius=radius.value,
+            distance=distance,
+        )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return list of keywords for input file."""
         return ("mars",)

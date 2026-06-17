@@ -47,26 +47,27 @@ def contribute_tau_numpy(
     layer: int,
     tau: npt.NDArray[np.float64],
 ) -> npt.NDArray[np.float64]:
-    """Generic cross-section integration function for tau
+    r"""Generic cross-section integration function for tau.
 
     This has the form:
 
     .. math::
 
-        \\tau_{\\lambda}(z) = \\int_{z_{0}}^{z_{1}} \\sigma(z') \\rho(z') dz',
+        \tau_{\lambda}(z) = \int_{z_{0}}^{z_{1}}
+            \sigma(z') \rho(z') dz',
 
     where :math:`z` is the layer, :math:`z_0` and :math:`z_1` are ``startK``
-    and ``endK`` respectively. :math:`\\sigma` is the weighted
+    and ``endK`` respectively. :math:`\sigma` is the weighted
     cross-section ``sigma``. :math:`rho` is the ``density`` and
     :math:`dz'` is the integration path length ``path``
 
 
     Parameters
     ----------
-    startK: int
+    startk: int
         starting layer in integration
 
-    endK: int
+    endk: int
         last layer in integration
 
     density_offset: int
@@ -90,10 +91,15 @@ def contribute_tau_numpy(
     layer: int
         Which layer we currently on
 
+    tau : array_like
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
+
     Returns
     -------
     tau : array_like
-        optical depth (well almost you still need to do ``exp(-tau)`` yourself)
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
 
     """
     _path = path[startk:endk, None]
@@ -106,8 +112,8 @@ def contribute_tau_numpy(
 
 
 def contribute_tau_numba(
-    startK: int,  # noqa: N803
-    endK: int,  # noqa: N803
+    startk: int,  # noqa: N803
+    endk: int,  # noqa: N803
     density_offset: int,
     sigma: npt.NDArray[np.float64],
     density: npt.NDArray[np.float64],
@@ -116,8 +122,8 @@ def contribute_tau_numba(
     ngrid: int,
     layer: int,
     tau: npt.NDArray[np.float64],
-):
-    """Generic cross-section integration function for tau
+) -> npt.NDArray[np.float64]:
+    r"""Generic cross-section integration function for tau.
 
     numba-fied for performance.
 
@@ -125,20 +131,21 @@ def contribute_tau_numba(
 
     .. math::
 
-        \\tau_{\\lambda}(z) = \\int_{z_{0}}^{z_{1}} \\sigma(z') \\rho(z') dz',
+        \tau_{\lambda}(z) = \int_{z_{0}}^{z_{1}}
+            \sigma(z') \rho(z') dz',
 
     where :math:`z` is the layer, :math:`z_0` and :math:`z_1` are ``startK``
-    and ``endK`` respectively. :math:`\\sigma` is the weighted
+    and ``endK`` respectively. :math:`\sigma` is the weighted
     cross-section ``sigma``. :math:`rho` is the ``density`` and
     :math:`dz'` is the integration path length ``path``
 
 
     Parameters
     ----------
-    startK: int
+    startk: int
         starting layer in integration
 
-    endK: int
+    endk: int
         last layer in integration
 
     density_offset: int
@@ -162,18 +169,26 @@ def contribute_tau_numba(
     layer: int
         Which layer we currently on
 
+    tau : array_like
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
+
+
     Returns
     -------
     tau : array_like
-        optical depth (well almost you still need to do ``exp(-tau)`` yourself)
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
 
     """
-    for k in range(startK, endK):
+    for k in range(startk, endk):
         _path = path[k]
         _density = density[k + density_offset]
         # for mol in range(nmols):
         for wn in range(ngrid):
             tau[layer, wn] += sigma[k + layer, wn] * _path * _density
+
+    return tau
 
 
 try:
@@ -236,7 +251,7 @@ class Contribution(Fittable, Logger, Writeable, Citable):
 
     @property
     def name(self) -> str:
-        """Name of the contribution. Identifier for plots"""
+        """Name of the contribution. Identifier for plots."""
         return self._name
 
     def contribute(
@@ -320,8 +335,7 @@ class Contribution(Fittable, Logger, Writeable, Citable):
     def prepare_each(
         self, model: ForwardModel, wngrid: npt.NDArray[np.float64]
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
-        """
-        **Requires implementation**
+        """**Requires implementation**.
 
         Used to prepare each component of the contribution.
         For context when the main ``taurex`` program is run
@@ -344,11 +358,11 @@ class Contribution(Fittable, Logger, Writeable, Citable):
             Name of component and component itself
 
         """
-
         raise NotImplementedError
 
     def prepare(self, model: ForwardModel, wngrid: npt.NDArray[np.float64]) -> None:
         """Used to prepare the contribution for the calculation.
+
         Called before the forward model performs the main optical depth
         calculation. Default behaviour is to loop through :func:`prepare_each`
         and sum all results into a single cross-section.
@@ -361,7 +375,6 @@ class Contribution(Fittable, Logger, Writeable, Citable):
         wngrid: :obj:`array`
             Wavenumber grid
         """
-
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
@@ -377,9 +390,9 @@ class Contribution(Fittable, Logger, Writeable, Citable):
         self.info("Done")
 
     def finalize(self, model: ForwardModel, tau: npt.NDArray[np.float64]):
-        """
-        Called in the last phase of the calculation, after the optical
-        depth has be completely computed.
+        """Called in the last phase of the calculation.
+
+        Called after the optical depth has be completely computed.
         """
         pass
 

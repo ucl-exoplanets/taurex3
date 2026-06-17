@@ -13,17 +13,17 @@ from .contribution import Contribution
 
 
 class SimpleCloudsContribution(Contribution):
-    """
-    Optically thick cloud deck up to a certain height
+    r"""Optically thick cloud deck up to a certain height.
 
     These have the form:
 
     .. math::
-            \\tau(\\lambda,z) =
-                \\begin{cases}
-                \\infty       & \\quad \\text{if } P(z) >= P_{0}\\\\
-                0            & \\quad \\text{if } P(z) < P_{0}
-                \\end{cases}
+
+            \tau(\lambda,z) =
+                \begin{cases}
+                \infty       & \quad \text{if } P(z) >= P_{0}\\
+                0            & \quad \text{if } P(z) < P_{0}
+                \end{cases}
 
     Where :math:`P_{0}` is the pressure at the top of the cloud-deck.
 
@@ -45,6 +45,7 @@ class SimpleCloudsContribution(Contribution):
 
     @property
     def order(self) -> int:
+        """Return order of contribution."""
         return 3
 
     def contribute(
@@ -58,14 +59,34 @@ class SimpleCloudsContribution(Contribution):
         tau: npt.NDArray[np.float64],
         path_length: t.Optional[npt.NDArray[np.float64]] = None,
     ):
-        """Contribute the cloud opacity to the optical depth."""
+        """Contribute the cloud opacity to the optical depth.
+
+        Parameters
+        ----------
+        model : OneDForwardModel
+            The forward model
+        start_layer : int
+            Initial integration layer
+        end_layer : int
+            Final integration layer
+        density_offset : int
+            offset in density layer
+        layer : int
+            atmospheric layer being computed
+        density : npt.NDArray[np.float64]
+            density profile of atmosphere
+        tau : npt.NDArray[np.float64]
+            optical depth to store result
+        path_length : npt.NDArray[np.float64], optional
+            integration length
+
+        """
         tau[layer] += self.sigma_xsec[layer, :]
 
     def prepare_each(
         self, model: OneDForwardModel, wngrid: npt.NDArray[np.float64]
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
         """Compute cross-section that is infinitely absorbing.
-
 
         Absorption occurs up to a certain height.
 
@@ -82,9 +103,7 @@ class SimpleCloudsContribution(Contribution):
         component: :obj:`tuple` of type (str, :obj:`array`)
             ``Clouds`` and opacity array.
 
-
         """
-
         contrib = np.zeros(
             shape=(
                 model.nLayers,
@@ -103,23 +122,36 @@ class SimpleCloudsContribution(Contribution):
         default_fit=False,
         default_bounds=[1e-3, 1e6],
     )
-    def cloudsPressure(self):  # noqa: N802
+    def cloudsPressure(self) -> float:  # noqa: N802
         """Cloud top pressure in Pascal."""
         return self._cloud_pressure
 
     @cloudsPressure.setter
-    def cloudsPressure(self, value):  # noqa: N802
+    def cloudsPressure(self, value: float) -> None:  # noqa: N802
         """Cloud top pressure in Pascal."""
         self._cloud_pressure = value
 
-    def write(self, output: OutputGroup):
-        """Write the cloud pressure to the output."""
+    def write(self, output: OutputGroup) -> OutputGroup:
+        """Write the cloud pressure to the output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            Output group written to.
+
+        """
         contrib = super().write(output)
         contrib.write_scalar("clouds_pressure", self._cloud_pressure)
         return contrib
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, str]:
+        """Return input keywords for the contribution."""
         return (
             "SimpleClouds",
             "ThickClouds",

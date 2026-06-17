@@ -1,18 +1,22 @@
 """Module for handling loading models from HDF5 files."""
 
+import typing as t
+
 import numpy as np
 
 from ..parameter.factory import get_keywordarg_dict
 from .util import class_for_name
 
 
-def get_klass_args(klass):
+def get_klass_args(klass) -> t.List[str]:
+    """Get class arguments."""
     return list(get_keywordarg_dict(klass)[0].keys())
 
 
 def load_generic_profile_from_hdf5(
     loc, module, identifier, profile_type=None, premade_dict=None, replacement_dict=None
 ):
+    """Load a generic profile from HDF5."""
     if profile_type is None:
         profile_type = loc[identifier][()]
 
@@ -47,6 +51,7 @@ def load_generic_profile_from_hdf5(
 
 
 def load_temperature_from_hdf5(loc, replacement_dict=None):
+    """Load temperature from HDF5."""
     return load_generic_profile_from_hdf5(
         loc["Temperature"],
         "taurex.data.profiles.temperature",
@@ -56,6 +61,7 @@ def load_temperature_from_hdf5(loc, replacement_dict=None):
 
 
 def load_pressure_from_hdf5(loc, replacement_dict=None):
+    """Load pressure from HDF5."""
     return load_generic_profile_from_hdf5(
         loc["Pressure"],
         "taurex.data.profiles.pressure",
@@ -65,6 +71,7 @@ def load_pressure_from_hdf5(loc, replacement_dict=None):
 
 
 def load_gas_from_hdf5(loc, molecule, replacement_dict=None):
+    """Load gas from HDF5."""
     return load_generic_profile_from_hdf5(
         loc[molecule],
         "taurex.data.profiles.chemistry",
@@ -74,6 +81,7 @@ def load_gas_from_hdf5(loc, molecule, replacement_dict=None):
 
 
 def load_planet_from_hdf5(loc, replacement_dict=None):
+    """Load planet from HDF5."""
     return load_generic_profile_from_hdf5(
         loc["Planet"],
         "taurex.data.planet",
@@ -84,6 +92,7 @@ def load_planet_from_hdf5(loc, replacement_dict=None):
 
 
 def load_star_from_hdf5(loc, replacement_dict=None):
+    """Load star from HDF5."""
     return load_generic_profile_from_hdf5(
         loc["Star"],
         "taurex.data.stellar",
@@ -93,6 +102,7 @@ def load_star_from_hdf5(loc, replacement_dict=None):
 
 
 def load_chemistry_from_hdf5(loc, replacement_dict=None):
+    """Load chemistry from HDF5."""
     from taurex.data.profiles.chemistry import TaurexChemistry
     from taurex.util import decode_string_array
 
@@ -115,6 +125,7 @@ def load_chemistry_from_hdf5(loc, replacement_dict=None):
 
 
 def load_contrib_from_hdf5(loc, contribution, replacement_dict=None):
+    """Load contribution from HDF5."""
     return load_generic_profile_from_hdf5(
         loc[contribution],
         "taurex.contributions",
@@ -125,6 +136,7 @@ def load_contrib_from_hdf5(loc, contribution, replacement_dict=None):
 
 
 def load_model_from_hdf5(loc, replacement_dict=None):
+    """Load model from HDF5."""
     chemistry = load_chemistry_from_hdf5(loc, replacement_dict=replacement_dict)
     pressure = load_pressure_from_hdf5(loc, replacement_dict=replacement_dict)
     temperature = load_temperature_from_hdf5(loc, replacement_dict=replacement_dict)
@@ -168,6 +180,7 @@ def load_model_from_hdf5(loc, replacement_dict=None):
 
 
 def taurex_hdf5_to_model(filename, replacement_dict=None):
+    """Load a model from an HDF5 file."""
     import h5py
 
     with h5py.File(filename, "r") as f:
@@ -179,6 +192,7 @@ def taurex_hdf5_to_model(filename, replacement_dict=None):
 
 
 def taurex_hdf5_to_observation(filename):
+    """Load an observation from an HDF5 file."""
     import h5py
 
     from taurex.data.spectrum import ArraySpectrum

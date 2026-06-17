@@ -1,3 +1,5 @@
+"""Tests for constant gas."""
+
 import numpy as np
 from hypothesis import given
 from hypothesis.strategies import floats
@@ -10,7 +12,7 @@ from ..strategies import molecule_vmr
 
 @given(molecule=molecule_vmr(), nlayers=integers(1, 300), new_value=floats(1e-30, 1e0))
 def test_constant_gas(molecule, nlayers, new_value):
-
+    """Test constant gas profile."""
     mol, vmr = molecule
     cg = ConstantGas(mol[0], mix_ratio=vmr)
     cg.initialize_profile(nlayers=nlayers)

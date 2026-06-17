@@ -1,3 +1,5 @@
+"""Test optimizer base class."""
+
 import math
 
 import pytest
@@ -16,6 +18,7 @@ from . import LineObsWithParams
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))
 def test_optimizer_fittingparams(m, c):
+    """Test optimizer fitting params."""
     lm = LineModel()
     lm.m = m
     lm.c = c
@@ -50,6 +53,7 @@ def test_optimizer_fittingparams(m, c):
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))
 def test_optimizer_fittingparams_with_obs(m, c):
+    """Test optimizer fitting params with observation."""
     lm = LineModel()
     lm.m = m
     lm.c = c
@@ -98,6 +102,7 @@ def test_optimizer_fittingparams_with_obs(m, c):
 
 
 def test_optimizer_setprior():
+    """Test optimizer set prior."""
     from taurex.core.priors import Gaussian
     from taurex.core.priors import Uniform
 
@@ -120,6 +125,7 @@ def test_optimizer_setprior():
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))
 def test_optimizer_updatemodel(m, c):
+    """Test optimizer update model."""
     lm = LineModel()
     lm.m = 1.0
     lm.c = 10.0
@@ -191,6 +197,7 @@ def test_optimizer_updatemodel(m, c):
     dolog=st.lists(st.booleans(), min_size=2, max_size=2),
 )
 def test_optimizer_olduniform(bounds, dolog):
+    """Test optimizer old uniform."""
     lm = LineModel()
     lm.m = 1.0
     lm.c = 10.0
@@ -199,7 +206,7 @@ def test_optimizer_olduniform(bounds, dolog):
     opt.enable_fit("m")
     opt.enable_fit("c")
 
-    for p, b, l in zip(["m", "c"], bounds, dolog):
+    for p, b, l in zip(["m", "c"], bounds, dolog, strict=False):
         if l:
             opt.set_mode(p, "log")
         else:
@@ -208,7 +215,7 @@ def test_optimizer_olduniform(bounds, dolog):
 
     note(opt.fit_names)
 
-    for p, b, l in zip(["m", "c"], bounds, dolog):
+    for p, b, l in zip(["m", "c"], bounds, dolog, strict=False):
         param = p
         if l:
             param = f"log_{p}"
@@ -227,6 +234,7 @@ def test_optimizer_olduniform(bounds, dolog):
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))
 def test_optimizer_derived(m, c):
+    """Test optimizer derived."""
     lm = LineModel()
     lm.m = m
     lm.c = c

@@ -1,3 +1,5 @@
+"""Parameter parser for input files."""
+
 import pathlib
 import typing as t
 
@@ -23,6 +25,7 @@ class ParameterParser(Logger):
     """Parse input file and generate appropriate objects."""
 
     def __init__(self):
+        """Initialize ParameterParser."""
         super().__init__("ParamParser")
         self._read = False
 
@@ -278,6 +281,7 @@ class ParameterParser(Logger):
         return None
 
     def create_manual_binning(self, config):
+        """Create binning manually."""
         import math
 
         import numpy as np
@@ -331,6 +335,7 @@ class ParameterParser(Logger):
         return binning_class(wngrid), wngrid
 
     def generate_binning(self):
+        """Generate binning."""
         config = self._raw_config.dict()
         if "Binning" in config:
             binning_config = config["Binning"]
@@ -356,6 +361,7 @@ class ParameterParser(Logger):
         star=None,
         obs=None,
     ):
+        """Generate model."""
         config = self._raw_config.dict()
         if "Model" in config:
             if chemistry is None:
@@ -383,6 +389,7 @@ class ParameterParser(Logger):
         return model
 
     def generate_chemistry_profile(self):
+        """Generate chemistry profile."""
         config = self._raw_config.dict()
         if "Chemistry" in config:
             return create_chemistry(config["Chemistry"])
@@ -390,6 +397,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_pressure_profile(self):
+        """Generate pressure profile."""
         config = self._raw_config.dict()
         if "Pressure" in config:
             return create_pressure_profile(config["Pressure"])
@@ -397,6 +405,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_temperature_profile(self):
+        """Generate temperature profile."""
         config = self._raw_config.dict()
         if "Temperature" in config:
             return create_temperature_profile(config["Temperature"])
@@ -404,6 +413,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_planet(self):
+        """Generate planet."""
         config = self._raw_config.dict()
 
         if "Planet" in config:
@@ -412,6 +422,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_star(self):
+        """Generate star."""
         config = self._raw_config.dict()
 
         if "Star" in config:
@@ -420,6 +431,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_fitting_parameters(self):
+        """Generate fitting parameters."""
         from .factory import create_prior
 
         config = self._raw_config.dict()
@@ -452,6 +464,7 @@ class ParameterParser(Logger):
             return {}
 
     def generate_derived_parameters(self):
+        """Generate derived parameters."""
         config = self._raw_config.dict()
         if "Derive" in config:
             fitting_config = config["Derive"]

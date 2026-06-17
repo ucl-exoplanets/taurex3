@@ -20,6 +20,7 @@ else:
 
 
 def _as_list(value: t.Any) -> t.List[t.Any]:
+    """Ensure value is a list."""
     if isinstance(value, np.ndarray):
         return value.tolist()
     if isinstance(value, (list, tuple)):
@@ -34,6 +35,31 @@ def _broadcast_param(
     *,
     allow_none: bool = False,
 ) -> t.Optional[t.List[t.Any]]:
+    """Broadcast a parameter value to match the number of species.
+
+    Parameters
+    ----------
+    value : Any
+        The parameter value to broadcast.
+    count : int
+        The number of species.
+    name : str
+        The name of the parameter (used in error messages).
+    allow_none : bool, optional
+        If True, allow None to be returned as is. Default is False.
+
+    Returns
+    -------
+    Optional[List[Any]]
+        A list of length ``count`` with the broadcast values, or None
+        if ``allow_none`` is True and value is None.
+
+    Raises
+    ------
+    InvalidPyMieScattGridException
+        If the parameter cannot be broadcast to the required length.
+
+    """
     if value is None:
         if allow_none:
             return None
@@ -61,6 +87,7 @@ def contribute_mie_tau_numpy(
     layer: int,
     tau: npt.NDArray[np.float64],
 ) -> npt.NDArray[np.float64]:
+    """Integrate Mie optical depth for a given layer using numpy."""
     for k in range(start_k, end_k):
         _path = path[k]
         for wn in range(ngrid):
@@ -84,21 +111,35 @@ class InvalidPyMieScattGridException(InvalidModelException):
 class PyMieScattGridExtinctionContribution(Contribution):
     """Cloud opacity from precomputed extinction-efficiency grids.
 
-    The supplied HDF5 files are expected to contain a ``radius_grid`` dataset in
-    microns, a ``wavenumber_grid`` dataset in :math:`cm^{-1}`, and either a
+    The supplied HDF5 files are expected to contain a ``radius_grid`` dataset
+    in microns, a ``wavenumber_grid`` dataset in :math:`cm^{-1}`, and either a
     ``Qext`` or ``Qext_grid`` dataset containing extinction efficiencies.
     """
+
+    # Pre-assign lists to avoid mutable default arguments
+    _default_mean_radius = [0.01]
+    _default_logstd_radius = [0.001]
+    _default_param_a = [1.0]
+    _default_param_b = [6.0]
+    _default_param_c = [6.0]
+    _default_param_d = [1.0]
+    _default_mix_ratio = [1e-10]
+    _default_species = ["Mg2SiO4"]
+    _default_midP = [1e3]
+    _default_rangeP = [1.0]
+    _default_altitude_decay = [-5.0]
+    _default_porosity = [0.0]
 
     def __init__(
         self,
         mie_particle_mean_radius: t.Optional[t.Any] = None,
         mie_particle_logstd_radius: t.Any = (0.001,),
-        mie_particle_paramA: t.Any = (1.0,),
-        mie_particle_paramB: t.Any = (6.0,),
-        mie_particle_paramC: t.Any = (6.0,),
-        mie_particle_paramD: t.Any = (1.0,),
-        mie_particle_radius_Nsampling: int = 5,
-        mie_particle_radius_Dsampling: float = 2,
+        mie_particle_param_a: t.Any = (1.0,),
+        mie_particle_param_b: t.Any = (6.0,),
+        mie_particle_param_c: t.Any = (6.0,),
+        mie_particle_param_d: t.Any = (1.0,),
+        mie_particle_radius_nsampling: int = 5,
+        mie_particle_radius_dsampling: float = 2,
         mie_particle_radius_distribution: str = "normal",
         mie_species_path: t.Optional[t.Any] = None,
         species: t.Any = ("Mg2SiO4",),
@@ -112,6 +153,52 @@ class PyMieScattGridExtinctionContribution(Contribution):
         mie_particle_altitude_decay: t.Any = (-5.0,),
         name: str = "PyMieScattGridExtinction",
     ) -> None:
+        """Initialize PyMieScattGridExtinctionContribution.
+
+        Parameters
+        ----------
+        mie_particle_mean_radius : optional
+            Mean particle radius in microns, by default None (uses 0.01).
+        mie_particle_logstd_radius : optional
+            Log standard deviation of particle radius, by default (0.001,).
+        mie_particle_param_a : optional
+            Parameter A for Deirmendjian distribution, by default (1.0,).
+        mie_particle_param_b : optional
+            Parameter B for Deirmendjian distribution, by default (6.0,).
+        mie_particle_param_c : optional
+            Parameter C for Deirmendjian distribution, by default (6.0,).
+        mie_particle_param_d : optional
+            Parameter D for Deirmendjian distribution, by default (1.0,).
+        mie_particle_radius_nsampling : int, optional
+            Number of radius samples, by default 5.
+        mie_particle_radius_dsampling : float, optional
+            Sampling range in standard deviations, by default 2.
+        mie_particle_radius_distribution : str, optional
+            Radius distribution type, by default "normal".
+        mie_species_path : optional
+            Paths to the species opacity files, by default None.
+        species : optional
+            Species names, by default ("Mg2SiO4",).
+        mie_particle_mix_ratio : optional
+            Mixing ratios, by default (1e-10,).
+        mie_porosity : optional
+            Porosity values, by default None.
+        mie_midP : optional
+            Mid-pressure levels in Pa, by default (1e3,).
+        mie_rangeP : optional
+            Pressure range in log10, by default (1.0,).
+        mie_nMedium : float, optional
+            Refractive index of the medium, by default 1.
+        mie_resolution : int, optional
+            Resolution of the wavenumber grid, by default 100.
+        mie_particle_altitude_distrib : str, optional
+            Altitude distribution type, by default "exp_decay".
+        mie_particle_altitude_decay : optional
+            Altitude decay parameters, by default (-5.0,).
+        name : str, optional
+            Contribution name, by default "PyMieScattGridExtinction".
+
+        """
         super().__init__(name)
 
         self._species = _as_list(species)
@@ -126,7 +213,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
             mie_species_path, self._species_count, "mie_species_path"
         )
         self._mie_particle_mean_radius = _broadcast_param(
-            mie_particle_mean_radius or (0.01,),
+            mie_particle_mean_radius or self._default_mean_radius,
             self._species_count,
             "mie_particle_mean_radius",
         )
@@ -135,17 +222,17 @@ class PyMieScattGridExtinctionContribution(Contribution):
             self._species_count,
             "mie_particle_logstd_radius",
         )
-        self._mie_particle_paramA = _broadcast_param(
-            mie_particle_paramA, self._species_count, "mie_particle_paramA"
+        self._mie_particle_param_a = _broadcast_param(
+            mie_particle_param_a, self._species_count, "mie_particle_param_a"
         )
-        self._mie_particle_paramB = _broadcast_param(
-            mie_particle_paramB, self._species_count, "mie_particle_paramB"
+        self._mie_particle_param_b = _broadcast_param(
+            mie_particle_param_b, self._species_count, "mie_particle_param_b"
         )
-        self._mie_particle_paramC = _broadcast_param(
-            mie_particle_paramC, self._species_count, "mie_particle_paramC"
+        self._mie_particle_param_c = _broadcast_param(
+            mie_particle_param_c, self._species_count, "mie_particle_param_c"
         )
-        self._mie_particle_paramD = _broadcast_param(
-            mie_particle_paramD, self._species_count, "mie_particle_paramD"
+        self._mie_particle_param_d = _broadcast_param(
+            mie_particle_param_d, self._species_count, "mie_particle_param_d"
         )
         self._mie_particle_mix_ratio = _broadcast_param(
             mie_particle_mix_ratio,
@@ -174,8 +261,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
         self._particle_alt_distib = mie_particle_altitude_distrib.lower().strip()
         self._mie_nMedium = mie_nMedium
         self._resolution = mie_resolution
-        self._Nsampling = int(mie_particle_radius_Nsampling)
-        self._Dsampling = mie_particle_radius_Dsampling
+        self._nsampling = int(mie_particle_radius_nsampling)
+        self._dsampling = mie_particle_radius_dsampling
 
         if self._mie_particle_radius_distribution not in {
             "normal",
@@ -192,13 +279,33 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 "mie_particle_altitude_distrib must be 'exp_decay' or 'linear'"
             )
 
-        self._radius_grid, self._Qext, self._Qext_wn = self.load_input_files(
+        self._radius_grid, self._qext, self._qext_wn = self.load_input_files(
             self._mie_species_path
         )
         self.generate_particle_fitting_params()
 
     @staticmethod
     def _read_qext_dataset(grid_file: h5py.File, path: str) -> npt.NDArray[np.float64]:
+        """Read the Qext dataset from the HDF5 file.
+
+        Parameters
+        ----------
+        grid_file : h5py.File
+            The HDF5 file object.
+        path : str
+            Path to the file (used in error messages).
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            The Qext dataset.
+
+        Raises
+        ------
+        InvalidPyMieScattGridException
+            If the required dataset is not found.
+
+        """
         for dataset_name in ("Qext", "Qext_grid"):
             if dataset_name in grid_file:
                 return np.asarray(grid_file[dataset_name][()], dtype=np.float64)
@@ -212,6 +319,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
         t.List[npt.NDArray[np.float64]],
         t.List[npt.NDArray[np.float64]],
     ]:
+        """Load input files for all species."""
         radius_grids = []
         qexts = []
         wavenumber_grids = []
@@ -249,6 +357,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
         tau: npt.NDArray[np.float64],
         path_length: t.Optional[npt.NDArray[np.float64]] = None,
     ):
+        """Contribute to the optical depth."""
         contribute_mie_tau(
             start_layer,
             end_layer,
@@ -259,7 +368,20 @@ class PyMieScattGridExtinctionContribution(Contribution):
             tau,
         )
 
-    def generate_particle_fitting_params(self) -> None:
+    def generate_particle_fitting_params(self) -> None:  # noqa: C901
+        """Generate fitting parameters for particle sizes.
+
+        The parameters generated are:
+            - ``Rmean_share``
+            - ``Rlogstd_share`` (if distribution is not "budaj")
+            - ``X_share``
+            - ``midP_share``
+            - ``rangeP_share``
+            - ``decayP_share``
+            - For each species: ``Rmean_``, ``Rlogstd_`` (if not "budaj"),
+              ``X_``, ``midP_``, ``rangeP_``, ``decayP_``.
+            - For each species: ``Porosity_`` if porosity is not None.
+        """
         bounds_rm = [0.01, 10]
         bounds_rstd = [0.01, 0.2]
         bounds_x = [1e0, 1e12]
@@ -528,21 +650,22 @@ class PyMieScattGridExtinctionContribution(Contribution):
     def prepare_each(
         self, model: ForwardModel, wngrid: npt.NDArray[np.float64]
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
+        """Prepare each component of the cloud opacity."""
         self._nlayers = model.nLayers
         self._ngrid = wngrid.shape[0]
         pressure_profile = model.pressureProfile
         sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid))
 
         for specie_idx, _ in enumerate(self._species):
-            wn = self._Qext_wn[specie_idx]
+            wn = self._qext_wn[specie_idx]
             mean_radius = self._mie_particle_mean_radius[specie_idx]
 
             if self._mie_particle_radius_distribution == "budaj":
                 log_rsigma = 0.2
                 radii_log = np.linspace(
-                    10 ** (np.log10(mean_radius) + self._Dsampling * log_rsigma),
-                    10 ** (np.log10(mean_radius) - self._Dsampling * log_rsigma),
-                    self._Nsampling,
+                    10 ** (np.log10(mean_radius) + self._dsampling * log_rsigma),
+                    10 ** (np.log10(mean_radius) - self._dsampling * log_rsigma),
+                    self._nsampling,
                 )
                 weights = ((radii_log / mean_radius) ** 6) * np.exp(
                     -6 * radii_log / mean_radius
@@ -550,24 +673,24 @@ class PyMieScattGridExtinctionContribution(Contribution):
             elif self._mie_particle_radius_distribution == "deirmendjian":
                 log_rsigma = self._mie_particle_std_radius[specie_idx]
                 radii_log = np.linspace(
-                    10 ** (np.log10(mean_radius) + self._Dsampling * log_rsigma),
-                    10 ** (np.log10(mean_radius) - self._Dsampling * log_rsigma),
-                    self._Nsampling,
+                    10 ** (np.log10(mean_radius) + self._dsampling * log_rsigma),
+                    10 ** (np.log10(mean_radius) - self._dsampling * log_rsigma),
+                    self._nsampling,
                 )
                 weights = (
-                    self._mie_particle_paramA[specie_idx]
-                    * (radii_log ** self._mie_particle_paramB[specie_idx])
+                    self._mie_particle_param_a[specie_idx]
+                    * (radii_log ** self._mie_particle_param_b[specie_idx])
                     * np.exp(
-                        -self._mie_particle_paramC[specie_idx]
-                        * (radii_log ** self._mie_particle_paramD[specie_idx])
+                        -self._mie_particle_param_c[specie_idx]
+                        * (radii_log ** self._mie_particle_param_d[specie_idx])
                     )
                 )
             else:
                 log_rsigma = self._mie_particle_std_radius[specie_idx]
                 radii_log = np.linspace(
-                    10 ** (np.log10(mean_radius) + self._Dsampling * log_rsigma),
-                    10 ** (np.log10(mean_radius) - self._Dsampling * log_rsigma),
-                    self._Nsampling,
+                    10 ** (np.log10(mean_radius) + self._dsampling * log_rsigma),
+                    10 ** (np.log10(mean_radius) - self._dsampling * log_rsigma),
+                    self._nsampling,
                 )
                 weights = stats.norm.pdf(
                     np.log10(radii_log), np.log10(mean_radius), log_rsigma
@@ -575,7 +698,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
 
             qexts = []
             radius_grid = self._radius_grid[specie_idx]
-            qext_grid = self._Qext[specie_idx]
+            qext_grid = self._qext[specie_idx]
 
             for radius in radii_log:
                 grid_idx = np.searchsorted(radius_grid, radius) - 1
@@ -644,6 +767,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
         yield "PyMieScattGridExt", sigma_xsec
 
     def write(self, output: OutputGroup) -> OutputGroup:
+        """Write contribution to output group."""
         contrib = super().write(output)
         contrib.write_array(
             "particle_mean_radius", np.array(self._mie_particle_mean_radius)
@@ -658,29 +782,38 @@ class PyMieScattGridExtinctionContribution(Contribution):
         contrib.write_array("particle_midP", np.array(self._mie_midP))
         contrib.write_array("particle_rangeP", np.array(self._mie_rangeP))
         contrib.write_string_array("cloud_species", self._species)
-        contrib.write_scalar("radius_Nsampling", self._Nsampling)
-        contrib.write_scalar("radius_Dsampling", self._Dsampling)
+        contrib.write_scalar("radius_Nsampling", self._nsampling)
+        contrib.write_scalar("radius_Dsampling", self._dsampling)
         contrib.write_scalar("mie_nMedium", self._mie_nMedium)
         return contrib
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return input keywords for the contribution."""
         return ("PyMieScattGridExtinction",)
 
     BIBTEX_ENTRIES = [
         """
         @BOOK{1983asls.book.....B,
                author = {{Bohren}, Craig F. and {Huffman}, Donald R.},
-                title = "{Absorption and scattering of light by small particles}",
+                title = "{Absorption and scattering of light
+                         by small particles}",
                  year = 1983,
-               adsurl = {https://ui.adsabs.harvard.edu/abs/1983asls.book.....B},
+               adsurl = {https://ui.adsabs.harvard.edu/abs/
+                         1983asls.book.....B},
               adsnote = {Provided by the SAO/NASA Astrophysics Data System}
         }
         @ARTICLE{2026A&A...707A.127V,
                author = {{Voyer}, M. and {Changeat}, Q.},
-                title = "{Precomputed aerosol extinction, scattering, and asymmetry grids for scalable atmospheric retrievals}",
+                title = "{Precomputed aerosol extinction, scattering,
+                         and asymmetry grids for scalable
+                         atmospheric retrievals}",
               journal = {Astronomy and Astrophysics},
-             keywords = {radiative transfer, methods: numerical, planets and satellites: atmospheres, planets and satellites: gaseous planets, Earth and Planetary Astrophysics, Instrumentation and Methods for Astrophysics},
+             keywords = {radiative transfer, methods: numerical,
+                         planets and satellites: atmospheres,
+                         planets and satellites: gaseous planets,
+                         Earth and Planetary Astrophysics,
+                         Instrumentation and Methods for Astrophysics},
                  year = 2026,
                 month = mar,
                volume = {707},

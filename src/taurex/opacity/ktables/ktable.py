@@ -1,4 +1,4 @@
-"""Base class for ktables"""
+"""Base class for ktables."""
 
 import typing as t
 

@@ -1,6 +1,6 @@
 """Example program that randomizes chemistry profiles."""
 
-import random
+import secrets
 
 from taurex import OutputSize
 from taurex.chemistry import ConstantGas
@@ -33,7 +33,9 @@ chemistry = TaurexChemistry(fill_gases=["H2", "He"], ratio=0.175)
 molecules = ["H2O", "CO2", "CO"]
 
 for mol in molecules:
-    chemistry.addGas(ConstantGas(mol, mix_ratio=random.uniform(1e-8, 1e-2)))
+    chemistry.addGas(
+        ConstantGas(mol, mix_ratio=secrets.SystemRandom().uniform(1e-8, 1e-2))
+    )
 
 # Now create our forward model
 
@@ -98,4 +100,4 @@ for n in runs[rank::size]:
 
     # Now we rerandomize all the molecules!
     for mol in molecules:
-        model[mol] = random.uniform(1e-8, 1e-2)
+        model[mol] = secrets.SystemRandom().uniform(1e-8, 1e-2)

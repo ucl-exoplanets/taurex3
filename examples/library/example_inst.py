@@ -18,6 +18,7 @@ class ExampleInstrument(Instrument):
     """
 
     def __init__(self, noise_scale=1):
+        """Initialize ExampleInstrument."""
         super().__init__()
 
         self._scale = noise_scale
@@ -78,6 +79,7 @@ class ExampleInstrument(Instrument):
         self._binner = FluxBinner(wngrid=10000 / wfc3_grid, wngrid_width=wfc3_wnwidths)
 
     def model_noise(self, model, model_res=None, num_observations=1):
+        """Model noise."""
         if model_res is None:
             model_res = model.model()
 

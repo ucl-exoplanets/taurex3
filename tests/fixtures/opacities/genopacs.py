@@ -1,8 +1,10 @@
+"""Generate dummy opacities for tests."""
+
 import numpy as np
-import pytest
 
 
 def gen_opacity(T, P, grid_size, mol_name):
+    """Generate dummy opacity."""
     opacity = {
         "t": T,
         "p": P,
@@ -14,6 +16,7 @@ def gen_opacity(T, P, grid_size, mol_name):
 
 
 def gen_ktables(T, P, ngauss, grid_size, mol_name):
+    """Generate dummy ktables."""
     opacity = {
         "t": T,
         "p": P,

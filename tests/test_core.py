@@ -1,3 +1,5 @@
+"""Test core."""
+
 import numpy as np
 import pytest
 from hypothesis import given
@@ -9,9 +11,13 @@ from .strategies import fitting_parameters
 
 
 class FakeFittable(Fittable):
+    """Fake fittable class."""
 
-    def __init__(self, fit_params=[]):
+    def __init__(self, fit_params=None):
+        """Initialize FakeFittable."""
         super().__init__()
+        if fit_params is None:
+            fit_params = []
         self.static_fit = 100.0
         self.static_fit_log = 1e10
         self.val_dict = {}
@@ -38,6 +44,7 @@ class FakeFittable(Fittable):
         default_bounds=[1e-10, 1e1],
     )
     def staticFit(self):
+        """Static fit."""
         return self.static_fit
 
     @staticFit.setter
@@ -52,6 +59,7 @@ class FakeFittable(Fittable):
         default_bounds=[1e-10, 1e1],
     )
     def staticFitLog(self):
+        """Static fit log."""
         return self.static_fit_log
 
     @staticFitLog.setter
@@ -60,7 +68,7 @@ class FakeFittable(Fittable):
 
 
 def test_static_param():
-
+    """Test static param."""
     fp = FakeFittable()
 
     params = fp.fitting_parameters()
@@ -92,7 +100,7 @@ def test_static_param():
 
 @given(fitting_parameters())
 def test_dynamic_params(s):
-
+    """Test dynamic params."""
     names = [a[0] for a in s]
 
     if len(names) > len(set(names)):
@@ -124,12 +132,12 @@ def test_dynamic_params(s):
         # Test writing
         new_values = np.random.rand(total_given_params)
 
-        for n, v in zip(names, new_values):
+        for n, v in zip(names, new_values, strict=False):
             params[n][3](v)
 
         # Insure the internal values asre consitant with
         # parameter
-        for p, new_value in zip(s, new_values):
+        for p, new_value in zip(s, new_values, strict=False):
             name, val, mode, def_fit, def_bound = p
             assert params[name][2]() == fp.val_dict[name]
             assert params[name][2]() == new_value

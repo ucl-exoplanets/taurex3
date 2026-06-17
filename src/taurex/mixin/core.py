@@ -59,7 +59,9 @@ M = t.TypeVar("M", bound="Mixin")
 class MixinProtocol(t.Protocol):
     """Mixin protocol."""
 
-    def __init_mixin__(self, **kwargs: t.Dict[str, t.Any]) -> None: ...
+    def __init_mixin__(self, **kwargs: t.Dict[str, t.Any]) -> None:
+        """Main user initialisation method for mixins."""
+        ...
 
 
 def mixed_init(self, **kwargs: t.Dict[str, t.Any]) -> None:
@@ -97,7 +99,12 @@ def mixed_init(self, **kwargs: t.Dict[str, t.Any]) -> None:
 
 
 class Mixin(MixinProtocol, Fittable, Citable, t.Generic[T]):
-    """Base mixin class."""
+    """Base mixin class.
+
+    A mixin class that provides additional functionality to a given
+    base class.
+
+    """
 
     KLASS_COMPAT: t.Type[T] = None
 
@@ -105,7 +112,6 @@ class Mixin(MixinProtocol, Fittable, Citable, t.Generic[T]):
         """Constructor.
 
         Should not be called directly.
-
         """
         old_fitting_parameters = {}
         old_derived_parameters = {}
@@ -125,16 +131,29 @@ class Mixin(MixinProtocol, Fittable, Citable, t.Generic[T]):
         """Main initialisation function for mixin.
 
         This should be implemented by the mixin class and not ``__init__``.
-
         """
         pass
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for mixin."""
         raise NotImplementedError
 
     @classmethod
     def compatible(cls, other: t.Type) -> bool:
+        """Check compatibility with other class.
+
+        Parameters
+        ----------
+        other : t.Type
+            The class to check compatibility with.
+
+        Returns
+        -------
+        bool
+            True if compatible, False otherwise.
+
+        """
         if cls.KLASS_COMPAT:
             return issubclass(other, cls.KLASS_COMPAT)
         else:
@@ -222,7 +241,20 @@ class InstrumentMixin(Mixin[Instrument], _BaseInstrument):
 def determine_mixin_args(
     klasses: t.Sequence[t.Union[t.Type[T], t.Type[M]]]
 ) -> t.Tuple[t.Dict[str, t.Any], bool]:
-    """Determine all arguments for a mixin class."""
+    """Determine all arguments for a mixin class.
+
+    Parameters
+    ----------
+    klasses : t.Sequence[t.Union[t.Type[T], t.Type[M]]]
+        A sequence of classes to determine arguments from.
+
+    Returns
+    -------
+    t.Tuple[t.Dict[str, t.Any], bool]
+        A tuple containing a dictionary of all keyword arguments and
+        a boolean indicating if a VAR_KEYWORD argument exists.
+
+    """
     import inspect
 
     has_kvar = False

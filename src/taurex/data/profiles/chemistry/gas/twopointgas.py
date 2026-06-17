@@ -61,22 +61,22 @@ class TwoPointGas(Gas):
 
     @property
     def mixRatioSurface(self) -> float:  # noqa: N802
-        """Abundance on the planets surface"""
+        """Abundance on the planets surface."""
         return self._mix_surface
 
     @property
     def mixRatioTop(self) -> float:  # noqa: N802
-        """Abundance on the top of atmosphere"""
+        """Abundance on the top of atmosphere."""
         return self._mix_top
 
     @mixRatioSurface.setter
     def mixRatioSurface(self, value: float) -> None:  # noqa: N802
-        """Set abundance on the planets surface"""
+        """Set abundance on the planets surface."""
         self._mix_surface = value
 
     @mixRatioTop.setter
     def mixRatioTop(self, value: float) -> None:  # noqa: N802
-        """Set abundance on the top of atmosphere"""
+        """Set abundance on the top of atmosphere."""
         self._mix_top = value
 
     def add_surface_param(self) -> None:
@@ -92,6 +92,9 @@ class TwoPointGas(Gas):
         param_surface = f"{param_name}_surface"
         param_surf_tex = f"{param_tex}_surface"
 
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
+
         def read_surf(self):
             return self._mix_surface
 
@@ -103,9 +106,6 @@ class TwoPointGas(Gas):
         fget_surf = read_surf
         fset_surf = write_surf
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
             param_surface,
             param_surf_tex,
@@ -129,6 +129,9 @@ class TwoPointGas(Gas):
         param_top = f"{param_name}_top"
         param_top_tex = f"{param_tex}_top"
 
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
+
         def read_top(self):
             return self._mix_top
 
@@ -140,9 +143,6 @@ class TwoPointGas(Gas):
         fget_top = read_top
         fset_top = write_top
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
             param_top, param_top_tex, fget_top, fset_top, "log", default_fit, bounds
         )
@@ -186,6 +186,7 @@ class TwoPointGas(Gas):
         self._mix_profile[-1] = chem_top
 
     def write(self, output: OutputGroup) -> OutputGroup:
+        """Write two point gas to output."""
         gas_entry = super().write(output)
         gas_entry.write_scalar("mix_ratio_top", self.mixRatioTop)
         gas_entry.write_scalar("mix_ratio_surface", self.mixRatioSurface)
@@ -193,6 +194,7 @@ class TwoPointGas(Gas):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return input keywords for two point gas."""
         return (
             "twopoint",
             "2point",

@@ -76,6 +76,7 @@ class BaseSpectrumTest(unittest.TestCase):
     """Test the base spectrum class."""
 
     def test_properties(self):
+        """Test properties."""
         spec = BaseSpectrum("test")
 
         with self.assertRaises(NotImplementedError):
@@ -127,6 +128,7 @@ class ObservedSpectrumTest(unittest.TestCase):
 
     @patch("numpy.loadtxt", return_value=np.ones(shape=(1000, 4), dtype=np.float64))
     def test_with_bin(self, mock_load):
+        """Test with bin."""
         test_spec = ObservedSpectrum("TestFile")
         mock_load.assert_called_with("TestFile")
         test_spec.spectrum
@@ -144,6 +146,7 @@ class ObservedSpectrumTest(unittest.TestCase):
 
     @patch("numpy.loadtxt", return_value=np.ones(shape=(1000, 3), dtype=np.float64))
     def test_without_bin(self, mock_load):
+        """Test without bin."""
         test_spec = ObservedSpectrum("TestFileNoBin")
         mock_load.assert_called_with("TestFileNoBin")
         test_spec.spectrum
@@ -161,14 +164,19 @@ class ObservedSpectrumTest(unittest.TestCase):
 
 
 class TaurexSpectrumTest(unittest.TestCase):
+    """Test Taurex spectrum."""
+
     def setUp(self):
+        """SetUp."""
         # Create a temporary directory
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):
+        """TearDown."""
         shutil.rmtree(self.test_dir)
 
     def gen_valid_hdf5_output(self):
+        """Generate valid HDF5 output."""
         import os
 
         from taurex.output.hdf5 import HDF5Output
@@ -199,6 +207,7 @@ class TaurexSpectrumTest(unittest.TestCase):
         return file_path, wngrid, wlgrid, spectrum, error, wnwidth, wlwidth
 
     def test_valid_opt(self):
+        """Test valid opt."""
         res = self.gen_valid_hdf5_output()
         file_path, wngrid, wlgrid, spectrum, error, wnwidth, wlwidth = res
         ts = TaurexSpectrum(file_path)

@@ -1,6 +1,7 @@
+"""Tests for chemistry."""
+
 from unittest.mock import patch
 
-import pytest
 from hypothesis import given
 from hypothesis.strategies import lists
 
@@ -10,6 +11,7 @@ from ..strategies import molecules
 
 
 def setup_active(active_molecules, inactive_molecules):
+    """Setup active and inactive molecules."""
     from taurex.cache import OpacityCache
     from taurex.cache.ktablecache import KTableCache
 
@@ -24,6 +26,7 @@ def setup_active(active_molecules, inactive_molecules):
 
 @given(mols=lists(molecules()))
 def test_chemistry_active_default(mols):
+    """Test active default."""
     from taurex.cache import GlobalCache
 
     active_molecules = [m[0] for m in mols]
@@ -49,6 +52,7 @@ def test_chemistry_active_default(mols):
 
 @given(mols=lists(molecules()))
 def test_chemistry_active_xsec(mols):
+    """Test active xsec."""
     from taurex.cache import GlobalCache
 
     active_molecules = [m[0] for m in mols]
@@ -73,6 +77,7 @@ def test_chemistry_active_xsec(mols):
 
 @given(mols=lists(molecules()))
 def test_chemistry_active_ktable(mols):
+    """Test active ktable."""
     from taurex.cache import GlobalCache
 
     active_molecules = [m[0] for m in mols]

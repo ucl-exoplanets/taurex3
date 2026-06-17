@@ -1,5 +1,6 @@
+"""Test isothermal temperature profile."""
+
 import numpy as np
-import pytest
 from hypothesis import given
 from hypothesis.strategies import floats
 from hypothesis.strategies import integers
@@ -13,7 +14,7 @@ from taurex.temperature import Isothermal
     nlayers=integers(1, 50),
 )
 def test_isothermal(temperature, another_temperature, nlayers):
-
+    """Test isothermal."""
     iso = Isothermal(T=temperature)
 
     iso.initialize_profile(nlayers=nlayers)

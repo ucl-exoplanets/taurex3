@@ -48,7 +48,7 @@ class NativeBinner(Binner):
             Optional, generally if you require this but the user does not pass
             it then you must compute it yourself using ``wngrid``. This can
             be done easily using the function
-            func:`~taurex.util.compute_bin_edges`.
+            :func:`~taurex.util.compute_bin_edges`.
 
         error: :obj:`array`, optional
             Associated errors or noise of the spectrum. Must be same shape
@@ -73,7 +73,7 @@ class NativeBinner(Binner):
         return wngrid, spectrum, grid_width, error
 
     def bin_model(self, model_output: ModelOutputType) -> BinDownType:
-        """Does nothing, only returns function arguments"""
+        """Does nothing, only returns function arguments."""
         return *model_output[:2], None, None
 
     def generate_spectrum_output(
@@ -85,7 +85,6 @@ class NativeBinner(Binner):
 
         Parameters
         ----------
-
         model_output: obj:`tuple`
             Result from running a TauREx3 forward model
 

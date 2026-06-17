@@ -1,14 +1,20 @@
+"""Tests for PyMieScattGridExtinctionContribution."""
+
 import numpy as np
 import pytest
 
 
 class DummyModel:
+    """Dummy model."""
+
     def __init__(self):
+        """Initialize DummyModel."""
         self.nLayers = 4
         self.pressureProfile = np.array([1e5, 1e4, 1e3, 1e2], dtype=np.float64)
 
 
 def test_pymiescatt_grid_accepts_qext_grid_dataset(tmp_path):
+    """Test PyMieScattGridExtinctionContribution accepts Qext_grid."""
     import h5py
 
     from taurex.contributions import PyMieScattGridExtinctionContribution
@@ -51,6 +57,7 @@ def test_pymiescatt_grid_accepts_qext_grid_dataset(tmp_path):
 
 
 def test_pymiescatt_grid_rejects_invalid_distribution(tmp_path):
+    """Test PyMieScattGridExtinctionContribution rejects invalid distribution."""
     import h5py
 
     from taurex.contributions import PyMieScattGridExtinctionContribution

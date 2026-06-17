@@ -1,3 +1,5 @@
+"""Test blackbody star."""
+
 import numpy as np
 from hypothesis import given
 from hypothesis import settings
@@ -19,6 +21,7 @@ from ..strategies import hyp_wngrid
 def test_blackbody_star(
     temperature, radius, distance, magnitudeK, mass, metallicity, wngrid
 ):
+    """Test blackbody star."""
     from taurex.stellar import BlackbodyStar
 
     bs = BlackbodyStar(temperature, radius, distance, magnitudeK, mass, metallicity)

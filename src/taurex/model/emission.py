@@ -28,8 +28,18 @@ _log = setup_log(__name__)
 
 
 def contribute_ktau_emission_numpy(
-    start_k, end_k, density_offset, sigma, density, path, weights, ngrid, layer, ngauss
-):
+    start_k: int,
+    end_k: int,
+    density_offset: int,
+    sigma: npt.NDArray[np.float64],
+    density: npt.NDArray[np.float64],
+    path: npt.NDArray[np.float64],
+    weights: npt.NDArray[np.float64],
+    ngrid: int,
+    layer: int,
+    ngauss: int,
+) -> npt.NDArray[np.float64]:
+    """Contribute ktau emission with numpy."""
     _path = path[start_k:end_k]
     _density = density[start_k + density_offset : end_k + density_offset]
 
@@ -39,8 +49,18 @@ def contribute_ktau_emission_numpy(
 
 
 def contribute_ktau_emission_numba(
-    start_k, end_k, density_offset, sigma, density, path, weights, ngrid, layer, ngauss
-):
+    start_k: int,
+    end_k: int,
+    density_offset: int,
+    sigma: npt.NDArray[np.float64],
+    density: npt.NDArray[np.float64],
+    path: npt.NDArray[np.float64],
+    weights: npt.NDArray[np.float64],
+    ngrid: int,
+    layer: int,
+    ngauss: int,
+) -> npt.NDArray[np.float64]:
+    """Contribute ktau emission with numba."""
     tau_temp = np.zeros(shape=(ngrid, ngauss))
 
     for k in range(start_k, end_k):
@@ -57,7 +77,10 @@ try:
     import numba
 
     contribute_ktau_emission = numba.jit(
-        contribute_ktau_emission_numba, nopython=True, nogil=True, fastmath=True
+        contribute_ktau_emission_numba,
+        nopython=True,
+        nogil=True,
+        fastmath=True,
     )
 except ImportError:
     _log.warning("Numba not installed, using numpy")
@@ -82,12 +105,10 @@ class EmissionModel(OneDForwardModel):
     ):
         """Initialise eclipse forward model.
 
+        This is the classic emission model using quadrature integration.
 
         Parameters
         ----------
-        name:
-            Name to use in logging
-
         planet:
             Planet model, default planet is Jupiter
 
@@ -95,8 +116,8 @@ class EmissionModel(OneDForwardModel):
             Star model, default star is Sun-like
 
         pressure_profile:
-            Pressure model, alternative is to set ``nlayers``, ``atm_min_pressure``
-            and ``atm_max_pressure``
+            Pressure model, alternative is to set ``nlayers``,
+            ``atm_min_pressure`` and ``atm_max_pressure``
 
         temperature_profile:
             Temperature model, default is an
@@ -116,6 +137,9 @@ class EmissionModel(OneDForwardModel):
 
         atm_max_pressure:
             Pressure at BOA. Used if ``pressure_profile`` is not defined.
+
+        contributions:
+            List of contribution objects to include in the model.
 
         ngauss:
             Number of gaussian quadrature points, default = 4
@@ -138,7 +162,9 @@ class EmissionModel(OneDForwardModel):
         self._clamp = 10
 
     def set_num_gauss(
-        self, value: int, coeffs: t.Optional[npt.NDArray[np.float64]] = None
+        self,
+        value: int,
+        coeffs: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
         """Set number of gaussian quadrature points.
 
@@ -191,7 +217,8 @@ class EmissionModel(OneDForwardModel):
 
         .. math::
 
-            F = \frac{F_{total}}{\F_{star}} \left(\frac{R_{planet}}{R_{star}}\right)^2
+            F = \frac{F_{total}}{F_{star}}
+            \left(\frac{R_{planet}}{R_{star}}\right)^2
 
         Parameters
         ----------
@@ -204,7 +231,6 @@ class EmissionModel(OneDForwardModel):
         star_sed = self._star.spectralEmissionDensity
 
         self.debug("Star SED: %s", star_sed)
-        # quit()
         star_radius = self._star.radius
         planet_radius = self._planet.fullRadius
         self.debug("star_radius %s", self._star.radius)
@@ -232,7 +258,22 @@ class EmissionModel(OneDForwardModel):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
-        """Evaluate the flux and quandratues but do not compute the final flux."""
+        """Evaluate the flux and quandratues but do not compute the final flux.
+
+        Parameters
+        ----------
+        wngrid : npt.NDArray[np.float64], optional
+            Wavenumber grid, by default None
+        cutoff_grid : bool, optional
+            Whether to cutoff the grid, by default True
+
+        Returns
+        -------
+        t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64],
+        npt.NDArray[np.float64], npt.NDArray[np.float64]]
+            Intensity, mu, weights, and tau.
+
+        """
         from taurex.util import clip_native_to_wngrid
 
         self.initialize_profiles()
@@ -255,7 +296,21 @@ class EmissionModel(OneDForwardModel):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
-        """Evaluate emission flux on quadratures using ktables."""
+        """Evaluate emission flux on quadratures using ktables.
+
+        Parameters
+        ----------
+        wngrid : npt.NDArray[np.float64]
+            Wavenumber grid.
+        return_contrib : bool
+            Whether to return contributions.
+
+        Returns
+        -------
+        t.Tuple
+            Intensity, mu, weights, and tau.
+
+        """
         from taurex.contributions import AbsorptionContribution
         from taurex.util import compute_dz
 
@@ -287,7 +342,14 @@ class EmissionModel(OneDForwardModel):
         # for layer in range(total_layers):
         for contrib in non_molecule_absorption:
             contrib.contribute(
-                self, 0, total_layers, 0, 0, density, surface_tau, path_length=dz
+                self,
+                0,
+                total_layers,
+                0,
+                0,
+                density,
+                surface_tau,
+                path_length=dz,
             )
 
         surface_tau = surface_tau * _mu
@@ -295,7 +357,14 @@ class EmissionModel(OneDForwardModel):
             for idx, m in enumerate(_mu):
                 tmp_tau[...] = 0.0
                 molecule_absorption.contribute(
-                    self, 0, total_layers, 0, 0, density, tmp_tau, path_length=dz * m
+                    self,
+                    0,
+                    total_layers,
+                    0,
+                    0,
+                    density,
+                    tmp_tau,
+                    path_length=dz * m,
                 )
                 surface_tau[idx] += tmp_tau[0]
 
@@ -321,7 +390,14 @@ class EmissionModel(OneDForwardModel):
                     path_length=dz,
                 )
                 contrib.contribute(
-                    self, layer, layer + 1, 0, 0, density, dtau, path_length=dz
+                    self,
+                    layer,
+                    layer + 1,
+                    0,
+                    0,
+                    density,
+                    dtau,
+                    path_length=dz,
                 )
 
             k_dtau = None
@@ -346,7 +422,16 @@ class EmissionModel(OneDForwardModel):
                 )
 
                 k_dtau = contribute_ktau_emission(
-                    layer, layer + 1, 0, sigma, density, dz, wg, wngrid_size, 0, ng
+                    layer,
+                    layer + 1,
+                    0,
+                    sigma,
+                    density,
+                    dz,
+                    wg,
+                    wngrid_size,
+                    0,
+                    ng,
                 )
                 k_dtau += k_layer
 
@@ -354,7 +439,12 @@ class EmissionModel(OneDForwardModel):
 
             self.debug("dtau[%s]=%s", layer, dtau)
             planck_term = black_body(wngrid, temperature[layer]) / PI
-            self.debug("planck_term[%s]=%s,%s", layer, temperature[layer], planck_term)
+            self.debug(
+                "planck_term[%s]=%s,%s",
+                layer,
+                temperature[layer],
+                planck_term,
+            )
 
             dtau_calc = np.exp(-dtau * _mu)
             layer_tau_calc = np.exp(-layer_tau * _mu)
@@ -404,7 +494,21 @@ class EmissionModel(OneDForwardModel):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
-        """Evaluate emission flux on quadratures."""
+        """Evaluate emission flux on quadratures.
+
+        Parameters
+        ----------
+        wngrid : npt.NDArray[np.float64]
+            Wavenumber grid.
+        return_contrib : bool
+            Whether to return contributions.
+
+        Returns
+        -------
+        t.Tuple
+            Intensity, mu, weights, and tau.
+
+        """
         if self.usingKTables:
             return self.evaluate_emission_ktables(wngrid, return_contrib)
 
@@ -428,7 +532,14 @@ class EmissionModel(OneDForwardModel):
         # for layer in range(total_layers):
         for contrib in self.contribution_list:
             contrib.contribute(
-                self, 0, total_layers, 0, 0, density, surface_tau, path_length=dz
+                self,
+                0,
+                total_layers,
+                0,
+                0,
+                density,
+                surface_tau,
+                path_length=dz,
             )
         self.debug("density = %s", density[0])
         self.debug("surface_tau = %s", surface_tau)
@@ -456,7 +567,14 @@ class EmissionModel(OneDForwardModel):
                     path_length=dz,
                 )
                 contrib.contribute(
-                    self, layer, layer + 1, 0, 0, density, dtau, path_length=dz
+                    self,
+                    layer,
+                    layer + 1,
+                    0,
+                    0,
+                    density,
+                    dtau,
+                    path_length=dz,
                 )
             # for contrib in self.contribution_list:
 
@@ -480,7 +598,12 @@ class EmissionModel(OneDForwardModel):
 
             self.debug("dtau[%s]=%s", layer, dtau)
             planck_term = black_body(wngrid, temperature[layer]) / PI
-            self.debug("planck_term[%s]=%s,%s", layer, temperature[layer], planck_term)
+            self.debug(
+                "planck_term[%s]=%s,%s",
+                layer,
+                temperature[layer],
+                planck_term,
+            )
 
             dtau_calc = 0.0
             if dtau.min() < self._clamp:
@@ -498,7 +621,21 @@ class EmissionModel(OneDForwardModel):
     def path_integral(
         self, wngrid: npt.NDArray[np.float64], return_contrib: bool
     ) -> t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-        """Evaluate emission flux and integrate quadratures for flux."""
+        """Evaluate emission flux and integrate quadratures for flux.
+
+        Parameters
+        ----------
+        wngrid : npt.NDArray[np.float64]
+            Wavenumber grid.
+        return_contrib : bool
+            Whether to return contributions.
+
+        Returns
+        -------
+        t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+            Flux and tau.
+
+        """
         intensity, _mu, _w, tau = self.evaluate_emission(wngrid, return_contrib)
         self.debug("intensity: %s", intensity)
 
@@ -508,7 +645,18 @@ class EmissionModel(OneDForwardModel):
         return self.compute_final_flux(flux_total).ravel(), tau
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write model to output group."""
+        """Write model to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         model = super().write(output)
         model.write_scalar("ngauss", self._ngauss)
         return model
@@ -522,7 +670,9 @@ class EmissionModel(OneDForwardModel):
         )
 
     @derivedparam(
-        param_name="log_F_bol", param_latex=r"log(F$_\{bol\}$)", compute=False
+        param_name="log_F_bol",
+        param_latex=r"log(F$_\{bol\}$)",
+        compute=False,
     )
     def logBolometricFlux(self) -> float:  # noqa: N802
         """log10 Flux integrated over all wavelengths (W m-2)."""
@@ -531,7 +681,7 @@ class EmissionModel(OneDForwardModel):
         try:
             from scipy.integrate import simps
         except ImportError:
-            # Using a newer version of scipy where simps was renamed to simpson
+            # Using a newer version of scipy where simps was renamed
             from scipy.integrate import simpson as simps
 
         intensity, _mu, _w, tau = self.partial_model()

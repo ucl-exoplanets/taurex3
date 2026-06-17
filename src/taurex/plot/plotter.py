@@ -1,12 +1,9 @@
 """Plotting module for TauREx."""
 
-import h5py
-import matplotlib
-
-
-matplotlib.use("Agg")
 import os
 
+import h5py
+import matplotlib
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
@@ -14,6 +11,8 @@ import numpy as np
 import taurex.plot.corner as corner
 from taurex.util.util import decode_string_array
 
+
+matplotlib.use("Agg")
 
 # some global matplotlib vars
 mpl.rcParams["axes.linewidth"] = 1  # set the value globally
@@ -25,17 +24,25 @@ mpl.rcParams["errorbar.capsize"] = 2
 
 
 class Plotter:
+    """Plotting class for TauREx output."""
+
     phi = 1.618
 
-    modelAxis = {
+    model_axis = {
         "TransmissionModel": "$(R_p/R_*)^2$",
         "EmissionModel": "$F_p/F_*$",
         "DirectImageModel": "$F_p$",
     }
 
     def __init__(
-        self, filename, title=None, prefix=None, cmap="Paired", out_folder="."
+        self,
+        filename,
+        title=None,
+        prefix=None,
+        cmap="Paired",
+        out_folder=".",
     ):
+        """Initialize Plotter."""
         self.fd = h5py.File(filename, "r")
         self.title = title
         self.cmap = mpl.cm.get_cmap(cmap)
@@ -48,12 +55,14 @@ class Plotter:
             os.makedirs(self.out_folder)
 
     def find_nearest(self, array, value):
+        """Find nearest value in array."""
         array = np.asarray(array)
         idx = (np.abs(array - value)).argmin()
         return idx, array[idx]
 
     @property
     def num_solutions(self, fd_position="Output"):
+        """Get number of solutions."""
         return len(
             [
                 (int(k[8:]), v)
@@ -63,6 +72,7 @@ class Plotter:
         )
 
     def solution_iter(self, fd_position="Output"):
+        """Iterate over solutions."""
         yield from [
             (int(k[8:]), v)
             for k, v in self.fd[fd_position]["Solutions"].items()
@@ -70,14 +80,15 @@ class Plotter:
         ]
 
     def forward_output(self):
+        """Get forward output group."""
         return self.fd["Output"]
 
     def compute_ranges(self, mu=True, selected_fitparams=None):
-
+        """Compute ranges."""
         solution_ranges = []
 
         mu_derived = None
-        for idx, sol in self.solution_iter():
+        for _, sol in self.solution_iter():
 
             mu_derived = self.get_derived_parameters(sol)
 
@@ -85,7 +96,7 @@ class Plotter:
 
             fit_params = sol["fit_params"]
             param_list = []
-            for fit_names in selected_fitparams:
+            for fit_names in fitting_names:
                 if fit_names not in self.fittingNames:
                     continue
                 param_values = fit_params[fit_names]
@@ -93,13 +104,25 @@ class Plotter:
                 sigma_p = param_values["sigma_p"][()]
                 val = param_values["value"][()]
 
-                param_list.append([val, val - 5.0 * sigma_m, val + 5.0 * sigma_p])
+                param_list.append(
+                    [
+                        val,
+                        val - 5.0 * sigma_m,
+                        val + 5.0 * sigma_p,
+                    ]
+                )
 
             for d in mu_derived:
                 sigma_m = d["sigma_m"][()]
                 sigma_p = d["sigma_p"][()]
                 val = d["value"][()]
-                param_list.append([val, val - 5.0 * sigma_m, val + 5.0 * sigma_p])
+                param_list.append(
+                    [
+                        val,
+                        val - 5.0 * sigma_m,
+                        val + 5.0 * sigma_p,
+                    ]
+                )
 
             solution_ranges.append(param_list)
 
@@ -113,10 +136,16 @@ class Plotter:
         ]
         if len(mu_derived) > 0:
             fitting_boundary_low = np.concatenate(
-                (fitting_boundary_low, [-1e99] * len(mu_derived))
+                (
+                    fitting_boundary_low,
+                    [-1e99] * len(mu_derived),
+                )
             )
             fitting_boundary_high = np.concatenate(
-                (fitting_boundary_high, [1e99] * len(mu_derived))
+                (
+                    fitting_boundary_high,
+                    [1e99] * len(mu_derived),
+                )
             )
 
         range_all = np.array(solution_ranges)
@@ -125,34 +154,40 @@ class Plotter:
         range_max = np.max(range_all[:, :, 2], axis=0)
 
         range_min = np.where(
-            range_min < fitting_boundary_low, fitting_boundary_low, range_min
+            range_min < fitting_boundary_low,
+            fitting_boundary_low,
+            range_min,
         )
         range_max = np.where(
-            range_max > fitting_boundary_high, fitting_boundary_high, range_max
+            range_max > fitting_boundary_high,
+            fitting_boundary_high,
+            range_max,
         )
-        return list(zip(range_min, range_max))
+        return list(zip(range_min, range_max, strict=True))
 
     @property
     def activeGases(self):
+        """Get active gases."""
         return decode_string_array(
             self.fd["ModelParameters"]["Chemistry"]["active_gases"]
         )
 
     @property
     def condensates(self):
+        """Get condensates."""
         return decode_string_array(
             self.fd["ModelParameters"]["Chemistry"]["condensates"]
         )
 
     @property
     def inactiveGases(self):
+        """Get inactive gases."""
         return decode_string_array(
             self.fd["ModelParameters"]["Chemistry"]["inactive_gases"]
         )
 
     def plot_fit_xprofile(self):
         """Plot fitted mixing ratio profiles."""
-
         for solution_idx, solution_val in self.solution_iter():
 
             fig = plt.figure(figsize=(7, 7 / self.phi))
@@ -175,7 +210,10 @@ class Plotter:
                 prof_std = active_profile_std[mol_idx]
 
                 plt.plot(
-                    prof, pressure_profile, color=cols_mol[mol_name], label=mol_name
+                    prof,
+                    pressure_profile,
+                    color=cols_mol[mol_name],
+                    label=mol_name,
                 )
 
                 plt.fill_betweenx(
@@ -204,7 +242,14 @@ class Plotter:
             plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            ax.set_position(
+                [
+                    box.x0,
+                    box.y0,
+                    box.width * 0.8,
+                    box.height,
+                ]
+            )
             ax.legend(
                 loc="center left",
                 bbox_to_anchor=(1, 0.5),
@@ -246,7 +291,10 @@ class Plotter:
                 prof_std = inactive_profile_std[mol_idx]
 
                 plt.plot(
-                    prof, pressure_profile, color=cols_mol[mol_name], label=mol_name
+                    prof,
+                    pressure_profile,
+                    color=cols_mol[mol_name],
+                    label=mol_name,
                 )
 
                 plt.fill_betweenx(
@@ -275,7 +323,14 @@ class Plotter:
             plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+            ax.set_position(
+                [
+                    box.x0,
+                    box.y0,
+                    box.width * 0.8,
+                    box.height,
+                ]
+            )
             ax.legend(
                 loc="center left",
                 bbox_to_anchor=(1, 0.5),
@@ -294,7 +349,7 @@ class Plotter:
             plt.close("all")
 
     def plot_forward_xprofile(self):
-
+        """Plot forward mixing ratio profiles."""
         solution_val = self.forward_output()
 
         profiles = solution_val["Profiles"]
@@ -314,7 +369,12 @@ class Plotter:
 
             prof = active_profile[mol_idx]
 
-            plt.plot(prof, pressure_profile, color=cols_mol[mol_name], label=mol_name)
+            plt.plot(
+                prof,
+                pressure_profile,
+                color=cols_mol[mol_name],
+                label=mol_name,
+            )
 
         plt.yscale("log")
         plt.gca().invert_yaxis()
@@ -324,7 +384,14 @@ class Plotter:
         plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        ax.set_position(
+            [
+                box.x0,
+                box.y0,
+                box.width * 0.8,
+                box.height,
+            ]
+        )
         ax.legend(
             loc="center left",
             bbox_to_anchor=(1, 0.5),
@@ -335,7 +402,10 @@ class Plotter:
         if self.title:
             plt.title(self.title + " - Active", fontsize=14)
         plt.savefig(
-            os.path.join(self.out_folder, "%s_fit_active_mixratio.pdf" % (self.prefix))
+            os.path.join(
+                self.out_folder,
+                "%s_fit_active_mixratio.pdf" % (self.prefix),
+            )
         )
         plt.close()
 
@@ -350,7 +420,12 @@ class Plotter:
 
             prof = inactive_profile[mol_idx]
 
-            plt.plot(prof, pressure_profile, color=cols_mol[mol_name], label=mol_name)
+            plt.plot(
+                prof,
+                pressure_profile,
+                color=cols_mol[mol_name],
+                label=mol_name,
+            )
 
         plt.yscale("log")
         plt.gca().invert_yaxis()
@@ -360,7 +435,14 @@ class Plotter:
         plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        ax.set_position(
+            [
+                box.x0,
+                box.y0,
+                box.width * 0.8,
+                box.height,
+            ]
+        )
         ax.legend(
             loc="center left",
             bbox_to_anchor=(1, 0.5),
@@ -372,13 +454,14 @@ class Plotter:
             plt.title(self.title + " - Inactive", fontsize=14)
         plt.savefig(
             os.path.join(
-                self.out_folder, "%s_fit_inactive_mixratio.pdf" % (self.prefix)
+                self.out_folder,
+                "%s_fit_inactive_mixratio.pdf" % (self.prefix),
             )
         )
         plt.close()
 
     def plot_forward_cprofile(self):
-
+        """Plot forward condensate profiles."""
         solution_val = self.forward_output()
 
         try:
@@ -402,7 +485,12 @@ class Plotter:
 
             prof = active_profile[mol_idx]
 
-            plt.plot(prof, pressure_profile, color=cols_mol[mol_name], label=mol_name)
+            plt.plot(
+                prof,
+                pressure_profile,
+                color=cols_mol[mol_name],
+                label=mol_name,
+            )
 
         plt.yscale("log")
         plt.gca().invert_yaxis()
@@ -412,7 +500,14 @@ class Plotter:
         plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
-        ax.set_position([box.x0, box.y0, box.width * 0.8, box.height])
+        ax.set_position(
+            [
+                box.x0,
+                box.y0,
+                box.width * 0.8,
+                box.height,
+            ]
+        )
         ax.legend(
             loc="center left",
             bbox_to_anchor=(1, 0.5),
@@ -424,16 +519,17 @@ class Plotter:
             plt.title(self.title, fontsize=14)
         plt.savefig(
             os.path.join(
-                self.out_folder, "%s_fit_condensate_mixratio.pdf" % (self.prefix)
+                self.out_folder,
+                "%s_fit_condensate_mixratio.pdf" % (self.prefix),
             )
         )
         plt.close()
 
     def plot_fitted_tp(self):
-
+        """Plot fitted TP profile."""
         # fitted model
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)
+        ax = fig.add_subplot(111)  # noqa: F841
 
         for solution_idx, solution_val in self.solution_iter():
             if self.num_solutions > 1:
@@ -469,13 +565,18 @@ class Plotter:
         legend.get_frame().set_alpha(0.8)
         if self.title:
             plt.title(self.title, fontsize=14)
-        plt.savefig(os.path.join(self.out_folder, "%s_tp_profile.pdf" % (self.prefix)))
+        plt.savefig(
+            os.path.join(
+                self.out_folder,
+                "%s_tp_profile.pdf" % (self.prefix),
+            )
+        )
         plt.close()
 
     def plot_forward_tp(self):
-
+        """Plot forward TP profile."""
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)
+        ax = fig.add_subplot(111)  # noqa: F841
 
         solution_val = self.forward_output()
 
@@ -495,18 +596,18 @@ class Plotter:
         legend.get_frame().set_alpha(0.8)
         if self.title:
             plt.title(self.title, fontsize=14)
-        plt.savefig(os.path.join(self.out_folder, "%s_tp_profile.pdf" % (self.prefix)))
+        plt.savefig(
+            os.path.join(
+                self.out_folder,
+                "%s_tp_profile.pdf" % (self.prefix),
+            )
+        )
         plt.close()
 
-    # def get_mu_parameters(self, solution):
-    #     if 'mu_derived' not in solution['fit_params'].keys():
-    #         return None
-    #     else:
-    #         return solution['fit_params']['mu_derived']
-
     def get_derived_parameters(self, solution):
+        """Get derived parameters."""
         if "derived_params" in solution:
-            return [c for k, c in solution["derived_params"].items()]
+            return [c for _, c in solution["derived_params"].items()]
         else:
             return [solution["fit_params"]["mu_derived"]]
 
@@ -520,22 +621,20 @@ class Plotter:
         truth=None,
         selected_fitparams=None,
     ):
+        """Plot posteriors."""
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no posteriors found"
+                "HDF5 was not generated from retrieval, " "no posteriors found"
             )
         if selected_fitparams is None:
             selected_fitparams = self.fittingNames
         if ranges is None:
             ranges = self.compute_ranges(
-                mu=plot_mu, selected_fitparams=selected_fitparams
+                mu=plot_mu,
+                selected_fitparams=selected_fitparams,
             )
 
-        figs = []
-
         for solution_idx, solution_val in self.solution_iter():
-
-            # print(solution_idx)
 
             mu_derived = self.get_derived_parameters(solution_val)
 
@@ -548,8 +647,6 @@ class Plotter:
             _tracedata = tracedata[..., indices]
             latex_names = [self.fittingLatex[idx] for idx in indices]
 
-            latex_derived = self.derivedLatex
-
             if mu_derived is not None:
                 for param in mu_derived:
 
@@ -561,8 +658,7 @@ class Plotter:
                 color_idx = float(solution_idx) / self.num_solutions
                 color = self.cmap(float(color_idx))
 
-            # print('color: {}'.format(color_idx))
-            ### https://matplotlib.org/users/customizing.html
+            # https://matplotlib.org/users/customizing.html
             plt.rc("xtick", labelsize=10)  # size of individual labels
             plt.rc("ytick", labelsize=10)
             plt.rc("axes.formatter", limits=(-4, 5))  # scientific notation..
@@ -600,7 +696,10 @@ class Plotter:
                 )
         if save:
             plt.savefig(
-                os.path.join(self.out_folder, "%s_posteriors.pdf" % (self.prefix))
+                os.path.join(
+                    self.out_folder,
+                    "%s_posteriors.pdf" % (self.prefix),
+                )
             )
             plt.close()
         else:
@@ -608,21 +707,19 @@ class Plotter:
 
     @property
     def modelType(self):
+        """Get model type."""
         return self.fd["ModelParameters"]["model_type"][()]
 
-    def count_contributions(self, spectra):
-        pass
-
     def plot_fitted_spectrum(self, resolution=None):
-
+        """Plot fitted spectrum."""
         # fitted model
         fig = plt.figure(figsize=(10.6, 7.0))
         # ax = fig.add_subplot(111)
+        fig = fig  # noqa: F841
 
         obs_spectrum = self.fd["Observed"]["spectrum"][...]
         error = self.fd["Observed"]["errorbars"][...]
         wlgrid = self.fd["Observed"]["wlgrid"][...]
-        bin_widths = self.fd["Observed"]["binwidths"][...]
 
         plt.errorbar(
             wlgrid,
@@ -636,9 +733,8 @@ class Plotter:
             label="Observed",
         )
 
-        N = self.num_solutions
         for solution_idx, solution_val in self.solution_iter():
-            if N > 1:
+            if self.num_solutions > 1:
                 label = "Fitted model (%i)" % (solution_idx)
             else:
                 label = "Fitted model"
@@ -658,7 +754,7 @@ class Plotter:
                 **{
                     "s": 10,
                     "edgecolors": "grey",
-                    "c": self.cmap(float(solution_idx) / N),
+                    "c": self.cmap(float(solution_idx) / self.num_solutions),
                 },
             )
 
@@ -667,7 +763,7 @@ class Plotter:
                 native_grid,
                 solution_val["Spectra"],
                 resolution=resolution,
-                color=self.cmap(float(solution_idx) / N),
+                color=self.cmap(float(solution_idx) / self.num_solutions),
                 label=label,
             )
 
@@ -678,24 +774,40 @@ class Plotter:
         # plt.ylim(0.0,0.006)
         plt.xlabel(r"Wavelength ($\mu$m)")
         try:
-            plt.ylabel(self.modelAxis[self.modelType])
+            plt.ylabel(self.model_axis[self.modelType])
         except KeyError:
             pass
 
         if np.max(wlgrid) - np.min(wlgrid) > 5:
             plt.xscale("log")
             plt.tick_params(axis="x", which="minor")
-            # ax.xaxis.set_minor_formatter(mpl.ticker.FormatStrFormatter("%i"))
-            # ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter("%i"))
-        plt.legend(loc="best", ncol=2, frameon=False, prop={"size": 11})
+            # ax.xaxis.set_minor_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+            # ax.xaxis.set_major_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+        plt.legend(
+            loc="best",
+            ncol=2,
+            frameon=False,
+            prop={"size": 11},
+        )
         if self.title:
             plt.title(self.title, fontsize=14)
         plt.tight_layout()
-        plt.savefig(os.path.join(self.out_folder, "%s_spectrum.pdf" % (self.prefix)))
+        plt.savefig(
+            os.path.join(
+                self.out_folder,
+                "%s_spectrum.pdf" % (self.prefix),
+            )
+        )
         plt.close()
 
     def plot_forward_spectrum(self, resolution=None):
+        """Plot forward spectrum."""
         fig = plt.figure(figsize=(5.3, 3.5))
+        fig = fig  # noqa: F841
 
         spectra_out = self.forward_output()["Spectra"]
 
@@ -707,7 +819,11 @@ class Plotter:
             wlgrid = spectra_out["native_wlgrid"][...]
 
         self._generic_plot(
-            wlgrid, native_grid, spectra_out, resolution=resolution, alpha=1
+            wlgrid,
+            native_grid,
+            spectra_out,
+            resolution=resolution,
+            alpha=1,
         )
         plt.xlim(
             np.min(wlgrid) - 0.05 * np.min(wlgrid),
@@ -716,28 +832,40 @@ class Plotter:
         # plt.ylim(0.0,0.006)
         plt.xlabel(r"Wavelength ($\mu$m)")
         try:
-            plt.ylabel(self.modelAxis[self.modelType])
+            plt.ylabel(self.model_axis[self.modelType])
         except KeyError:
             pass
 
         if np.max(wlgrid) - np.min(wlgrid) > 5:
             plt.xscale("log")
             plt.tick_params(axis="x", which="minor")
-            # ax.xaxis.set_minor_formatter(mpl.ticker.FormatStrFormatter("%i"))
-            # ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter("%i"))
-        plt.legend(loc="best", ncol=2, frameon=False, prop={"size": 11})
+            # ax.xaxis.set_minor_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+            # ax.xaxis.set_major_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+        plt.legend(
+            loc="best",
+            ncol=2,
+            frameon=False,
+            prop={"size": 11},
+        )
         if self.title:
             plt.title(self.title, fontsize=14)
         plt.tight_layout()
         plt.savefig(
-            os.path.join(self.out_folder, "%s_forward_spectrum.pdf" % (self.prefix))
+            os.path.join(
+                self.out_folder,
+                "%s_forward_spectrum.pdf" % (self.prefix),
+            )
         )
         plt.close()
 
     def plot_fitted_contrib(self, full=False, resolution=None):
+        """Plot fitted contributions."""
         # fitted model
 
-        N = self.num_solutions
         for solution_idx, solution_val in self.solution_iter():
 
             fig = plt.figure(figsize=(5.3 * 2, 3.5 * 2))
@@ -746,7 +874,6 @@ class Plotter:
             obs_spectrum = self.fd["Observed"]["spectrum"][:]
             error = self.fd["Observed"]["errorbars"][...]
             wlgrid = self.fd["Observed"]["wlgrid"][...]
-            bin_widths = self.fd["Observed"]["binwidths"][...]
 
             plt.errorbar(
                 wlgrid,
@@ -760,7 +887,11 @@ class Plotter:
                 label="Observed",
             )
             self._plot_contrib(
-                solution_val, wlgrid, ax, full=full, resolution=resolution
+                solution_val,
+                wlgrid,
+                ax,
+                full=full,
+                resolution=resolution,
             )
 
             # plt.tight_layout()
@@ -775,6 +906,7 @@ class Plotter:
         plt.close("all")
 
     def plot_forward_contrib(self, full=False, resolution=None):
+        """Plot forward contributions."""
         fig = plt.figure(figsize=(5.3 * 2, 3.5 * 2))
         ax = fig.add_subplot(111)
 
@@ -788,29 +920,49 @@ class Plotter:
             wlgrid = spectra_out["native_wlgrid"][...]
 
         self._generic_plot(
-            wlgrid, native_grid, spectra_out, resolution=resolution, alpha=0.5
+            wlgrid,
+            native_grid,
+            spectra_out,
+            resolution=resolution,
+            alpha=0.5,
         )
         self._plot_contrib(
-            self.forward_output(), wlgrid, ax, full=full, resolution=resolution
+            self.forward_output(),
+            wlgrid,
+            ax,
+            full=full,
+            resolution=resolution,
         )
 
         # plt.tight_layout()
         plt.savefig(
             os.path.join(
-                self.out_folder, "%s_spectrum_contrib_forward.pdf" % (self.prefix)
+                self.out_folder,
+                "%s_spectrum_contrib_forward.pdf" % (self.prefix),
             )
         )
         plt.close()
 
-    def _plot_contrib(self, output, wlgrid, ax, full=False, resolution=None):
-
+    def _plot_contrib(
+        self,
+        output,
+        wlgrid,
+        ax,
+        full=False,
+        resolution=None,
+    ):
+        """Plot contributions."""
         if full:
             wlgrid = self.full_contrib_plot(
-                output["Spectra"], wlgrid, resolution=resolution
+                output["Spectra"],
+                wlgrid,
+                resolution=resolution,
             )
         else:
             wlgrid = self.simple_contrib_plot(
-                output["Spectra"], wlgrid, resolution=resolution
+                output["Spectra"],
+                wlgrid,
+                resolution=resolution,
             )
 
         plt.xlim(
@@ -820,19 +972,29 @@ class Plotter:
         # plt.ylim(0.0,0.006)
         plt.xlabel(r"Wavelength ($\mu$m)")
         try:
-            plt.ylabel(self.modelAxis[self.modelType])
+            plt.ylabel(self.model_axis[self.modelType])
         except KeyError:
             pass
 
         if np.max(wlgrid) - np.min(wlgrid) > 5:
             plt.xscale("log")
             plt.tick_params(axis="x", which="minor")
-            # ax.xaxis.set_minor_formatter(mpl.ticker.FormatStrFormatter("%i"))
-            # ax.xaxis.set_major_formatter(mpl.ticker.FormatStrFormatter("%i"))
-        # plt.legend(loc='best', ncol=2, frameon=False, prop={'size':11})
+            # ax.xaxis.set_minor_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+            # ax.xaxis.set_major_formatter(
+            #     mpl.ticker.FormatStrFormatter("%i")
+            # )
+        # plt.legend(loc='best', ncol=2, frameon=False,
+        #             prop={'size':11})
         box = ax.get_position()
         ax.set_position(
-            [box.x0, box.y0 + box.height * 0.1, box.width, box.height * 0.9]
+            [
+                box.x0,
+                box.y0 + box.height * 0.1,
+                box.width,
+                box.height * 0.9,
+            ]
         )
         # Put a legend below current axis
         ax.legend(
@@ -846,28 +1008,42 @@ class Plotter:
             plt.title(self.title, fontsize=14)
 
     def full_contrib_plot(self, spectra, wlgrid, resolution=None):
+        """Plot full contributions."""
         native_grid = spectra["native_wngrid"][...]
-        for contrib_name, contrib_dict in spectra["Contributions"].items():
+        for (
+            contrib_name,
+            contrib_dict,
+        ) in spectra["Contributions"].items():
 
-            first_name = contrib_name
-
-            for component_name, component_value in contrib_dict.items():
+            for (
+                component_name,
+                component_value,
+            ) in contrib_dict.items():
                 if isinstance(component_value, h5py.Dataset):
                     continue
                 total_label = f"{contrib_name}-{component_name}"
                 self._generic_plot(
-                    wlgrid, native_grid, component_value, resolution, label=total_label
+                    wlgrid,
+                    native_grid,
+                    component_value,
+                    resolution,
+                    label=total_label,
                 )
         return wlgrid
 
     def simple_contrib_plot(self, spectra, wlgrid, resolution=None):
-
+        """Plot simple contributions."""
         native_grid = spectra["native_wngrid"][...]
 
-        for contrib_name, contrib_dict in spectra["Contributions"].items():
-            first_name = contrib_name
-            if first_name == "Absorption":
-                for component_name, component_value in contrib_dict.items():
+        for (
+            contrib_name,
+            contrib_dict,
+        ) in spectra["Contributions"].items():
+            if contrib_name == "Absorption":
+                for (
+                    component_name,
+                    component_value,
+                ) in contrib_dict.items():
                     if isinstance(component_value, h5py.Dataset):
                         continue
                     total_label = f"{contrib_name}-{component_name}"
@@ -879,11 +1055,16 @@ class Plotter:
                         label=total_label,
                     )
             else:
-                self._generic_plot(wlgrid, native_grid, contrib_dict, resolution)
+                self._generic_plot(
+                    wlgrid,
+                    native_grid,
+                    contrib_dict,
+                    resolution,
+                )
 
         return wlgrid
 
-    def _generic_plot(
+    def _generic_plot(  # noqa: C901
         self,
         wlgrid,
         native_grid,
@@ -894,14 +1075,18 @@ class Plotter:
         alpha=1.0,
         label=None,
     ):
-
+        """Generic plotting function."""
         binned_error = None
         if resolution is not None:
             from taurex.binning import FluxBinner
             from taurex.util.util import create_grid_res
             from taurex.util.util import wnwidth_to_wlwidth
 
-            _grid = create_grid_res(resolution, wlgrid.min() * 0.9, wlgrid.max() * 1.1)
+            _grid = create_grid_res(
+                resolution,
+                wlgrid.min() * 0.9,
+                wlgrid.max() * 1.1,
+            )
             bin_wlgrid = _grid[:, 0]
 
             bin_wngrid = 10000 / _grid[:, 0]
@@ -937,7 +1122,12 @@ class Plotter:
                 binned_error = None
 
         good = binned_spectrum > 0
-        plt.plot(wlgrid[good], binned_spectrum[good], label=label, alpha=alpha)
+        plt.plot(
+            wlgrid[good],
+            binned_spectrum[good],
+            label=label,
+            alpha=alpha,
+        )
         if binned_error is not None:
             plt.fill_between(
                 wlgrid[good],
@@ -961,30 +1151,40 @@ class Plotter:
             )
 
     def close(self):
+        """Close HDF5 file."""
         self.fd.close()
 
     def plot_forward_tau(self):
-
+        """Plot forward tau."""
         forward_output = self.forward_output()
 
         contribution = forward_output["Spectra"]["native_tau"][...]
-        # contribution = self.pickle_file['solutions'][solution_idx]['contrib_func']
+        # contribution = self.pickle_file['solutions'][
+        #     solution_idx
+        # ]['contrib_func']
 
         pressure = forward_output["Profiles"]["pressure_profile"][:]
         wavelength = forward_output["Spectra"]["native_wlgrid"][:]
 
         self._plot_tau(contribution, pressure, wavelength)
 
-        plt.savefig(os.path.join(self.out_folder, "%s_tau_forward.pdf" % (self.prefix)))
+        plt.savefig(
+            os.path.join(
+                self.out_folder,
+                "%s_tau_forward.pdf" % (self.prefix),
+            )
+        )
 
         plt.close()
 
     def plot_fitted_tau(self, wl_min: float = 0.5, wl_max: float = 12.0):
-        N = self.num_solutions
+        """Plot fitted tau."""
         for solution_idx, solution_val in self.solution_iter():
 
             contribution = solution_val["Spectra"]["native_tau"][...]
-            # contribution = self.pickle_file['solutions'][solution_idx]['contrib_func']
+            # contribution = self.pickle_file['solutions'][
+            #     solution_idx
+            # ]['contrib_func']
 
             pressure = solution_val["Profiles"]["pressure_profile"][:]
             wavelength = solution_val["Spectra"]["native_wlgrid"][:]
@@ -993,26 +1193,32 @@ class Plotter:
             wavelength_left = self.find_nearest(wavelength, wl_max)[0]
 
             wavelength = wavelength[wavelength_left : wavelength_right + 1]
-            contribution = contribution[..., wavelength_left : wavelength_right + 1]
+            contribution = contribution[
+                ...,
+                wavelength_left : wavelength_right + 1,
+            ]
 
             self._plot_tau(contribution, pressure, wavelength)
 
             plt.savefig(
                 os.path.join(
-                    self.out_folder, "%s_tau_sol%i.pdf" % (self.prefix, solution_idx)
+                    self.out_folder,
+                    "%s_tau_sol%i.pdf" % (self.prefix, solution_idx),
                 )
             )
 
             plt.close()
 
     def _plot_tau(self, contribution, pressure, wavelength):
+        """Plot tau."""
         grid = plt.GridSpec(1, 4, wspace=0.4, hspace=0.3)
         fig = plt.figure("Contribution function")
+        fig = fig  # noqa: F841
         ax1 = plt.subplot(grid[0, :3])
         pos = plt.imshow(contribution, aspect="auto")
         plt.colorbar(pos, ax=ax1)
 
-        ### mapping of the pressure array onto the ticks:
+        # mapping of the pressure array onto the ticks:
         y_labels = np.array(
             [
                 pow(10.0, p)
@@ -1027,10 +1233,13 @@ class Plotter:
         for i in range(len(y_ticks)):
             y_ticks[i] = (
                 np.abs(pressure - y_labels[i])
-            ).argmin()  ## To find the corresponding index
-        plt.yticks(y_ticks, ["$10^{%.f}$" % y for y in np.log10(y_labels) - 5])
+            ).argmin()  # To find the corresponding index
+        plt.yticks(
+            y_ticks,
+            ["$10^{%.f}$" % y for y in np.log10(y_labels) - 5],
+        )
 
-        ### mapping of the wavelength array onto the ticks:
+        # mapping of the wavelength array onto the ticks:
         x_label0 = np.ceil(np.min(wavelength) * 10) / 10.0
         x_label5 = np.round(np.max(wavelength) * 10) / 10.0
         x_label1 = (
@@ -1079,13 +1288,20 @@ class Plotter:
         )
 
         x_labels = np.array(
-            [x_label0, x_label1, x_label2, x_label3, x_label4, x_label5]
+            [
+                x_label0,
+                x_label1,
+                x_label2,
+                x_label3,
+                x_label4,
+                x_label5,
+            ]
         )
         x_ticks = np.zeros(len(x_labels))
         for i in range(len(x_ticks)):
             x_ticks[i] = (
                 np.abs(wavelength - x_labels[i])
-            ).argmin()  ## To find the corresponding index
+            ).argmin()  # To find the corresponding index
         plt.xticks(x_ticks, x_labels)
         plt.gca().invert_yaxis()
         plt.gca().invert_xaxis()
@@ -1093,15 +1309,22 @@ class Plotter:
         plt.ylabel("Pressure [bar]")
 
         ax2 = plt.subplot(grid[0, 3])
+        ax2 = ax2  # noqa: F841
 
         contribution_collapsed = np.average(contribution, axis=1)
-        # contribution_collapsed = np.amax(contribution_hr, axis=1) ## good for emission
+        # contribution_collapsed = np.amax(
+        #     contribution_hr, axis=1
+        # )
+        # good for emission
         contribution_sum = np.zeros(len(contribution_collapsed))
         for i in range(len(contribution_collapsed) - 1):
             contribution_sum[i + 1] = (
                 contribution_sum[i] + contribution_collapsed[i + 1]
             )
-        plt.plot(contribution_collapsed, pressure * pow(10, -5))
+        plt.plot(
+            contribution_collapsed,
+            pressure * pow(10, -5),
+        )
         plt.ylim(y_labels[0] / 1.0e5, y_labels[-1] / 1.0e5)
         plt.yscale("log")
         plt.gca().yaxis.tick_right()
@@ -1109,31 +1332,34 @@ class Plotter:
 
     @property
     def fittingNames(self):
+        """Get fitting names."""
         from taurex.util.util import decode_string_array
 
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting names found"
+                "HDF5 was not generated from retrieval, " "no fitting names found"
             )
         return decode_string_array(self.fd["Optimizer"]["fit_parameter_names"])
 
     @property
     def fittingLatex(self):
+        """Get fitting latex."""
         from taurex.util.util import decode_string_array
 
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting latex found"
+                "HDF5 was not generated from retrieval, " "no fitting latex found"
             )
         return decode_string_array(self.fd["Optimizer"]["fit_parameter_latex"])
 
     @property
     def derivedNames(self):
+        """Get derived names."""
         from taurex.util.util import decode_string_array
 
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting latex found"
+                "HDF5 was not generated from retrieval, " "no fitting latex found"
             )
         try:
             array = decode_string_array(self.fd["Optimizer"]["derived_parameter_names"])
@@ -1143,11 +1369,12 @@ class Plotter:
 
     @property
     def derivedLatex(self):
+        """Get derived latex."""
         from taurex.util.util import decode_string_array
 
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting latex found"
+                "HDF5 was not generated from retrieval, " "no fitting latex found"
             )
         try:
             array = decode_string_array(self.fd["Optimizer"]["derived_parameter_latex"])
@@ -1157,22 +1384,25 @@ class Plotter:
 
     @property
     def fittingBoundaryLow(self):
+        """Get fitting boundary low."""
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting boundary found"
+                "HDF5 was not generated from retrieval, " "no fitting boundary found"
             )
         return self.fd["Optimizer"]["fit_boundary_low"][:]
 
     @property
     def fittingBoundaryHigh(self):
+        """Get fitting boundary high."""
         if not self.is_retrieval:
             raise Exception(
-                "HDF5 was not generated from retrieval, no fitting boundary found"
+                "HDF5 was not generated from retrieval, " "no fitting boundary found"
             )
         return self.fd["Optimizer"]["fit_boundary_high"][:]
 
     @property
     def is_retrieval(self):
+        """Check if retrieval."""
         try:
             self.fd["Output"]
             self.fd["Optimizer"]
@@ -1183,6 +1413,7 @@ class Plotter:
 
     @property
     def is_lightcurve(self):
+        """Check if lightcurve."""
         try:
             self.fd["Lightcurve"]
             return True
@@ -1190,7 +1421,8 @@ class Plotter:
             return False
 
 
-def main():
+def main():  # noqa: C901
+    """Plotter main function."""
     import argparse
 
     parser = argparse.ArgumentParser(description="Taurex-Plotter")
@@ -1274,7 +1506,13 @@ def main():
         help="Plot everythiong",
         action="store_true",
     )
-    parser.add_argument("-T", "--title", dest="title", type=str, help="Title of plots")
+    parser.add_argument(
+        "-T",
+        "--title",
+        dest="title",
+        type=str,
+        help="Title of plots",
+    )
     parser.add_argument(
         "-o",
         "--output-dir",
@@ -1284,7 +1522,11 @@ def main():
         help="output directory to store plots",
     )
     parser.add_argument(
-        "-p", "--prefix", dest="prefix", type=str, help="File prefix for outputs"
+        "-p",
+        "--prefix",
+        dest="prefix",
+        type=str,
+        help="File prefix for outputs",
     )
     parser.add_argument(
         "-m",
@@ -1349,9 +1591,15 @@ def main():
 
     if plot_contrib:
         if plot.is_retrieval:
-            plot.plot_fitted_contrib(full=plot_fullcontrib, resolution=args.resolution)
+            plot.plot_fitted_contrib(
+                full=plot_fullcontrib,
+                resolution=args.resolution,
+            )
         else:
-            plot.plot_forward_contrib(full=plot_fullcontrib, resolution=args.resolution)
+            plot.plot_forward_contrib(
+                full=plot_fullcontrib,
+                resolution=args.resolution,
+            )
 
     if plot_tau:
         if plot.is_retrieval:

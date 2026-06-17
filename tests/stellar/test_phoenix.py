@@ -9,6 +9,7 @@ from taurex.stellar import PhoenixStar
 
 
 def create_fits_file(tp, lg, mtl):
+    """Create fits file."""
     temp_string = ("%3.1f" % (tp / 100)).zfill(5)
     temp_logg = "%1.1f" % lg
     temp_mtl = "%1.1f" % mtl
@@ -25,6 +26,7 @@ def create_fits_file(tp, lg, mtl):
 
 
 def test_phoenix_find_spectrum(tmpdir):
+    """Test phoenix find spectrum."""
     # Suppress spectrum loading
     with patch.multiple(
         "taurex.stellar.PhoenixStar",

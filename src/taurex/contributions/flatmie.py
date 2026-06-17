@@ -18,18 +18,6 @@ class FlatMieContribution(Contribution):
     Absorption is computed as a flat value between two pressures
     across all wavenumbers.
 
-    Parameters
-    ----------
-
-    flat_mix_ratio: float
-        Opacity value
-
-    flat_bottomP: float
-        Bottom of absorbing region in Pa
-
-    flat_topP: float
-        Top of absorbing region in Pa
-
     """
 
     def __init__(
@@ -38,6 +26,20 @@ class FlatMieContribution(Contribution):
         flat_bottomP: float = -1,  # noqa: N803
         flat_topP: float = -1,
     ) -> None:
+        """Initialize FlatMieContribution.
+
+        Parameters
+        ----------
+        flat_mix_ratio: float
+            Opacity value
+
+        flat_bottomP: float
+            Bottom of absorbing region in Pa
+
+        flat_topP: float
+            Top of absorbing region in Pa
+
+        """
         super().__init__("Mie")
 
         self._mie_mix = flat_mix_ratio
@@ -52,9 +54,7 @@ class FlatMieContribution(Contribution):
         default_bounds=[1e-20, 1],
     )
     def mieTopPressure(self) -> float:  # noqa: N802
-        """
-        Pressure at top of absorbing region in Pa
-        """
+        """Pressure at top of absorbing region in Pa."""
         return self._mie_top_pressure
 
     @mieTopPressure.setter
@@ -95,7 +95,6 @@ class FlatMieContribution(Contribution):
         self, model: OneDForwardModel, wngrid: npt.NDArray[np.float64]
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
         """Computes and flat absorbing opacity for the pressure regions given.
-
 
         Parameters
         ----------

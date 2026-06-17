@@ -49,6 +49,7 @@ class ExampleChemistry(Chemistry):
     """
 
     def __init__(self, molecules=None, fractions=None):
+        """Initialize ExampleChemistry."""
         if molecules is None:
             molecules = []
         if fractions is None:
@@ -85,11 +86,7 @@ class ExampleChemistry(Chemistry):
         pressure_profile=None,
         altitude_profile=None,
     ):
-        """
-        Here we can perform the actual calculation of the profiles.
-
-        """
-
+        """Here we can perform the actual calculation of the profiles."""
         # We do not want any negative values.
         # We can raise an exception to prevent it from
         # running in forward model mode.
@@ -130,42 +127,43 @@ class ExampleChemistry(Chemistry):
         self._active_mix = np.stack(active_list)
         self._inactive_mix = np.stack(inactive_list)
 
-        super().compute_mu_profile(nlayers)  #  Now we can compute the mu profile
+        super().compute_mu_profile(nlayers)  # Now we can compute the mu profile
 
     # --------------- TauREX 3 required properties -----------------
 
     @property
     def activeGases(self):
-        """
+        """Active gases for the chemistry scheme.
+
         This is needed by taurex you can easily do this
         by checking if the molecule is within the availableActive
-        list
+        list.
         """
         return [mol for mol in self._molecules if mol in self.availableActive]
 
     @property
     def inactiveGases(self):
-        """
+        """Inactive gases for the chemistry scheme.
+
         This is needed by taurex you can easily do this
-        by checking if the molecule is NOT within the availableActive
+        by checking if the molecule is NOT within the availableActive.
         """
         return [mol for mol in self._molecules if mol not in self.availableActive]
 
     @property
     def activeGasMixProfile(self):
+        """Active gas mixing profile."""
         return self._active_mix
 
     @property
     def inactiveGasMixProfile(self):
+        """Inactive gas mixing profile."""
         return self._inactive_mix
 
     # -------- Fitting parameters ----------
 
     def setup_molecule_parameters(self):
-        """
-        This function will setup the fitting parameters programmatically
-        """
-
+        """Set up fitting parameters programmatically."""
         # Loop through the molecules whilst getting the index
         for idx, molecule in enumerate(self._molecules):
 

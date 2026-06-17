@@ -1,314 +1,250 @@
+"""Test util functions."""
+
 import hypothesis
-import hypothesis.extra.numpy as hyp_numpy
 import numpy as np
-from hypothesis import assume
-from hypothesis.strategies import booleans
-from hypothesis.strategies import composite
+import pytest
+from hypothesis.extra.numpy import arrays
 from hypothesis.strategies import floats
 from hypothesis.strategies import integers
-from hypothesis.strategies import lists
 from hypothesis.strategies import text
-from hypothesis.strategies import tuples
+
+from ..strategies import molecules
 
 
-@composite
-def molecules(draw, style="normal"):
-    mass = {
-        "H": 1.00794,
-        "He": 4.002602,
-        "Li": 6.941,
-        "Be": 9.012182,
-        "B": 10.811,
-        "C": 12.011,
-        "N": 14.00674,
-        "O": 15.9994,
-        "F": 18.9984032,
-        "Ne": 20.1797,
-        "Na": 22.989768,
-        "Mg": 24.3050,
-        "Al": 26.981539,
-        "Si": 28.0855,
-        "P": 30.973762,
-        "S": 32.066,
-        "Cl": 35.4527,
-        "Ar": 39.948,
-        "K": 39.0983,
-        "Ca": 40.078,
-        "Sc": 44.955910,
-        "Ti": 47.88,
-        "V": 50.9415,
-        "Cr": 51.9961,
-        "Mn": 54.93805,
-        "Fe": 55.847,
-        "Co": 58.93320,
-        "Ni": 58.6934,
-        "Cu": 63.546,
-        "Zn": 65.39,
-        "Ga": 69.723,
-        "Ge": 72.61,
-        "As": 74.92159,
-        "Se": 78.96,
-        "Br": 79.904,
-        "Kr": 83.80,
-        "Rb": 85.4678,
-        "Sr": 87.62,
-        "Y": 88.90585,
-        "Zr": 91.224,
-        "Nb": 92.90638,
-        "Mo": 95.94,
-        "Tc": 98,
-        "Ru": 101.07,
-        "Rh": 102.90550,
-        "Pd": 106.42,
-        "Ag": 107.8682,
-        "Cd": 112.411,
-        "In": 114.82,
-        "Sn": 118.710,
-        "Sb": 121.757,
-        "Te": 127.60,
-        "I": 126.90447,
-        "Xe": 131.29,
-        "Cs": 132.90543,
-        "Ba": 137.327,
-        "La": 138.9055,
-        "Ce": 140.115,
-        "Pr": 140.90765,
-        "Nd": 144.24,
-        "Pm": 145,
-        "Sm": 150.36,
-        "Eu": 151.965,
-        "Gd": 157.25,
-        "Tb": 158.92534,
-        "Dy": 162.50,
-        "Ho": 164.93032,
-        "Er": 167.26,
-        "Tm": 168.93421,
-        "Yb": 173.04,
-        "Lu": 174.967,
-        "Hf": 178.49,
-        "Ta": 180.9479,
-        "W": 183.85,
-        "Re": 186.207,
-        "Os": 190.2,
-        "Ir": 192.22,
-        "Pt": 195.08,
-        "Au": 196.96654,
-        "Hg": 200.59,
-        "Tl": 204.3833,
-        "Pb": 207.2,
-        "Bi": 208.98037,
-        "Po": 209,
-        "At": 210,
-        "Rn": 222,
-        "Fr": 223,
-        "Ra": 226.0254,
-        "Ac": 227,
-        "Th": 232.0381,
-        "Pa": 213.0359,
-        "U": 238.0289,
-        "Np": 237.0482,
-        "Pu": 244,
-        "Am": 243,
-        "Cm": 247,
-        "Bk": 247,
-        "Cf": 251,
-        "Es": 252,
-        "Fm": 257,
-        "Md": 258,
-        "No": 259,
-        "Lr": 260,
-        "Rf": 261,
-        "Db": 262,
-        "Sg": 263,
-        "Bh": 262,
-        "Hs": 265,
-        "Mt": 266,
+@hypothesis.given(molecules(style="normal"))
+def test_molecular_weight_hyp_normal(mol):
+    """Test molecular weight calculation for normal style molecules."""
+    from taurex.util import calculate_weight
+
+    k, _, v = mol
+    assert calculate_weight(k) == pytest.approx(v, rel=1e-3)
+
+
+@hypothesis.given(molecules(style="exomol"))
+def test_molecular_weight_hyp_exomol(mol):
+    """Test molecular weight calculation for exomol style molecules."""
+    from taurex.util import calculate_weight
+
+    k, e, v = mol
+    assert calculate_weight(e) == pytest.approx(v, rel=1e-3)
+    assert calculate_weight(e) == calculate_weight(k)
+
+
+def test_molecular_weight():
+    """Test molecular weight calculation for a known set of molecules."""
+    from taurex.util import calculate_weight
+
+    expected = {
+        "NH3": 17.031,
+        "AsH3": 77.945,
+        "C6H6": 78.114,
+        "Br2": 159.808,
+        "CS2": 76.143,
+        "CO": 28.010,
+        "CCl4": 153.822,
+        "Cl2": 70.905,
+        "ClO2": 67.452,
+        "C2H4": 28.054,
+        "H2COCH2": 44.053,
+        "HCHO": 30.026,
+        "H2NNH2": 32.045,
+        "H2": 2.016,
+        "HBr": 80.912,
+        "HCl": 36.461,
+        "HCN": 27.026,
+        "H2O2": 34.015,
+        "H2S": 34.082,
+        "CH3SH": 48.109,
+        "CH3NHNH2": 46.072,
+        "NO": 30.006,
+        "NO2": 46.006,
+        "N2O4": 92.011,
+        "O3": 47.998,
+        "CH3COOOH": 76.051,
+        "PH3": 33.998,
+        "CH3CHOCH2": 58.080,
+        "SiH4": 32.117,
+        "SO2": 64.065,
+        "SO2F2": 102.062,
     }
-    atom_names = list(mass.keys())
-    total_atoms = len(mass)
 
-    at_count_draw = tuples(integers(1, total_atoms - 1), integers(1, 6))
-
-    atoms = draw(lists(at_count_draw, min_size=1))
-
-    name_atom_count = [(atom_names[at], count) for at, count in atoms]
-
-    molecule_name = "".join(
-        [f"{at}{c}" if c > 1 else f"{at}" for at, c in name_atom_count]
-    )
-    exomol_name = molecule_name
-    if style == "exomol":
-        exomol_name = "-".join(
-            [
-                f"{int(mass[at])}{at}{c}" if c > 1 else f"{int(mass[at])}{at}"
-                for at, c in name_atom_count
-            ]
-        )
-
-    final_mass = sum([mass[at] * c for at, c in name_atom_count])
-
-    return molecule_name, exomol_name, final_mass
+    for k, v in expected.items():
+        assert calculate_weight(k) == pytest.approx(v, rel=1e-3)
 
 
-@composite
-def molecule_vmr(draw, min_range=1e-20, max_range=1):
-    molecule = draw(molecules())
-    vmr = draw(floats(min_range, max_range))
+@hypothesis.given(integers(10, 1000))
+def test_grid_res(res):
+    """Test grid resolution creation."""
+    from taurex.util import create_grid_res
 
-    return molecule, vmr
+    wn = 10000 / create_grid_res(res, 10.0, 1000)[::-1, 0]
 
-
-@composite
-def fitting_parameters(draw):
-
-    fitting_names = draw(lists(text(min_size=1), min_size=1, max_size=20))
-    num_fit = len(fitting_names)
-    value = draw(lists(floats(1e-10, 1e10), min_size=num_fit, max_size=num_fit))
-    mode = draw(lists(booleans(), min_size=num_fit, max_size=num_fit))
-    mode = ["linear" if b else "log" for b in mode]
-    bounds = draw(
-        lists(
-            tuples(floats(1e-10, 1e10), floats(1e-10, 1e10)),
-            min_size=num_fit,
-            max_size=num_fit,
-        )
-    )
-    default_fit = draw(lists(booleans(), min_size=num_fit, max_size=num_fit))
-
-    return list(zip(fitting_names, value, mode, default_fit, bounds))
+    assert round(np.mean(wn / np.gradient(wn))) == res
 
 
-@composite
-def hyp_wngrid(draw, num_elements=integers(3, 50), sort=False):
-    wngrid = draw(
-        hyp_numpy.arrays(
-            np.float64, num_elements, elements=floats(100, 30000), unique=True
-        )
-    )
-    if sort:
-        wngrid = np.sort(wngrid)
+def test_molecule_sanitization_same():
+    """Test molecule sanitization doesn't change already correct names."""
+    from taurex.util import sanitize_molecule_string
 
-    return wngrid
+    names = [
+        "NH3",
+        "AsH3",
+        "C6H6",
+        "Br2",
+        "CS2",
+        "CO",
+        "CCl4",
+        "Cl2",
+        "ClO2",
+        "C2H4",
+        "H2COCH2",
+        "HCHO",
+        "H2NNH2",
+        "H2",
+        "HBr",
+        "HCl",
+        "HCN",
+        "H2O2",
+        "H2S",
+        "CH3SH",
+        "CH3NHNH2",
+        "NO",
+        "NO2",
+        "N2O4",
+        "O3",
+        "CH3COOOH",
+        "PH3",
+        "CH3CHOCH2",
+        "SiH4",
+        "SO2",
+        "SO2F2",
+    ]
+    for n in names:
+        assert sanitize_molecule_string(n) == n
 
 
-@composite
-def wngrid_spectra(draw, num_elements=integers(3, 50), sort=False):
+@hypothesis.given(integers(10, 1000))
+def test_width_conversion(s):
+    """Test conversion between wavenumber and wavelength widths."""
+    from taurex.util import create_grid_res
+    from taurex.util import wnwidth_to_wlwidth
 
-    wngrid = draw(hyp_wngrid(num_elements, sort))
-    if sort:
-        wngrid = np.sort(wngrid)
+    res = create_grid_res(s, 0.1, 10)
 
-    spectra = draw(
-        hyp_numpy.arrays(
-            np.float64,
-            wngrid.shape[0],
-            elements=floats(1e-10, 1e-1),
-            fill=floats(1e-10, 1e-1),
-        )
+    wl = res[:, 0]
+    wlwidths = res[:, 1]
+
+    wn = 10000 / wl[::-1]
+    wnwidths = wnwidth_to_wlwidth(wl, wlwidths)[::-1]
+
+    np.testing.assert_array_almost_equal(
+        wnwidth_to_wlwidth(wn, wnwidths)[::-1], wlwidths, 6
     )
 
-    return wngrid, spectra
+
+@hypothesis.given(molecules(style="exomol"))
+def test_molecule_sanitization(mol):
+    """Test molecule sanitization converts exomol names to standard format."""
+    from taurex.util import sanitize_molecule_string
+
+    expected, exomol, mass = mol
+    assert sanitize_molecule_string(exomol) == expected
 
 
-@composite
-def temperatures(draw, min_layers=2, max_layers=30):
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
+def test_conversion_factor():
+    """Test unit conversion factors between various units."""
+    from taurex.util import conversion_factor
 
-    min_T = draw(floats(min_value=100.0, max_value=3000.0))
-    max_T = draw(floats(min_value=100.0, max_value=3000.0))
-    T = np.linspace(min_T, max_T, nlayers)
+    assert conversion_factor("Pa", "bar") == 1e-5
 
-    return T
+    assert conversion_factor("m", "um") == 1e6
 
+    assert conversion_factor("m**2/h", "cm**2/s") == 1e4 / 3600
 
-@composite
-def pressures(draw, min_layers=2, max_layers=30):
-
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
-    min_P = draw(integers(min_value=4, max_value=6))
-    max_P = draw(integers(min_value=-6, max_value=3))
-
-    P = np.logspace(min_P, max_P, nlayers)
-
-    return P
+    assert conversion_factor("erg/(cm**2*s*Hz)", "Jy") == 1e23
 
 
-@composite
-def TPs(draw, min_layers=2, max_layers=30):
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
+def test_wngrid_clip():
+    """Test clipping native grid to wavenumber grid."""
+    from taurex.binning import FluxBinner
+    from taurex.util import clip_native_to_wngrid
 
-    min_T = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
-    max_T = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
-    T = np.linspace(min_T, max_T, nlayers)
+    total_values = 1000
+    wngrid = np.linspace(100, 10000, total_values)
 
-    min_P = draw(integers(min_value=4, max_value=6))
-    max_P = draw(integers(min_value=-6, max_value=3))
+    values = np.random.rand(total_values)
 
-    P = np.logspace(min_P, max_P, nlayers)
+    test_grid = wngrid[(wngrid > 4000) & (wngrid < 8000)]
 
-    return T, P, nlayers
+    fb = FluxBinner(wngrid=test_grid)
+
+    true = fb.bindown(wngrid, values)
+
+    clipped = clip_native_to_wngrid(wngrid, test_grid)
+    interp_values = np.interp(clipped, wngrid, values)
+    clipped_flux = fb.bindown(clipped, interp_values)
+
+    np.testing.assert_array_equal(true[1], clipped_flux[1])
 
 
-@composite
-def TP_npoints(draw, min_layers=2, max_layers=30):
+@hypothesis.given(integers(10, 100))
+def test_bin_edges(res):
+    """Test computation of bin edges from a grid."""
+    from taurex.util import compute_bin_edges
+    from taurex.util import create_grid_res
 
-    P = draw(pressures(min_layers=min_layers, max_layers=max_layers))
-    nlayers = P.shape[0]
+    grid = create_grid_res(res, 300, 10000)
+    edges, widths = compute_bin_edges(grid[:, 0])
 
-    T_top = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
-    T_surface = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
+    assert round(np.mean(grid[:, 0] / widths)) == res
 
-    P_top = draw(integers(min_value=-6, max_value=6))
-    P_top = 10**P_top
-    P_surface = -1
 
-    leftover = nlayers - 2
+def test_check_duplicates():
+    """Test detection of duplicate items in a list."""
+    from taurex.util import has_duplicates
 
-    if leftover > 0:
+    arr = ["Hello", "Hello"]
 
-        temp_points = draw(
-            lists(
-                floats(min_value=100.0, max_value=3000.0, allow_nan=False),
-                min_size=leftover,
-                max_size=leftover,
-            )
-        )
-        press_points = draw(
-            lists(
-                floats(min_value=1e-6, max_value=1e6, allow_nan=False),
-                min_size=leftover,
-                max_size=leftover,
-            )
-        )
+    assert has_duplicates(arr) is True
+
+    arr = ["Hello", "World"]
+
+    assert has_duplicates(arr) is False
+
+
+@hypothesis.given(
+    arr=arrays(
+        np.float64,
+        10,
+        elements=floats(min_value=-10.0, max_value=20.0, allow_nan=False),
+        unique=True,
+    ).map(np.sort),
+    value=floats(min_value=-20.0, max_value=50.0, allow_nan=False),
+)
+def test_closest_pair(arr, value):
+    """Test finding the closest pair of indices in a sorted array."""
+    from taurex.util import find_closest_pair
+
+    left, right = find_closest_pair(arr, value)
+
+    # hypothesis.note(f'L: {left} R: {right} V: {value}')
+
+    assert left == right - 1 or left == right
+    if value < arr.min():
+        assert left == 0
+        assert right == 1
+    elif value > arr.max():
+        assert left == arr.shape[0] - 2
+        assert right == arr.shape[0] - 1
     else:
-        temp_points = []
-        press_points = []
-
-    return nlayers, T_top, T_surface, P_top, P_surface, temp_points, press_points, P
+        assert value >= arr[left]
+        assert value <= arr[right]
 
 
-@composite
-def planets(draw, mass_range=[0.001, 10.0], radius_range=[0.001, 10.0]):
-    from taurex.planet import Planet
+@hypothesis.given(string=text(min_size=1))
+def test_ensure_string(string):
+    """Test ensuring string is UTF-8 encoded correctly."""
+    from taurex.util import ensure_string_utf8
 
-    planet_mass = draw(
-        floats(min_value=mass_range[0], max_value=mass_range[1], allow_nan=False)
-    )
-    planet_radius = draw(
-        floats(min_value=radius_range[0], max_value=radius_range[1], allow_nan=False)
-    )
-    planet_distance = draw(floats(allow_nan=False))
-    impact_param = draw(floats(allow_nan=False))
-    orbital_period = draw(floats(allow_nan=False))
-    albedo = draw(floats(allow_nan=False))
-    transit_time = draw(floats(allow_nan=False))
-
-    return Planet(
-        planet_mass=planet_mass,
-        planet_radius=planet_radius,
-        planet_distance=planet_distance,
-        impact_param=impact_param,
-        orbital_period=orbital_period,
-        albedo=albedo,
-        transit_time=transit_time,
-    )
+    assert string == ensure_string_utf8(string)
+    assert string == ensure_string_utf8(string.encode())

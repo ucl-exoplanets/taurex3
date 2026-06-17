@@ -1,13 +1,9 @@
-import math
-import unittest
+"""Test Guillot 2010 temperature profile."""
 
-import numpy as np
 import pytest
 from hypothesis import given
-from hypothesis import note
 from hypothesis import strategies as st
 
-from taurex.data.planet import Earth
 from taurex.data.profiles.temperature import Guillot2010
 from taurex.exceptions import InvalidModelException
 
@@ -26,25 +22,65 @@ from ..strategies import pressures
     planet=planets(),
 )
 def test_guillot_behaviour(
-    T_irr, kappa_ir, kappa_v1, kappa_v2, alpha, T_int, P, planet
+    T_irr,
+    kappa_ir,
+    kappa_v1,
+    kappa_v2,
+    alpha,
+    T_int,
+    P,
+    planet,
 ):
-
+    """Test guillot behaviour."""
     g = None
 
-    if any([kappa_ir == 0.0, kappa_v1 == 0.0, kappa_v2 == 0.0, T_irr < 0, T_int < 0]):
+    if any(
+        [
+            kappa_ir == 0.0,
+            kappa_v1 == 0.0,
+            kappa_v2 == 0.0,
+            T_irr < 0,
+            T_int < 0,
+        ]
+    ):
         with pytest.raises(InvalidModelException):
-            g = Guillot2010(T_irr, kappa_ir, kappa_v1, kappa_v2, alpha, T_int)
+            g = Guillot2010(
+                T_irr,
+                kappa_ir,
+                kappa_v1,
+                kappa_v2,
+                alpha,
+                T_int,
+            )
         return
     elif kappa_v1 / kappa_ir == 0.0 or kappa_v2 / kappa_ir == 0.0:
         with pytest.raises(InvalidModelException):
-            g = Guillot2010(T_irr, kappa_ir, kappa_v1, kappa_v2, alpha, T_int)
+            g = Guillot2010(
+                T_irr,
+                kappa_ir,
+                kappa_v1,
+                kappa_v2,
+                alpha,
+                T_int,
+            )
         return
     else:
-        g = Guillot2010(T_irr, kappa_ir, kappa_v1, kappa_v2, alpha, T_int)
+        g = Guillot2010(
+            T_irr,
+            kappa_ir,
+            kappa_v1,
+            kappa_v2,
+            alpha,
+            T_int,
+        )
 
     nlayers = P.shape[0]
 
-    g.initialize_profile(nlayers=nlayers, planet=planet, pressure_profile=P)
+    g.initialize_profile(
+        nlayers=nlayers,
+        planet=planet,
+        pressure_profile=P,
+    )
 
     # Test fitting params
     params = g.fitting_parameters()
@@ -70,7 +106,7 @@ def test_guillot_behaviour(
         old_value = params["kappa_irr"][2]()
         params["kappa_irr"][3](0.0)
         g.profile
-        assert False
+        raise AssertionError("Should have raised InvalidModelException")
     except InvalidModelException:
         params["kappa_irr"][3](old_value)
         assert True
@@ -79,7 +115,7 @@ def test_guillot_behaviour(
         old_value = params["kappa_v1"][2]()
         params["kappa_v1"][3](0.0)
         g.profile
-        assert False
+        raise AssertionError("Should have raised InvalidModelException")
     except InvalidModelException:
         params["kappa_v1"][3](old_value)
         assert True
@@ -88,15 +124,15 @@ def test_guillot_behaviour(
         old_value = params["kappa_v2"][2]()
         params["kappa_v2"][3](0.0)
         g.profile
-        assert False
+        raise AssertionError("Should have raised InvalidModelException")
     except InvalidModelException:
         params["kappa_v2"][3](old_value)
         assert True
 
 
 def test_guillot_values():
-    """
+    """Test guillot values.
+
     Should be a list of inputs and outputs
     """
-
     pass

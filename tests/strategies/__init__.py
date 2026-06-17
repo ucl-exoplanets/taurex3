@@ -1,7 +1,7 @@
-import hypothesis
+"""Test strategies."""
+
 import hypothesis.extra.numpy as hyp_numpy
 import numpy as np
-from hypothesis import assume
 from hypothesis.strategies import booleans
 from hypothesis.strategies import composite
 from hypothesis.strategies import floats
@@ -13,6 +13,7 @@ from hypothesis.strategies import tuples
 
 @composite
 def molecules(draw, style="normal"):
+    """Generate random molecules."""
     mass = {
         "H": 1.00794,
         "He": 4.002602,
@@ -140,7 +141,7 @@ def molecules(draw, style="normal"):
     if style == "exomol":
         exomol_name = "-".join(
             [
-                f"{int(mass[at])}{at}{c}" if c > 1 else f"{int(mass[at])}{at}"
+                (f"{int(mass[at])}{at}{c}" if c > 1 else f"{int(mass[at])}{at}")
                 for at, c in name_atom_count
             ]
         )
@@ -152,6 +153,7 @@ def molecules(draw, style="normal"):
 
 @composite
 def molecule_vmr(draw, min_range=1e-20, max_range=1):
+    """Generate random molecule vmr."""
     molecule = draw(molecules())
     vmr = draw(floats(min_range, max_range))
 
@@ -160,29 +162,67 @@ def molecule_vmr(draw, min_range=1e-20, max_range=1):
 
 @composite
 def fitting_parameters(draw):
-
+    """Generate random fitting parameters."""
     fitting_names = draw(lists(text(min_size=1), min_size=1, max_size=20))
     num_fit = len(fitting_names)
-    value = draw(lists(floats(1e-10, 1e10), min_size=num_fit, max_size=num_fit))
-    mode = draw(lists(booleans(), min_size=num_fit, max_size=num_fit))
-    mode = ["linear" if b else "log" for b in mode]
-    bounds = draw(
+    value = draw(
         lists(
-            tuples(floats(1e-10, 1e10), floats(1e-10, 1e10)),
+            floats(1e-10, 1e10),
             min_size=num_fit,
             max_size=num_fit,
         )
     )
-    default_fit = draw(lists(booleans(), min_size=num_fit, max_size=num_fit))
+    mode = draw(
+        lists(
+            booleans(),
+            min_size=num_fit,
+            max_size=num_fit,
+        )
+    )
+    mode = ["linear" if b else "log" for b in mode]
+    bounds = draw(
+        lists(
+            tuples(
+                floats(1e-10, 1e10),
+                floats(1e-10, 1e10),
+            ),
+            min_size=num_fit,
+            max_size=num_fit,
+        )
+    )
+    default_fit = draw(
+        lists(
+            booleans(),
+            min_size=num_fit,
+            max_size=num_fit,
+        )
+    )
 
-    return list(zip(fitting_names, value, mode, default_fit, bounds))
+    return list(
+        zip(
+            fitting_names,
+            value,
+            mode,
+            default_fit,
+            bounds,
+            strict=True,
+        )
+    )
 
 
 @composite
-def hyp_wngrid(draw, num_elements=integers(3, 50), sort=False):
+def hyp_wngrid(
+    draw,
+    num_elements=integers(3, 50),  # noqa: B008
+    sort=False,
+):
+    """Generate random wngrid."""
     wngrid = draw(
         hyp_numpy.arrays(
-            np.float64, num_elements, elements=floats(100, 30000), unique=True
+            np.float64,
+            num_elements,
+            elements=floats(100, 30000),
+            unique=True,
         )
     )
     if sort:
@@ -192,8 +232,12 @@ def hyp_wngrid(draw, num_elements=integers(3, 50), sort=False):
 
 
 @composite
-def wngrid_spectra(draw, num_elements=integers(3, 50), sort=False):
-
+def wngrid_spectra(
+    draw,
+    num_elements=integers(3, 50),  # noqa: B008
+    sort=False,
+):
+    """Generate random wngrid and spectra."""
     wngrid = draw(hyp_wngrid(num_elements, sort))
     if sort:
         wngrid = np.sort(wngrid)
@@ -212,7 +256,13 @@ def wngrid_spectra(draw, num_elements=integers(3, 50), sort=False):
 
 @composite
 def temperatures(draw, min_layers=2, max_layers=30):
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
+    """Generate random temperatures."""
+    nlayers = draw(
+        integers(
+            min_value=min_layers,
+            max_value=max_layers,
+        )
+    )
 
     min_T = draw(floats(min_value=100.0, max_value=3000.0))
     max_T = draw(floats(min_value=100.0, max_value=3000.0))
@@ -223,8 +273,13 @@ def temperatures(draw, min_layers=2, max_layers=30):
 
 @composite
 def pressures(draw, min_layers=2, max_layers=30):
-
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
+    """Generate random pressures."""
+    nlayers = draw(
+        integers(
+            min_value=min_layers,
+            max_value=max_layers,
+        )
+    )
     min_P = draw(integers(min_value=4, max_value=6))
     max_P = draw(integers(min_value=-6, max_value=3))
 
@@ -235,10 +290,28 @@ def pressures(draw, min_layers=2, max_layers=30):
 
 @composite
 def TPs(draw, min_layers=2, max_layers=30):
-    nlayers = draw(integers(min_value=min_layers, max_value=max_layers))
+    """Generate random TP profiles."""
+    nlayers = draw(
+        integers(
+            min_value=min_layers,
+            max_value=max_layers,
+        )
+    )
 
-    min_T = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
-    max_T = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
+    min_T = draw(
+        floats(
+            min_value=100.0,
+            max_value=3000.0,
+            allow_nan=False,
+        )
+    )
+    max_T = draw(
+        floats(
+            min_value=100.0,
+            max_value=3000.0,
+            allow_nan=False,
+        )
+    )
     T = np.linspace(min_T, max_T, nlayers)
 
     min_P = draw(integers(min_value=4, max_value=6))
@@ -251,12 +324,29 @@ def TPs(draw, min_layers=2, max_layers=30):
 
 @composite
 def TP_npoints(draw, min_layers=2, max_layers=30):
-
-    P = draw(pressures(min_layers=min_layers, max_layers=max_layers))
+    """Generate random npoint TP profiles."""
+    P = draw(
+        pressures(
+            min_layers=min_layers,
+            max_layers=max_layers,
+        )
+    )
     nlayers = P.shape[0]
 
-    T_top = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
-    T_surface = draw(floats(min_value=100.0, max_value=3000.0, allow_nan=False))
+    T_top = draw(
+        floats(
+            min_value=100.0,
+            max_value=3000.0,
+            allow_nan=False,
+        )
+    )
+    T_surface = draw(
+        floats(
+            min_value=100.0,
+            max_value=3000.0,
+            allow_nan=False,
+        )
+    )
 
     P_top = draw(integers(min_value=-6, max_value=6))
     P_top = 10**P_top
@@ -268,14 +358,22 @@ def TP_npoints(draw, min_layers=2, max_layers=30):
 
         temp_points = draw(
             lists(
-                floats(min_value=100.0, max_value=3000.0, allow_nan=False),
+                floats(
+                    min_value=100.0,
+                    max_value=3000.0,
+                    allow_nan=False,
+                ),
                 min_size=leftover,
                 max_size=leftover,
             )
         )
         press_points = draw(
             lists(
-                floats(min_value=1e-6, max_value=1e6, allow_nan=False),
+                floats(
+                    min_value=1e-6,
+                    max_value=1e6,
+                    allow_nan=False,
+                ),
                 min_size=leftover,
                 max_size=leftover,
             )
@@ -284,18 +382,46 @@ def TP_npoints(draw, min_layers=2, max_layers=30):
         temp_points = []
         press_points = []
 
-    return nlayers, T_top, T_surface, P_top, P_surface, temp_points, press_points, P
+    return (
+        nlayers,
+        T_top,
+        T_surface,
+        P_top,
+        P_surface,
+        temp_points,
+        press_points,
+        P,
+    )
+
+
+# Predefined planet defaults to avoid B008
+_DEFAULT_MASS_RANGE = [0.001, 10.0]
+_DEFAULT_RADIUS_RANGE = [0.001, 10.0]
 
 
 @composite
-def planets(draw, mass_range=[0.001, 10.0], radius_range=[0.001, 10.0]):
+def planets(draw, mass_range=None, radius_range=None):
+    """Generate random planets."""
     from taurex.planet import Planet
 
+    if mass_range is None:
+        mass_range = _DEFAULT_MASS_RANGE
+    if radius_range is None:
+        radius_range = _DEFAULT_RADIUS_RANGE
+
     planet_mass = draw(
-        floats(min_value=mass_range[0], max_value=mass_range[1], allow_nan=False)
+        floats(
+            min_value=mass_range[0],
+            max_value=mass_range[1],
+            allow_nan=False,
+        )
     )
     planet_radius = draw(
-        floats(min_value=radius_range[0], max_value=radius_range[1], allow_nan=False)
+        floats(
+            min_value=radius_range[0],
+            max_value=radius_range[1],
+            allow_nan=False,
+        )
     )
     planet_distance = draw(floats(allow_nan=False))
     impact_param = draw(floats(allow_nan=False))

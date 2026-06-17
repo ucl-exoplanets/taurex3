@@ -1,12 +1,10 @@
-"""Includes some useful definitions and enums"""
+"""Includes some useful definitions and enums."""
 
 from enum import IntEnum
 
 
 class OutputSize(IntEnum):
-    """
-    This enum describes how heavy the final output will be
-    """
+    """This enum describes how heavy the final output will be."""
 
     heavy = 6
     """Output everything native and binned (large file size)"""

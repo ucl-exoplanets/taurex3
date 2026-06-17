@@ -1,3 +1,5 @@
+"""Module for Rayleigh scattering cross sections."""
+
 import numpy as np
 
 
@@ -50,6 +52,7 @@ _molecule_func = {
 
 
 def rayleigh_sigma_from_name(molecule_name, wngrid):
+    """Get Rayleigh cross section for a molecule."""
     try:
         return _molecule_func[molecule_name](wngrid)
     except KeyError:
@@ -57,6 +60,7 @@ def rayleigh_sigma_from_name(molecule_name, wngrid):
 
 
 def compute_h2(wngrid):
+    """Compute H2 Rayleigh cross section."""
     wave = 1e8 / wngrid
 
     return (
@@ -67,12 +71,14 @@ def compute_h2(wngrid):
 
 
 def compute_he(wngrid):
+    """Compute He Rayleigh cross section."""
     wave = 1e8 / wngrid
 
     return ((5.484e-14) * (wave ** (-4.0)) * (1 + (2.44e5) * (wave ** (-2.0)))) * 1e-4
 
 
 def compute_ray_sigma(wngrid, n=0.0, n_air=2.6867805e25, king=1.0):
+    """Compute Rayleigh cross section."""
     wlgrid = (10000.0 / wngrid) * 1e-6
 
     n_factor = (n**2 - 1) / (n_air * (n**2.0 + 2.0))

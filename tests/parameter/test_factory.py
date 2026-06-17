@@ -6,7 +6,11 @@ from taurex.parameter import factory
 
 
 def test_get_keywordarg_dict_non_mixin():
+    """Test get keyword arg dict."""
+
     class TestClass:
+        """Test class."""
+
         def __init__(self, a, b, c=1, d=2):
             pass
 
@@ -16,17 +20,24 @@ def test_get_keywordarg_dict_non_mixin():
 
 
 def test_get_keywordarg_dict_mixin():
+    """Test get keyword arg dict mixin."""
     from taurex.mixin import Mixin
 
     class TestClass:
+        """Test class."""
+
         def __init__(self, a, b, c=1, d=2):
             pass
 
     class TestMixin(Mixin):
+        """Test mixin."""
+
         def __init_mixin__(self, e, f, g=10, h=20):
             pass
 
     class TestClass2(TestMixin, TestClass):
+        """Test class 2."""
+
         pass
 
     kwargs, has_kvar = factory.get_keywordarg_dict(TestClass2)

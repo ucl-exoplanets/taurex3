@@ -32,6 +32,7 @@ class HDF5OutputGroup(OutputGroup):
         array: ArrayType,
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write array to HDF5 group."""
         array = np.array(array)
         ds = self._entry.create_dataset(
             str(array_name), data=array, shape=array.shape, dtype=array.dtype
@@ -47,6 +48,7 @@ class HDF5OutputGroup(OutputGroup):
         scalar: ScalarType,
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write scalar to HDF5 group."""
         ds = self._entry.create_dataset(str(scalar_name), data=scalar)
         if metadata:
             for k, v in metadata.items():
@@ -56,6 +58,7 @@ class HDF5OutputGroup(OutputGroup):
     def write_string(
         self, string_name: str, string: str, metadata: t.Optional[MetadataType] = None
     ) -> None:
+        """Write string to HDF5 group."""
         ds = self._entry.create_dataset(str(string_name), data=string)
         if metadata:
             for k, v in metadata.items():
@@ -92,6 +95,7 @@ class HDF5Output(Output, HDF5OutputGroup):
     """Output using HDF5 format."""
 
     def __init__(self, filename, append=False):
+        """Initialize HDF5 output."""
         Output.__init__(self, "HDF5Output")
         HDF5OutputGroup.__init__(self, name="HDF5Output", entry=None)
 

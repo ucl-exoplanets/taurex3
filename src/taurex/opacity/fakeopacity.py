@@ -21,6 +21,7 @@ class FakeOpacity(InterpolatingOpacity):
         num_p: t.Optional[int] = 20,
         num_t: t.Optional[int] = 27,
     ):
+        """Initialize FakeOpacity."""
         super().__init__("FAKE")
         self._molecule_name = molecule_name
         self._wavenumber_grid = create_grid_res(wn_res, *wn_size)[:, 0]

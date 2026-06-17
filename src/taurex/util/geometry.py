@@ -1,7 +1,24 @@
+"""Geometry utility functions."""
+
 import numpy as np
 
 
 def normalize(v, axis=0):
+    """Normalize a vector.
+
+    Parameters
+    ----------
+    v : array_like
+        Vector to normalize.
+    axis : int, optional
+        Axis along which to normalize, by default 0.
+
+    Returns
+    -------
+    array
+        Normalized vector.
+
+    """
     norm = np.linalg.norm(v, axis=axis)
     solution = v / norm
     solution[:, norm == 0] = v[:, norm == 0]
@@ -9,6 +26,23 @@ def normalize(v, axis=0):
 
 
 def sphere_to_cartesian(R, vec, degrees=True):
+    """Convert spherical coordinates to cartesian.
+
+    Parameters
+    ----------
+    R : float
+        Radius.
+    vec : array_like
+        Vector of shape (3, ...) representing (altitude, latitude, longitude).
+    degrees : bool, optional
+        If True, input angles are in degrees, by default True.
+
+    Returns
+    -------
+    array
+        Cartesian coordinates.
+
+    """
     result = np.zeros_like(vec)
     _vec = vec[...]
     if degrees:
@@ -20,8 +54,22 @@ def sphere_to_cartesian(R, vec, degrees=True):
 
 
 def compute_line_3d(v, t, axis=0):
-    """
-    Generates a line given two cartesian points
+    """Generates a line given two cartesian points.
+
+    Parameters
+    ----------
+    v : array_like
+        Origin vector.
+    t : array_like
+        Target vector.
+    axis : int, optional
+        Axis along which to compute, by default 0.
+
+    Returns
+    -------
+    tuple
+        Origin and normalized direction vector.
+
     """
     v = np.array(v)
     t = np.array(t)
@@ -31,11 +79,23 @@ def compute_line_3d(v, t, axis=0):
 
 
 def parallel_vector(R, alt, max_alt=1e5):
-    """
-    Generates a viewing and tangent vectors
-    parallel to the surface of a sphere
-    """
+    """Generates viewing and tangent vectors parallel to the surface of a sphere.
 
+    Parameters
+    ----------
+    R : float
+        Radius.
+    alt : array_like
+        Altitude(s).
+    max_alt : float, optional
+        Maximum altitude for viewer, by default 1e5.
+
+    Returns
+    -------
+    tuple
+        Viewer and tangent vectors.
+
+    """
     if not hasattr(alt, "__len__"):
         alt = np.array([alt])
     viewer = np.zeros(shape=(3, len(alt)))
@@ -48,9 +108,20 @@ def parallel_vector(R, alt, max_alt=1e5):
 
 
 def perpendicular_vector(R, max_alt):
-    """
-    Generates a viewing and tangent vectors
-    perpendicular to a sphere of radius R
+    """Generates viewing and tangent vectors perpendicular to a sphere.
+
+    Parameters
+    ----------
+    R : float
+        Radius.
+    max_alt : float
+        Maximum altitude for viewer.
+
+    Returns
+    -------
+    tuple
+        Viewer and tangent vectors.
+
     """
     return np.array([0, R + max_alt * 2, 0]).reshape(3, 1), np.array(
         [0.0, 0, 0]
@@ -58,12 +129,27 @@ def perpendicular_vector(R, max_alt):
 
 
 def multi_dot(a, b):
+    """Compute element-wise dot product along an axis.
+
+    Parameters
+    ----------
+    a : array_like
+        First array.
+    b : array_like
+        Second array.
+
+    Returns
+    -------
+    array
+        Element-wise dot product.
+
+    """
     return np.sum(a * b, axis=0)
 
 
-def compute_intersection_3d(R, h, u, o, c=np.zeros(3), allow_single=False):
-    """
-    Computes line-sphere intersection for a range of radius offsets
+def compute_intersection_3d(R, h, u, o, c=None, allow_single=False):
+    """Compute line-sphere intersection for a range of radius offsets.
+
     Will detect if path crosses R and cutoff the point
 
     Parameters
@@ -83,14 +169,19 @@ def compute_intersection_3d(R, h, u, o, c=np.zeros(3), allow_single=False):
     c: vector, optional
         center position of sphere default is (0,0,0)
 
+    allow_single: bool
+        allow single intersection
+
     Returns
-    --------
+    -------
     solution: array of shape (2,3,m,n)
         Array containing points that intersect the sphere
         First index is always the point closest to origin vector
 
 
     """
+    if c is None:
+        c = np.zeros(3)
     if not hasattr(h, "__len__"):
         h = np.array([h])
     else:
@@ -159,11 +250,43 @@ def compute_intersection_3d(R, h, u, o, c=np.zeros(3), allow_single=False):
     return solution
 
 
-def compute_path_length_3d(R, altitudes, viewer, tangent, coordinates="cartesian"):
-    """
-    Given a viewing and tangent vector, computes the path length for a sphere
-    """
+_DEFAULT_MAX_ALT = 1e5
 
+
+def compute_path_length_3d(
+    R,
+    altitudes,
+    viewer,
+    tangent,
+    coordinates="cartesian",
+    max_alt=_DEFAULT_MAX_ALT,
+):
+    """Computes the path length for a sphere.
+
+    Given a viewing and tangent vector, computes the path length for a
+    sphere.
+
+    Parameters
+    ----------
+    R : float
+        Radius
+    altitudes : array_like
+        Altitude levels
+    viewer : array_like
+        Viewer position
+    tangent : array_like
+        Tangent position
+    coordinates : str, optional
+        Coordinate system, by default "cartesian"
+    max_alt : float, optional
+        Maximum altitude, by default 1e5
+
+    Returns
+    -------
+    list or None
+        List of (indices, distances) tuples or None if no intersection
+
+    """
     _viewer = viewer[...]
     _tangent = tangent[...]
 

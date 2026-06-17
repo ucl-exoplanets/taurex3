@@ -1,4 +1,4 @@
-"""Types for TauREx 3"""
+"""Types for TauREx 3."""
 
 import os
 import pathlib

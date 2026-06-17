@@ -35,6 +35,7 @@ class LightCurveData(Logger, Writeable):
         name: InstrumentType,
         lc_data: LCDataType,
     ):
+        """Create LightCurveData from instrument name."""
         log = logging.getLogger()
         if name.lower() in ("wfc3",):
             return cls(lc_data, "wfc3", (1.1, 1.8))

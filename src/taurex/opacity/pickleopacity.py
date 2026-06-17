@@ -146,6 +146,7 @@ class PickleOpacity(InterpolatingOpacity):
 
     @property
     def pressureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Pressure grid."""
         return self._pressure_grid
 
     @property

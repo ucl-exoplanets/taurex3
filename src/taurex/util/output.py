@@ -1,3 +1,5 @@
+"""Module for handling output of Taurex data."""
+
 import os
 
 import h5py
@@ -7,9 +9,16 @@ from taurex import OutputSize
 
 
 def store_taurex_results(
-    output, model, native_grid, absp, tau, contributions, observed=None, optimizer=None
+    output,
+    model,
+    native_grid,
+    absp,
+    tau,
+    contributions,
+    observed=None,
+    optimizer=None,
 ):
-
+    """Store Taurex results."""
     o = output.create_group("Output")
 
     if observed:
@@ -55,20 +64,32 @@ def store_taurex_results(
 
 
 def store_profiles(output, model):
+    """Store atmospheric profiles."""
     output.write_array("density_profile", model.densityProfile)
-    output.write_array("scaleheight_profile", model.scaleheight_profile)
+    output.write_array(
+        "scaleheight_profile",
+        model.scaleheight_profile,
+    )
     output.write_array("altitude_profile", model.altitudeProfile)
     output.write_array("gravity_profile", model.gravity_profile)
     output.write_array("pressure_profile", model.pressure.profile)
     output.write_array("temp_profile", model.temperatureProfile)
-    # output.write_array('temp_profile', model._temperature_profile.profile)
+    # output.write_array(
+    #     'temp_profile', model._temperature_profile.profile
+    # )
 
-    output.write_array("active_mix_profile", model.chemistry.activeGasMixProfile)
-    output.write_array("inactive_mix_profile", model.chemistry.inactiveGasMixProfile)
+    output.write_array(
+        "active_mix_profile",
+        model.chemistry.activeGasMixProfile,
+    )
+    output.write_array(
+        "inactive_mix_profile",
+        model.chemistry.inactiveGasMixProfile,
+    )
 
 
 def store_fwspectrum(output, native_grid, absp, tau):
-
+    """Store forward spectrum."""
     output.write_array("native_wngrid", native_grid)
     output.write_array("native_wlgrid", 10000 / native_grid)
     output.write_array("native_spectrum", absp)
@@ -76,39 +97,48 @@ def store_fwspectrum(output, native_grid, absp, tau):
 
 
 def store_fwcontrib(output, contributions):
+    """Store forward contributions."""
     for name, value in contributions:
         output.write_array(name, value)
 
 
 def store_optimizer(output, model, opt):
+    """Store optimizer."""
     opt.write_optimizer(output)
 
 
 def store_fit(output, model, opt):
+    """Store fit."""
     opt.write_fit(output)
 
 
 def store_planet(output, model):
+    """Store planet."""
     model._planet.write(output)
 
 
 def store_star(output, model):
+    """Store star."""
     model._star.write(output)
 
 
 def store_temperature(output, model):
+    """Store temperature."""
     model._temperature_profile.write(output)
 
 
 def store_pressure(output, model):
+    """Store pressure."""
     model._pressure_profile.write(output)
 
 
 def store_chemistry(output, model):
+    """Store chemistry."""
     model._chemistry.write(output)
 
 
 def generate_profile_dict(model):
+    """Generate profile dictionary."""
     out = {}
     out["temp_profile"] = model.temperatureProfile
     out["active_mix_profile"] = model.chemistry.activeGasMixProfile
@@ -123,7 +153,10 @@ def generate_profile_dict(model):
     return out
 
 
-def generate_spectra_dict(result, contrib_result, native_grid, bin_grid=None):
+def generate_spectra_dict(  # noqa: C901
+    result, contrib_result, native_grid, bin_grid=None
+):
+    """Generate spectra dictionary."""
     from taurex.util import bindown
 
     out = {}
@@ -167,25 +200,21 @@ def generate_spectra_dict(result, contrib_result, native_grid, bin_grid=None):
                 name = c[0]
                 native = None
                 binned = None
-                tau = None
                 extra = None
                 # Cause I had no forsight
                 if len(c) == 3:
 
                     native = c[1]
-                    tau = c[2]
+
                 elif len(c) > 3:
                     if isinstance(c[3], tuple):
                         native = c[1]
-                        tau = c[2]
                         extra = c[3:]
                     else:
                         binned = c[1]
                         native = c[2]
-                        tau = c[3]
                         extra = c[4:]
 
-                # tau = c[3] # necessary?
                 contrib_comp = {}
                 if binned is not None:
                     contrib_comp["binned"] = binned
@@ -202,7 +231,7 @@ def generate_spectra_dict(result, contrib_result, native_grid, bin_grid=None):
 
 
 def plot_taurex_results_from_hdf5(arg_output):
-
+    """Plot Taurex results from HDF5."""
     file = h5py.File(arg_output, "r")
 
     solution_name = file["Output"]["solutions"]
@@ -228,11 +257,14 @@ def plot_taurex_results_from_hdf5(arg_output):
     observed[:, 3] = file["Output"]["Observed"]["binwidths"][:]
 
     plot_spectrum(
-        spectrum, os.path.splitext(arg_output)[0] + "_spectrum.pdf", observed=observed
+        spectrum,
+        os.path.splitext(arg_output)[0] + "_spectrum.pdf",
+        observed=observed,
     )
 
 
 def plot_spectrum(spectrum, arg_output, observed=None):
+    """Plot spectrum."""
     import matplotlib.pyplot as plt
     from matplotlib import cm
 
@@ -248,17 +280,28 @@ def plot_spectrum(spectrum, arg_output, observed=None):
         )
 
     plt.plot(
-        observed[:, 0], observed[:, 1], ".", color="blue", alpha=0.6, label="Observed"
+        observed[:, 0],
+        observed[:, 1],
+        ".",
+        color="blue",
+        alpha=0.6,
+        label="Observed",
     )
     plt.plot(
         [observed[:, 0], observed[:, 0]],
-        [observed[:, 1] - observed[:, 2], observed[:, 1] + observed[:, 2]],
+        [
+            observed[:, 1] - observed[:, 2],
+            observed[:, 1] + observed[:, 2],
+        ],
         "-",
         color="blue",
         alpha=0.6,
     )
     plt.plot(
-        [observed[:, 0] - observed[:, 3] / 2, observed[:, 0] + observed[:, 3] / 2],
+        [
+            observed[:, 0] - observed[:, 3] / 2,
+            observed[:, 0] + observed[:, 3] / 2,
+        ],
         [observed[:, 1], observed[:, 1]],
         "-",
         color="blue",
@@ -273,19 +316,26 @@ def plot_spectrum(spectrum, arg_output, observed=None):
     plt.savefig(os.path.join(arg_output), dpi=1000)
 
 
-def store_contributions(binner, model, output_size=OutputSize.heavy):
-
+def store_contributions(binner, model, output_size=OutputSize.heavy):  # noqa: C901
+    """Store contributions."""
     native_grid, contribs = model.model_contrib()
-    native_grid, contribs_component = model.model_full_contrib()
+    (
+        native_grid,
+        contribs_component,
+    ) = model.model_full_contrib()
 
     contribution_dict = {}
 
-    for contrib_name, main_contribution in contribs.items():
+    for (
+        contrib_name,
+        main_contribution,
+    ) in contribs.items():
 
         flux, tau, extras = main_contribution
 
         this_contrib_dict = binner.generate_spectrum_output(
-            (native_grid, flux, tau, extras), output_size=output_size
+            (native_grid, flux, tau, extras),
+            output_size=output_size,
         )
 
         try:
@@ -312,10 +362,16 @@ def store_contributions(binner, model, output_size=OutputSize.heavy):
         except KeyError:
             pass
 
-        for name, flux, tau, extras in contribs_component[contrib_name]:
+        for (
+            name,
+            flux,
+            tau,
+            extras,
+        ) in contribs_component[contrib_name]:
 
             component_contrib_dict = binner.generate_spectrum_output(
-                (native_grid, flux, tau, extras), output_size=output_size
+                (native_grid, flux, tau, extras),
+                output_size=output_size,
             )
 
             try:

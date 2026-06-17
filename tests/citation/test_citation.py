@@ -1,4 +1,8 @@
+"""Test citation module."""
+
+
 def test_no_duplicates():
+    """Test no duplicate citations."""
     from taurex._citation import taurex_citation
     from taurex.core import unique_citations_only
 

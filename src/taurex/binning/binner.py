@@ -1,4 +1,4 @@
-"""Module for the base binning class"""
+"""Module for the base binning class."""
 
 import typing as t
 
@@ -37,8 +37,7 @@ class BinnedSpectrumType(t.TypedDict):
 
 
 class Binner(Loggable):
-    """
-    *Abstract class*
+    """Abstract class.
 
     The binner class deals with binning down spectra to different resolutions.
     It also provides a method to generate spectrum output format from a forward
@@ -48,6 +47,7 @@ class Binner(Loggable):
     """
 
     def __init__(self):
+        """Initialize Binner."""
         super().__init__()
 
     def bindown(
@@ -58,6 +58,7 @@ class Binner(Loggable):
         error: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> BinDownType:
         """Bin down a spectrum from a high resolution to a lower resolution.
+
         **Requires implementation**
 
         This should handle the binning of a spectrum passed into the function.
@@ -79,7 +80,7 @@ class Binner(Loggable):
             Optional, generally if you require this but the user does not pass
             it then you must compute it yourself using ``wngrid``. This can
             be done easily using the function
-            func:`~taurex.util.compute_bin_edges`.
+            :func:`~taurex.util.compute_bin_edges`.
 
         error: :obj:`array`, optional
             Associated errors or noise of the spectrum. Must be same shape
@@ -109,8 +110,8 @@ class Binner(Loggable):
         raise NotImplementedError
 
     def bin_model(self, model_output: ModelOutputType) -> BinDownType:
-        """
-        Bins down a TauREx3 forward model.
+        """Bins down a TauREx3 forward model.
+
         This automatically splits the output and passes it to
         the :func:`bindown` function.
         Its general usage is of the form:
@@ -127,7 +128,7 @@ class Binner(Loggable):
 
         Parameters
         ----------
-        model_output: obj:`tuple`
+        model_output: :obj:`tuple`
             Result from running a TauREx3 forward model
 
         Returns
@@ -155,7 +156,7 @@ class Binner(Loggable):
 
         Parameters
         ----------
-        model_output: obj:`tuple`
+        model_output: :obj:`tuple`
             Result from running a TauREx3 forward model
 
         output_size: :class:`~taurex.taurexdefs.OutputSize`

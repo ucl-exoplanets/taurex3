@@ -1,4 +1,4 @@
-"""Pressure Profile from file"""
+"""Pressure Profile from file."""
 
 import typing as t
 
@@ -58,6 +58,7 @@ class FilePressureProfile(ArrayPressureProfile):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for this pressure profile."""
         return (
             "file",
             "fromfile",

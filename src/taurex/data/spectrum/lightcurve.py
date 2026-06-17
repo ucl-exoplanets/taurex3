@@ -81,10 +81,16 @@ class ObservedLightCurve(BaseSpectrum):
             list(t)
             for t in zip(
                 *sorted(
-                    zip(wngrid_min, raw_data, data_std),
+                    zip(
+                        wngrid_min,
+                        raw_data,
+                        data_std,
+                        strict=True,
+                    ),
                     key=lambda x: x[0],
                     reverse=True,
-                )
+                ),
+                strict=True
             )
         )
         return np.concatenate(raw_data), np.concatenate(data_std)
@@ -98,26 +104,26 @@ class ObservedLightCurve(BaseSpectrum):
 
         The lightcurve spectrum comes in the form of multiple lightcurves
         stuck together into
-        one long spectrum. The number of lightcurves is equal to the number of
-        bins in :func:`wavelengthGrid`.
+        one long spectrum. The number of lightcurves is equal to the number
+        of bins in :func:`wavelengthGrid`.
 
         """
         return self._spec
 
     @property
     def rawData(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Raw lightcurve data read from file
+        """Raw lightcurve data read from file.
 
         Returns
         -------
         lc_data : :obj:`array`
 
         """
-        self.obs_spectrum
+        return self.obs_spectrum
 
     @property
     def wavelengthGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Returns wavelength grid in microns
+        """Returns wavelength grid in microns.
 
         Returns
         -------

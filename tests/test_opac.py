@@ -1,3 +1,5 @@
+"""Test opacity."""
+
 import numpy as np
 import pytest
 from hypothesis import example
@@ -9,8 +11,10 @@ from taurex.opacity import InterpolatingOpacity
 
 
 class FakeOpac(InterpolatingOpacity):
+    """Fake opacity."""
 
     def __init__(self):
+        """Initialize FakeOpac."""
         super().__init__("Fake")
 
         num_temp = 5
@@ -26,23 +30,28 @@ class FakeOpac(InterpolatingOpacity):
 
     @property
     def xsecGrid(self):
+        """Cross section grid."""
         return self._xsec_grid
 
     @property
     def wavenumberGrid(self):
+        """Wavenumber grid."""
         return self._wavenumber_grid
 
     @property
     def temperatureGrid(self):
+        """Temperature grid."""
         return self._temperature_grid
 
     @property
     def pressureGrid(self):
+        """Pressure grid."""
         return self._pressure_grid
 
 
 @pytest.fixture(scope="module")
 def fake_interp_opac():
+    """Fake interp opacity fixture."""
     return FakeOpac()
 
 
@@ -64,6 +73,7 @@ def fake_interp_opac():
 @example(temperature=2000, pressure=1e8)
 @example(temperature=3000, pressure=1e8)
 def test_find_closest_index(fake_interp_opac, temperature, pressure):
+    """Test find closest index."""
     import math
 
     t_min, t_max, p_min, p_max = fake_interp_opac.find_closest_index(
@@ -101,6 +111,7 @@ def test_find_closest_index(fake_interp_opac, temperature, pressure):
 
 
 def test_min_max(fake_interp_opac):
+    """Test min max."""
     assert fake_interp_opac.pressureMax == fake_interp_opac.pressureGrid.max()
     assert fake_interp_opac.pressureMin == fake_interp_opac.pressureGrid.min()
     assert fake_interp_opac.temperatureMin == fake_interp_opac.temperatureGrid.min()
@@ -126,7 +137,7 @@ def test_min_max(fake_interp_opac):
 @example(temperature=3000, pressure=1e8)
 @settings(deadline=500)
 def test_interpolation(fake_interp_opac, temperature, pressure):
-    """I cant test if its correct, only that it works for now"""
+    """I cant test if its correct, only that it works for now."""
     op = fake_interp_opac.opacity(temperature, pressure)
     minimum_case = (
         temperature < fake_interp_opac.temperatureMin

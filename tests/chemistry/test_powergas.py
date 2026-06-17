@@ -1,8 +1,9 @@
+"""Tests for power gas."""
+
 import numpy as np
 import pytest
 from hypothesis import given
 from hypothesis.strategies import floats
-from hypothesis.strategies import integers
 
 from taurex.chemistry import PowerGas
 
@@ -18,7 +19,7 @@ from ..strategies import molecule_vmr
     tp=TPs(),
 )
 def test_powergas_all(molecule, alpha, beta, gamma, tp):
-
+    """Test power gas ALL."""
     T, P, n = tp
     mol, vmr = molecule
     mol_name = mol[0]
@@ -45,6 +46,7 @@ def test_powergas_all(molecule, alpha, beta, gamma, tp):
 @pytest.mark.parametrize("molecule", ["H2", "H2O", "TiO", "VO", "H-", "Na", "K"])
 @given(TP=TPs())
 def test_auto_profile(molecule, TP):
+    """Test auto profile."""
     T, P, n = TP
     ps_auto = PowerGas(molecule_name=molecule, profile_type="auto")
     ps_truth = PowerGas(molecule_name="LOL", profile_type=molecule)
@@ -58,22 +60,19 @@ def test_auto_profile(molecule, TP):
 @pytest.mark.parametrize("molecule", ["H2", "H2O", "TiO", "VO", "H-", "Na", "K"])
 @given(
     molecule_chosen=molecule_vmr(),
-    alpha=floats(allow_nan=False),
-    beta=floats(allow_nan=False),
-    gamma=floats(allow_nan=False),
     TP=TPs(),
 )
-def test_auto_profile_override(molecule, molecule_chosen, alpha, beta, gamma, TP):
+def test_auto_profile_override(molecule, molecule_chosen, TP):
+    """Test auto profile override."""
     T, P, n = TP
     mol, vmr = molecule_chosen
-    mol_name = mol[0]
     ps_auto = PowerGas(molecule_name=molecule, profile_type="auto")
     ps_truth = PowerGas(
         molecule_name=molecule,
         mix_ratio_surface=vmr,
-        alpha=alpha,
-        beta=beta,
-        gamma=gamma,
+        alpha=vmr,
+        beta=vmr,
+        gamma=vmr,
         profile_type="auto",
     )
 

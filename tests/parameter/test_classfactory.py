@@ -1,3 +1,5 @@
+"""Test ClassFactory."""
+
 import typing as t
 
 from taurex.parameter.classfactory import ClassFactory
@@ -5,8 +7,11 @@ from taurex.temperature import TemperatureProfile
 
 
 class TempTest(TemperatureProfile):
+    """Test temperature profile."""
+
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return input keywords."""
         return ("test",)
 
 

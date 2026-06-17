@@ -1,7 +1,10 @@
+"""Test MultiModel."""
+
 import pytest
 
 
 def test_multitransit_autofraction_completion():
+    """Test multitransit autofraction completion."""
     from taurex.model import MultiTransitModel
 
     model = MultiTransitModel(
@@ -16,6 +19,7 @@ def test_multitransit_autofraction_completion():
 
 
 def test_multitransit_invalid_fraction_count():
+    """Test multitransit invalid fraction count."""
     from taurex.model import MultiTransitModel
 
     with pytest.raises(ValueError, match="fractions"):
@@ -27,6 +31,7 @@ def test_multitransit_invalid_fraction_count():
 
 
 def test_parameter_multitransit_setup_keywords():
+    """Test parameter multitransit setup keywords."""
     from taurex.model import MultiParameterTransitModel
     from taurex.pressure import SimplePressureProfile
 

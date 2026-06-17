@@ -1,3 +1,5 @@
+"""Test Nestle optimizer."""
+
 import pytest
 from hypothesis import given
 from hypothesis import settings
@@ -11,6 +13,7 @@ from . import LineObs
 @given(m=st.floats(1.0, 2.0), c=st.floats(1.0, 30.0))
 @settings(deadline=None)
 def test_optimizer(m, c):
+    """Test optimizer."""
     from taurex.optimizer import NestleOptimizer
 
     lm = LineModel()

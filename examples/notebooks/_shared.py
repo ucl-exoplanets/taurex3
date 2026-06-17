@@ -61,7 +61,7 @@ def download_file(url: str, destination: Path) -> Path:
     destination.parent.mkdir(parents=True, exist_ok=True)
     if destination.exists():
         return destination
-    urlretrieve(url, destination)
+    urlretrieve(url, destination)  # noqa: S310
     return destination
 
 

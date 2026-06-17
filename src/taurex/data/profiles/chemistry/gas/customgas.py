@@ -1,4 +1,4 @@
-"""Constant gas profile."""
+"""Custom gas profile."""
 
 import typing as t
 
@@ -12,7 +12,7 @@ from .gas import Gas
 
 
 class CustomGas(Gas):
-    """Constant gas profile.
+    """Custom gas profile.
 
     Molecular abundace is constant at each layer of the
     atmosphere
@@ -24,10 +24,10 @@ class CustomGas(Gas):
         molecule_name: t.Optional[str] = "H2O",
         mix_ratio: npt.NDArray[np.float64] = None,
     ) -> None:
-        """Initialize constant gas profile.
+        """Initialize Custom gas profile.
 
         Parameters
-        -----------
+        ----------
         molecule_name : str
             Name of molecule
 
@@ -42,9 +42,7 @@ class CustomGas(Gas):
 
     @property
     def mixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
-
-        Mixing profile
+        """Mixing profile.
 
         Returns
         -------
@@ -52,7 +50,6 @@ class CustomGas(Gas):
             Mix ratio for molecule at each layer
 
         """
-
         return self._mix_array
 
     def initialize_profile(
@@ -65,7 +62,7 @@ class CustomGas(Gas):
         """Initialize the mixing profile.
 
         Parameters
-        -----------
+        ----------
         nlayers: int
             Number of layers in atmosphere
         temperature_profile: :obj:`array`
@@ -87,7 +84,6 @@ class CustomGas(Gas):
         :func:`taurex.fitting.fittable.Fittable.add_fittable_param`
 
         """
-
         mol_name = self.molecule
         param_name = self.molecule
         param_tex = molecule_texlabel(mol_name)
@@ -98,7 +94,7 @@ class CustomGas(Gas):
         def write_mol(self, value):
             self._mix_ratio = value
 
-        read_mol.__doc__ = f"{mol_name} constant mix ratio (VMR)"
+        read_mol.__doc__ = f"{mol_name} custom mix ratio (VMR)"
 
         fget = read_mol
         fset = write_mol
@@ -111,7 +107,18 @@ class CustomGas(Gas):
         )
 
     def write(self, output: OutputGroup):
-        """Write constant gas profile to output."""
+        """Write Custom gas profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         gas_entry = super().write(output)
         gas_entry.write_scalar("mix_ratio", self._mix_ratio)
 
@@ -119,4 +126,5 @@ class CustomGas(Gas):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str]:
+        """Return input keywords for this gas."""
         return ("custom",)

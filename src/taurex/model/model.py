@@ -28,7 +28,6 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
     def __init__(self, name: str) -> None:
         """Initialise forward model.
 
-
         Parameters
         ----------
         name : str
@@ -56,6 +55,7 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
         return self._fitting_parameters[key][3](value)
 
     def defaultBinner(self) -> Binner:  # noqa: N802
+        """Default binner for this model."""
         from taurex.binning import NativeBinner
 
         return NativeBinner()
@@ -83,7 +83,7 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         cutoff_grid: t.Optional[bool] = True,
     ) -> ModelOutputType:
-        """Computes the forward model for a wngrid"""
+        """Computes the forward model for a wngrid."""
         raise NotImplementedError
 
     def model_contrib(
@@ -95,7 +95,9 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
         t.Dict[
             str,
             t.Tuple[
-                npt.NDArray[np.float64], npt.NDArray[np.float64], t.Optional[t.Any]
+                npt.NDArray[np.float64],
+                npt.NDArray[np.float64],
+                t.Optional[t.Any],
             ],
         ],
     ]:
@@ -120,7 +122,7 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
             ],
         ],
     ]:
-        """Computes the forward model for a wngrid for each contribution
+        """Computes the forward model for a wngrid for each contribution.
 
         Considers each contribution has subcomponents as well.
 
@@ -128,13 +130,17 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
         raise NotImplementedError
 
     @property
-    def fittingParameters(self) -> t.Dict[str, FittingType]:  # noqa: N802
-        """Returns a dictionary of fitting parameters"""
+    def fittingParameters(  # noqa: N802
+        self,
+    ) -> t.Dict[str, FittingType]:
+        """Returns a dictionary of fitting parameters."""
         return self._fitting_parameters
 
     @property
-    def derivedParameters(self) -> t.Dict[str, DerivedType]:  # noqa: N802
-        """Returns a dictionary of derived parameters"""
+    def derivedParameters(  # noqa: N802
+        self,
+    ) -> t.Dict[str, DerivedType]:
+        """Returns a dictionary of derived parameters."""
         return self._derived_parameters
 
     def compute_error(
@@ -143,13 +149,41 @@ class ForwardModel(Logger, Fittable, Writeable, Citable):
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
     ) -> t.Tuple[
-        t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]
+        t.Dict[str, npt.NDArray[np.float64]],
+        t.Dict[str, npt.NDArray[np.float64]],
     ]:
-        """Error of the model and its components given a sample function."""
+        """Error of the model and its components given a sample function.
+
+        Parameters
+        ----------
+        samples : t.Callable[[], float]
+            A callable that returns a sequence of weights.
+        wngrid : t.Optional[npt.NDArray[np.float64]], optional
+            Wavenumber grid, by default None
+        binner : t.Optional[Binner], optional
+            Binning object, by default None
+
+        Returns
+        -------
+        t.Tuple
+            Profile and spectrum error dictionaries.
+
+        """
         return {}, {}
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write forward model to output group."""
+        """Write forward model to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         model = output.create_group("ModelParameters")
         model.write_string("model_type", self.__class__.__name__)
         contrib = model.create_group("Contributions")

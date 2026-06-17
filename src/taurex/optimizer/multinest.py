@@ -77,6 +77,8 @@ class NestFitParam(FitParam):
 
 
 class NestSolutionOutput(t.TypedDict):
+    """Output for a single nestle solution."""
+
     type: str
     local_logE: t.Tuple[float, float]  # noqa: N815
     weights: npt.NDArray[np.float64]
@@ -85,7 +87,7 @@ class NestSolutionOutput(t.TypedDict):
 
 
 class NestOutputType(t.TypedDict):
-    """Multinest output type"""
+    """Multinest output type."""
 
     NEST_stats: NestStatsOutput
     global_logE: t.Tuple[float, float]  # noqa: N815
@@ -93,6 +95,8 @@ class NestOutputType(t.TypedDict):
 
 
 class MultiNestOptimizer(Optimizer):
+    """An optimizer that uses the MultiNest library."""
+
     def __init__(
         self,
         multi_nest_path: t.Optional[PathLike] = None,
@@ -135,20 +139,24 @@ class MultiNestOptimizer(Optimizer):
             Search for multiple modes
         num_params_cluster:
             Parameters on which to cluster
-            e.g. if nclust_par = 3, it will cluster on the first 3 parameters only.
+            e.g. if nclust_par = 3, it will cluster on the first 3
+            parameters only.
             if ncluster_par = -1 it clusters on all parameters
         maximum_modes:
             Maximum number of modes
         constant_efficiency_mode:
             Run in constant efficiency mode
         evidence_tolerance:
-            Set log likelihood tolerance. :math:`\Delta \log Z <` evidence_tolerance
+            Set log likelihood tolerance.
+            :math:`\Delta \log Z <` evidence_tolerance
         mode_tolerance:
             Mode tolerance
         importance_sampling:
             Use importance nested sampling
         resume:
             Resume from previous run
+        only_finish:
+            Force sampler to not run multinest but simply process outputs.
         n_iter_before_update:
             Number of iterations before updating
         multinest_prefix:
@@ -195,7 +203,10 @@ class MultiNestOptimizer(Optimizer):
 
         if get_rank() == 0:
             if not multi_nest_path.exists():
-                self.info("Directory %s does not exist, creating", multi_nest_path)
+                self.info(
+                    "Directory %s does not exist, creating",
+                    multi_nest_path,
+                )
                 multi_nest_path.mkdir(parents=True)
         barrier()
 
@@ -217,9 +228,9 @@ class MultiNestOptimizer(Optimizer):
             return self.log_likelihood(data)
 
         def multinest_uniform_prior(cube, ndim, nparams):
-            # prior distributions called by multinest. Implements a uniform prior
-            # converting parameters from normalised grid to uniform prior
-            # print(type(cube))
+            # prior distributions called by multinest. Implements
+            # a uniform prior converting parameters from
+            # normalised grid to uniform prior
             data = np.array([cube[i] for i in range(nparams)])
             prior = self.prior_transform(data)
             for idx, c in enumerate(prior):
@@ -241,7 +252,10 @@ class MultiNestOptimizer(Optimizer):
             self.nclust_par = ndim  # For writing to output later on
 
         # Will help for live plotting
-        with open(self.dir_multinest / f"{self.multinest_prefix}params.json", "w") as f:
+        with open(
+            self.dir_multinest / f"{self.multinest_prefix}params.json",
+            "w",
+        ) as f:
             json.dump(self.fit_latex, f)
 
         # write param json file
@@ -276,7 +290,19 @@ class MultiNestOptimizer(Optimizer):
         self.debug("Multinest output %s", self._multinest_output)
 
     def write_optimizer(self, output: OutputGroup) -> OutputGroup:
-        """Write optimizer to output."""
+        """Write optimizer to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            The written output group.
+
+        """
         opt = super().write_optimizer(output)
 
         # sampling efficiency (parameter, ...)
@@ -305,6 +331,18 @@ class MultiNestOptimizer(Optimizer):
         return opt
 
     def write_fit(self, output):
+        """Write fit to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         fit = super().write_fit(output)
 
         if self._multinest_output:
@@ -323,11 +361,7 @@ class MultiNestOptimizer(Optimizer):
 
         self.warning("Store the multinest results")
         nest_out = {"solutions": {}}
-        data = np.loadtxt(
-            self.dir_multinest
-            / f"{self.multinest_prefix}.txt"
-            # os.path.join(self.dir_multinest, "{}.txt".format(self.multinest_prefix))
-        )
+        data = np.loadtxt(self.dir_multinest / f"{self.multinest_prefix}.txt")
 
         nest_analyser = pymultinest.Analyzer(
             n_params=len(self.fitting_parameters),
@@ -348,13 +382,7 @@ class MultiNestOptimizer(Optimizer):
         # Bypass if run in multimodes = False. Pymultinest.Analyser does
         # not report means and sigmas in this case
         if len(nest_out["NEST_stats"]["modes"]) == 0:
-            with open(
-                self.dir_multinest
-                / f"{self.multinest_prefix}stats.dat"
-                # os.path.join(
-                #     self.dir_multinest, "{}stats.dat".format(self.multinest_prefix)
-                # )
-            ) as file:
+            with open(self.dir_multinest / f"{self.multinest_prefix}stats.dat") as file:
                 lines = file.readlines()
             stats = {"modes": []}
             read_error_into_dict(lines[0], stats)
@@ -408,7 +436,8 @@ class MultiNestOptimizer(Optimizer):
         if self.multimodes:
             # separate modes. get individual samples for each mode
 
-            # get parameter values and sample probability (=weight) for each mode
+            # get parameter values and sample probability (=weight)
+            # for each mode
             with open(
                 os.path.join(
                     self.dir_multinest / f"{self.multinest_prefix}post_separate.dat",
@@ -435,7 +464,8 @@ class MultiNestOptimizer(Optimizer):
                     mode_array[idx, :] = line
                 modes_array.append(mode_array)
         else:
-            # not running in multimode. Get chains directly from file 1-.txt
+            # not running in multimode. Get chains directly from file
+            # 1-.txt
             modes_array = [data[:, 2:]]
             chains_weights = [data[:, 0]]
             modes_weights.append(chains_weights[0])
@@ -459,7 +489,9 @@ class MultiNestOptimizer(Optimizer):
             for idx, param_name in enumerate(self.fit_names):
                 trace = modes_array[nmode][:, idx]
                 q_16, q_50, q_84 = quantile_corner(
-                    trace, [0.16, 0.5, 0.84], weights=np.asarray(modes_weights[nmode])
+                    trace,
+                    [0.16, 0.5, 0.84],
+                    weights=np.asarray(modes_weights[nmode]),
                 )
 
                 mydict["fit_params"][param_name] = {
@@ -486,13 +518,37 @@ class MultiNestOptimizer(Optimizer):
         return solution
 
     def get_samples(self, solution_idx: int) -> npt.NDArray[np.float64]:
-        """Get samples from solution."""
+        """Get samples from solution.
+
+        Parameters
+        ----------
+        solution_idx : int
+            Index of the solution.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of samples.
+
+        """
         return self._multinest_output["solutions"][f"solution{solution_idx}"][
             "tracedata"
         ]
 
     def get_weights(self, solution_idx: int) -> npt.NDArray[np.float64]:
-        """Get weights from solution."""
+        """Get weights from solution.
+
+        Parameters
+        ----------
+        solution_idx : int
+            Index of the solution.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of weights.
+
+        """
         return self._multinest_output["solutions"][f"solution{solution_idx}"]["weights"]
 
     def get_solution(
@@ -506,19 +562,39 @@ class MultiNestOptimizer(Optimizer):
                 t.Tuple[
                     t.Literal["Statistics"],
                     t.Dict[
-                        t.Literal["local log-evidence", "local log-evidence error"],
+                        t.Literal[
+                            "local log-evidence",
+                            "local log-evidence error",
+                        ],
                         float,
                     ],
                 ],
-                t.Tuple[t.Literal["fit_params"], t.Dict[str, NestFitParam]],
-                t.Tuple[t.Literal["tracedata"], npt.NDArray[np.float64]],
-                t.Tuple[t.Literal["weights"], npt.NDArray[np.float64]],
+                t.Tuple[
+                    t.Literal["fit_params"],
+                    t.Dict[str, NestFitParam],
+                ],
+                t.Tuple[
+                    t.Literal["tracedata"],
+                    npt.NDArray[np.float64],
+                ],
+                t.Tuple[
+                    t.Literal["weights"],
+                    npt.NDArray[np.float64],
+                ],
             ],
         ],
         None,
         None,
     ]:
-        """Get solution as generator."""
+        """Get solution as generator.
+
+        Yields
+        ------
+        t.Generator
+            Yields solution index, map values, median values,
+            and extra information.
+
+        """
         names = self.fit_names
         opt_values = self.fit_values
         opt_map = self.fit_values
@@ -562,11 +638,14 @@ class MultiNestOptimizer(Optimizer):
     BIBTEX_ENTRIES = [
         r"""
         @article{ refId0,
-        author = {{Buchner, J.} and {Georgakakis, A.} and {Nandra, K.} and {Hsu, L.}
-        and {Rangel, C.} and {Brightman, M.} and {Merloni, A.} and {Salvato, M.}
+        author = {{Buchner, J.} and {Georgakakis, A.} and
+                 {Nandra, K.} and {Hsu, L.}
+        and {Rangel, C.} and {Brightman, M.} and {Merloni, A.}
+        and {Salvato, M.}
         and {Donley, J.} and {Kocevski, D.}},
-        title = {X-ray spectral modelling of the AGN obscuring region in the
-            CDFS: Bayesian model selection and catalogue},
+        title = {X-ray spectral modelling of the AGN obscuring
+                 region in the CDFS: Bayesian model selection
+                 and catalogue},
         DOI= "10.1051/0004-6361/201322971",
         url= "https://doi.org/10.1051/0004-6361/201322971",
         journal = {A\&A},
@@ -582,7 +661,8 @@ class MultiNestOptimizer(Optimizer):
                 title = "{MULTINEST: an efficient and robust Bayesian
                 inference tool for cosmology and particle physics}",
             journal = {MNRAS},
-            keywords = {methods: data analysis, methods: statistical, Astrophysics},
+            keywords = {methods: data analysis, methods: statistical,
+                        Astrophysics},
                 year = "2009",
                 month = "Oct",
             volume = {398},
@@ -592,7 +672,9 @@ class MultiNestOptimizer(Optimizer):
         archivePrefix = {arXiv},
             eprint = {0809.3437},
         primaryClass = {astro-ph},
-            adsurl = {https://ui.adsabs.harvard.edu/abs/2009MNRAS.398.1601F},
+            adsurl = {
+                https://ui.adsabs.harvard.edu/abs/2009MNRAS.398.1601F
+            },
             adsnote = {Provided by the SAO/NASA Astrophysics Data System}
         }
         """,

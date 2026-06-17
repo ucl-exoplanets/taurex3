@@ -40,13 +40,47 @@ def contribute_cia_numpy(
     ngrid: int,
     layer: int,
     tau: npt.NDArray[np.float64],
-):
-    """Integrate the optical depth for a given layer."""
+) -> npt.NDArray[np.float64]:
+    """Integrate the optical depth for a given layer.
+
+    Parameters
+    ----------
+    startk : int
+        Starting layer in integration
+    endk : int
+        Last layer in integration
+    density_offset : int
+        Which part of the density profile to start from
+    sigma : :obj:`array`
+        Cross-section
+    density : array_like
+        Density profile of atmosphere
+    path : array_like
+        Path-length or altitude gradient
+    nlayers : int
+        Total number of layers (unused)
+    ngrid : int
+        Total number of grid points
+    layer : int
+        Which layer we currently on
+    tau : array_like
+        Optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
+
+    Returns
+    -------
+    tau : array_like
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
+
+    """
     _path = path[startk:endk, None]
     _density = density[startk + density_offset : endk + density_offset, None]
     _sigma = sigma[startk + layer : endk + layer, :]
 
     tau[layer, :] += np.sum(_sigma * _path * _density * _density, axis=0)
+
+    return tau
 
 
 def contribute_cia_numba(
@@ -61,27 +95,27 @@ def contribute_cia_numba(
     layer: int,
     tau: npt.NDArray[np.float64],
 ) -> npt.NDArray[np.float64]:
-    """Collisionally induced absorption integration function.
+    r"""Collisionally induced absorption integration function.
 
     This has the form:
 
     .. math::
 
-        \\tau_{\\lambda}(z) = \\int_{z_{0}}^{z_{1}}
-            \\sigma(z') \\rho(z')^{2} dz',
+        \tau_{\lambda}(z) = \int_{z_{0}}^{z_{1}}
+            \sigma(z') \rho(z')^{2} dz',
 
     where :math:`z` is the layer, :math:`z_0` and :math:`z_1` are ``startK``
-    and ``endK`` respectively. :math:`\\sigma` is the weighted
+    and ``endK`` respectively. :math:`\sigma` is the weighted
     cross-section ``sigma``. :math:`rho` is the ``density`` and
     :math:`dz'` is the integration path length ``path``
 
 
     Parameters
     ----------
-    startK: int
+    startk: int
         starting layer in integration
 
-    endK: int
+    endk: int
         last layer in integration
 
     density_offset: int
@@ -105,10 +139,15 @@ def contribute_cia_numba(
     layer: int
         Which layer we currently on
 
+    tau : array_like
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
+
     Returns
     -------
     tau : array_like
-        optical depth (well almost you still need to do ``exp(-tau)`` yourself)
+        optical depth (well almost you still need to do
+        ``exp(-tau)`` yourself)
 
     """
     for k in range(startk, endk):
@@ -117,6 +156,8 @@ def contribute_cia_numba(
         # for mol in range(nmols):
         for wn in range(ngrid):
             tau[layer, wn] += sigma[k + layer, wn] * _path * _density * _density
+
+    return tau
 
 
 try:
@@ -162,11 +203,10 @@ class CIAContribution(Contribution):
             list of molecule pairs of the form ``mol1-mol2``
             e.g. ``H2-He``
         """
-
         return self._cia_pairs
 
     @ciaPairs.setter
-    def ciaPairs(self, value: t.List[str]) -> None:  # noqa: N806,N802
+    def ciaPairs(self, value: t.List[str]) -> None:  # noqa: N802
         """Sets list of molecular pairs involved.
 
         Parameters
@@ -189,7 +229,28 @@ class CIAContribution(Contribution):
         tau: npt.NDArray[np.float64],
         path_length: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
-        """Integrate the optical depth for a given layer."""
+        """Integrate the optical depth for a given layer.
+
+        Parameters
+        ----------
+        model : OneDForwardModel
+            The forward model
+        start_layer : int
+            Initial integration layer
+        end_layer : int
+            Final integration layer
+        density_offset : int
+            offset in density layer
+        layer : int
+            atmospheric layer being computed
+        density : npt.NDArray[np.float64]
+            density profile of atmosphere
+        tau : npt.NDArray[np.float64]
+            optical depth to store result
+        path_length : npt.NDArray[np.float64], optional
+            integration length
+
+        """
         if self._total_cia > 0:
             contribute_cia(
                 start_layer,
@@ -207,7 +268,7 @@ class CIAContribution(Contribution):
     def prepare_each(
         self, model: OneDForwardModel, wngrid: npt.NDArray[np.float64]
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
-        """Computes and weighs cross-section for a single pair of molecules
+        """Computes and weighs cross-section for a single pair of molecules.
 
         Parameters
         ----------
@@ -248,7 +309,19 @@ class CIAContribution(Contribution):
             yield pair_name, sigma_cia
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write output to file."""
+        """Write output to file.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            Output group written to.
+
+        """
         contrib = super().write(output)
         if len(self.ciaPairs) > 0:
             contrib.write_string_array("cia_pairs", self.ciaPairs)

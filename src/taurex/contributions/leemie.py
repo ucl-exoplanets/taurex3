@@ -27,7 +27,6 @@ class LeeMieContribution(Contribution):
 
     Parameters
     ----------
-
     lee_mie_radius: float
         Particle radius in um
 
@@ -119,6 +118,26 @@ class LeeMieContribution(Contribution):
         lee_mie_bottomP: t.Optional[float] = -1,  # noqa: N803
         lee_mie_topP: t.Optional[float] = -1,
     ) -> None:
+        """Initialize LeeMieContribution.
+
+        Parameters
+        ----------
+        lee_mie_radius: float
+            Particle radius in um
+
+        lee_mie_q: float
+            Extinction coefficient
+
+        lee_mie_mix_ratio: float
+            Mixing ratio in atmosphere in particles/m3
+
+        lee_mie_bottomP: float
+            Bottom of cloud deck in Pa
+
+        lee_mie_topP: float
+            Top of cloud deck in Pa
+
+        """
         super().__init__("Mie")
 
         self._mie_radius = lee_mie_radius
@@ -273,7 +292,13 @@ class LeeMieContribution(Contribution):
         yield "Lee", sigma_xsec
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write output group."""
+        """Write output group.
+
+        Parameters
+        ----------
+        output: :class:`~taurex.output.output.Output`
+            Output object to write to
+        """
         contrib = super().write(output)
         contrib.write_scalar("lee_mie_radius", self._mie_radius)
         contrib.write_scalar("lee_mie_q", self._mie_q)
@@ -284,7 +309,7 @@ class LeeMieContribution(Contribution):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str]:
-        """Input keywords.""" ""
+        """Input keywords."""
         return ("LeeMie",)
 
     BIBTEX_ENTRIES = [

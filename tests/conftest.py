@@ -1,2 +1,4 @@
-from .fixtures.opacities import pickle_opac
-from .fixtures.spectra import spectra
+"""Fixtures for tests."""
+
+from .fixtures.opacities import pickle_opac  # noqa: F401
+from .fixtures.spectra import spectra  # noqa: F401

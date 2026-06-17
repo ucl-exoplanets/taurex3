@@ -1,13 +1,16 @@
+"""Fitting utilities for parsing priors."""
+
 import typing as t
 
 
 class MalformedPriorInputError(Exception):
-    """Raised when the input prior string is malformed"""
+    """Raised when the input prior string is malformed."""
 
     pass
 
 
 def validate_priors(prior_string: str) -> None:
+    """Validate prior string."""
     count_left_bracket = prior_string.count("(")
     count_right_bracket = prior_string.count(")")
 
@@ -23,6 +26,7 @@ def validate_priors(prior_string: str) -> None:
 
 
 def parse_priors(prior_string: str) -> t.Tuple[str, t.Dict[str, t.Any]]:
+    """Parse prior string."""
     import ast
 
     func_parse = ast.parse(prior_string)

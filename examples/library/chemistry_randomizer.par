@@ -32,6 +32,3 @@ model_type = transmission
     cia_pairs = H2-H2, H2-He
 
     [[Rayleigh]]
-
-
-

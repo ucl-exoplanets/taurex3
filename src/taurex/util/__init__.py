@@ -1,17 +1,37 @@
-"""Common functions that are used and are quite helpful"""
+"""Common functions that are used and are quite helpful."""
 
-from .util import (bindown, calculate_weight, class_for_name,
-                   class_from_keyword, clip_native_to_wngrid,
-                   compute_bin_edges, compute_dz, conversion_factor,
-                   create_grid_res, decode_string_array, ensure_string_utf8,
-                   find_closest_pair, get_molecular_weight, has_duplicates,
-                   loadtxt2d, mass, merge_elements, molecule_texlabel,
-                   movingaverage, quantile_corner, random_int_iter,
-                   read_error_into_dict, read_error_line, read_table,
-                   recursively_save_dict_contents_to_output,
-                   sanitize_molecule_string, split_molecule_elements,
-                   store_thing, tokenize_molecule, weighted_avg_and_std,
-                   wnwidth_to_wlwidth)
+from .util import bindown
+from .util import calculate_weight
+from .util import class_for_name
+from .util import class_from_keyword
+from .util import clip_native_to_wngrid
+from .util import compute_bin_edges
+from .util import compute_dz
+from .util import conversion_factor
+from .util import create_grid_res
+from .util import decode_string_array
+from .util import ensure_string_utf8
+from .util import find_closest_pair
+from .util import get_molecular_weight
+from .util import has_duplicates
+from .util import loadtxt2d
+from .util import mass
+from .util import merge_elements
+from .util import molecule_texlabel
+from .util import movingaverage
+from .util import quantile_corner
+from .util import random_int_iter
+from .util import read_error_into_dict
+from .util import read_error_line
+from .util import read_table
+from .util import recursively_save_dict_contents_to_output
+from .util import sanitize_molecule_string
+from .util import split_molecule_elements
+from .util import store_thing
+from .util import tokenize_molecule
+from .util import weighted_avg_and_std
+from .util import wnwidth_to_wlwidth
+
 
 __all__ = [
     "mass",
@@ -19,7 +39,6 @@ __all__ = [
     "split_molecule_elements",
     "tokenize_molecule",
     "merge_elements",
-    "split_molecule_elements",
     "sanitize_molecule_string",
     "get_molecular_weight",
     "molecule_texlabel",

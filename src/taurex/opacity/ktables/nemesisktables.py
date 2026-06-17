@@ -1,4 +1,5 @@
 """Class for handling ktables from NEMESIS."""
+
 import pathlib
 import typing as t
 
@@ -8,7 +9,8 @@ import numpy.typing as npt
 from taurex.types import PathLike
 from taurex.util import sanitize_molecule_string
 
-from ..interpolateopacity import InterpModeType, InterpolatingOpacity
+from ..interpolateopacity import InterpModeType
+from ..interpolateopacity import InterpolatingOpacity
 from .ktable import KTable
 
 

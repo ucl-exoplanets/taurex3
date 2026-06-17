@@ -1,4 +1,5 @@
 """Opacity for hydrogen ion."""
+
 import typing as t
 import warnings
 
@@ -166,7 +167,7 @@ class HydrogenIon(Contribution):
     def prepare_each(
         self, model: OneDForwardModel, wngrid
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
-        """Computes and weighs cross-section for a H-"""
+        """Computes and weighs cross-section for an H-."""
         self._nlayers = model.nLayers
         self._P_dyne = model.pressureProfile * 1e6
 

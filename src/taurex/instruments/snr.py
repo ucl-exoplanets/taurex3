@@ -1,10 +1,12 @@
 """Instrument implementation for SNR noise model."""
+
 import math
 import typing as t
 
 import numpy as np
 
-from taurex.binning import BinDownType, Binner
+from taurex.binning import BinDownType
+from taurex.binning import Binner
 from taurex.model import ForwardModel
 from taurex.types import ModelOutputType
 
@@ -21,13 +23,14 @@ class SNRInstrument(Instrument):
     """
 
     def __init__(
-        self, SNR: t.Optional[int] = 10, binner: t.Optional[Binner] = None  # noqa: N803
+        self,
+        SNR: t.Optional[int] = 10,  # noqa: N803
+        binner: t.Optional[Binner] = None,
     ):
         """Initialize SNR instrument.
 
         Parameters
         ----------
-
         SNR: float
             Signal-to-noise ratio
 
@@ -52,7 +55,6 @@ class SNRInstrument(Instrument):
 
         Parameters
         ----------
-
         model:
             Forward model to pass.
 
@@ -76,10 +78,16 @@ class SNRInstrument(Instrument):
 
         noise = np.ones(spectrum.shape) * signal / self._SNR
 
-        return wngrid, spectrum, noise / math.sqrt(num_observations), grid_width
+        return (
+            wngrid,
+            spectrum,
+            noise / math.sqrt(num_observations),
+            grid_width,
+        )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for SNR instrument."""
         return (
             "snr",
             "SNR",

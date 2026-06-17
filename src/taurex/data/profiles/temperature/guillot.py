@@ -1,4 +1,5 @@
 """Guillot 2010 temperature profile."""
+
 import typing as t
 
 import numpy as np
@@ -31,20 +32,20 @@ class Guillot2010(TemperatureProfile):
         """Initialize guillot temperature profile.
 
         Parameters
-        -----------
-            T_irr: float
-                planet equilibrium temperature
-                (Line fixes this but we keep as free parameter)
-            kappa_ir: float
-                mean infra-red opacity
-            kappa_v1: float
-                mean optical opacity one
-            kappa_v2: float
-                mean optical opacity two
-            alpha: float
-                ratio between kappa_v1 and kappa_v2 downwards radiation stream
-            T_int: float
-                Internal heating parameter (K)
+        ----------
+        T_irr: float
+            planet equilibrium temperature
+            (Line fixes this but we keep as free parameter)
+        kappa_irr: float
+            mean infra-red opacity
+        kappa_v1: float
+            mean optical opacity one
+        kappa_v2: float
+            mean optical opacity two
+        alpha: float
+            ratio between kappa_v1 and kappa_v2 downwards radiation stream
+        T_int: float
+            Internal heating parameter (K)
 
         """
         super().__init__("Guillot")
@@ -56,7 +57,6 @@ class Guillot2010(TemperatureProfile):
         self.kappa_v2 = kappa_v2
         self.alpha = alpha
         self.T_int = T_int
-
         self._check_values()
 
     @fitparam(
@@ -66,11 +66,19 @@ class Guillot2010(TemperatureProfile):
         default_bounds=[1300, 2500],
     )
     def equilTemperature(self) -> float:  # noqa: N802
-        """Planet equilibrium temperature"""
+        """Planet equilibrium temperature."""
         return self.T_irr
 
     @equilTemperature.setter
     def equilTemperature(self, value: float) -> None:  # noqa: N802
+        """Set planet equilibrium temperature.
+
+        Parameters
+        ----------
+        value : float
+            Equilibrium temperature in Kelvin.
+
+        """
         self.T_irr = value
 
     @fitparam(
@@ -81,11 +89,19 @@ class Guillot2010(TemperatureProfile):
         default_mode="log",
     )
     def meanInfraOpacity(self) -> float:  # noqa: N802
-        """mean infra-red opacity"""
+        """Mean infra-red opacity."""
         return self.kappa_ir
 
     @meanInfraOpacity.setter
     def meanInfraOpacity(self, value: float) -> None:  # noqa: N802
+        """Set mean infra-red opacity.
+
+        Parameters
+        ----------
+        value : float
+            Mean infra-red opacity.
+
+        """
         self.kappa_ir = value
 
     @fitparam(
@@ -96,12 +112,19 @@ class Guillot2010(TemperatureProfile):
         default_mode="log",
     )
     def meanOpticalOpacity1(self) -> float:  # noqa: N802
-        """mean optical opacity one"""
+        """Mean optical opacity one."""
         return self.kappa_v1
 
     @meanOpticalOpacity1.setter
     def meanOpticalOpacity1(self, value: float) -> None:  # noqa: N802
-        """mean optical opacity one"""
+        """Set mean optical opacity one.
+
+        Parameters
+        ----------
+        value : float
+            Mean optical opacity one.
+
+        """
         self.kappa_v1 = value
 
     @fitparam(
@@ -112,12 +135,19 @@ class Guillot2010(TemperatureProfile):
         default_mode="log",
     )
     def meanOpticalOpacity2(self) -> float:  # noqa: N802
-        """mean optical opacity two"""
+        """Mean optical opacity two."""
         return self.kappa_v2
 
     @meanOpticalOpacity2.setter
     def meanOpticalOpacity2(self, value: float) -> None:  # noqa: N802
-        """mean optical opacity two"""
+        """Set mean optical opacity two.
+
+        Parameters
+        ----------
+        value : float
+            Mean optical opacity two.
+
+        """
         self.kappa_v2 = value
 
     @fitparam(
@@ -127,11 +157,19 @@ class Guillot2010(TemperatureProfile):
         default_bounds=[0.0, 1.0],
     )
     def opticalRatio(self) -> float:  # noqa: N802
-        """ratio between kappa_v1 and kappa_v2."""
+        """Ratio between kappa_v1 and kappa_v2."""
         return self.alpha
 
     @opticalRatio.setter
     def opticalRatio(self, value: float) -> None:  # noqa: N802
+        """Set ratio between kappa_v1 and kappa_v2.
+
+        Parameters
+        ----------
+        value : float
+            Ratio between kappa_v1 and kappa_v2.
+
+        """
         self.alpha = value
 
     @fitparam(
@@ -141,12 +179,19 @@ class Guillot2010(TemperatureProfile):
         default_bounds=[0.0, 1.0],
     )
     def internalTemperature(self) -> float:  # noqa: N802
-        """ratio between kappa_v1 and kappa_v2"""
+        """Internal temperature parameter."""
         return self.T_int
 
     @internalTemperature.setter
     def internalTemperature(self, value: float) -> None:  # noqa: N802
-        """ratio between kappa_v1 and kappa_v2"""
+        """Set internal temperature parameter.
+
+        Parameters
+        ----------
+        value : float
+            Internal temperature in Kelvin.
+
+        """
         self.T_int = value
 
     def _check_values(self) -> None:
@@ -176,7 +221,9 @@ class Guillot2010(TemperatureProfile):
 
         if self.T_irr < 0 or self.T_int < 0:
             self.warning(
-                "Negative temperature input T_irr=%s T_int=%s", self.T_irr, self.T_int
+                "Negative temperature input T_irr=%s T_int=%s",
+                self.T_irr,
+                self.T_int,
             )
             raise InvalidModelException("Negative temperature input")
 
@@ -190,7 +237,6 @@ class Guillot2010(TemperatureProfile):
             Temperature profile at each layer in Kelvin.
 
         """
-
         planet_grav = self.planet.gravity
 
         self._check_values()
@@ -223,7 +269,18 @@ class Guillot2010(TemperatureProfile):
         return t4**0.25
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write temperature profile to output."""
+        """Write temperature profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         temperature = super().write(output)
         temperature.write_scalar("T_irr", self.T_irr)
         temperature.write_scalar("kappa_irr", self.kappa_ir)
@@ -244,7 +301,8 @@ class Guillot2010(TemperatureProfile):
         r"""
         @article{guillot,
         author = {{Guillot, T.}},
-        title = {On the radiative equilibrium of irradiated planetary atmospheres},
+        title = {On the radiative equilibrium of
+                irradiated planetary atmospheres},
         DOI= "10.1051/0004-6361/200913396",
         url= "https://doi.org/10.1051/0004-6361/200913396",
         journal = {A\&A},

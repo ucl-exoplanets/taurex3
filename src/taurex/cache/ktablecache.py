@@ -19,7 +19,11 @@ class KTableCache(Singleton):
     """
 
     def init(self) -> None:
-        """Initialise the cache."""
+        """Initialise the cache.
+
+        Sets up the internal opacity dictionary,
+        path, interpolation mode, and memory mode.
+        """
         self.opacity_dict: t.Dict[str, KTable] = {}
         self._opacity_path = GlobalCache()["ktable_path"]
         self.log = Logger("KTableCache")
@@ -37,12 +41,15 @@ class KTableCache(Singleton):
 
         Parameters
         ----------
-
         opacity_path : str or :obj:`list` of str, optional
             search path(s) to look for molecular opacities
 
-        """
+        Raises
+        ------
+        NotADirectoryError
+            If the path does not exist.
 
+        """
         import os
 
         GlobalCache()["ktable_path"] = opacity_path
@@ -83,12 +90,6 @@ class KTableCache(Singleton):
             if key in self.opacity_dict:
                 return self.opacity_dict[key]
             else:
-                # try:
-                #     # if self._radis:
-                #     #     return self.create_radis_opacity(key,molecule_filter=[key])
-                #     # else:
-                #         raise Exception
-                # except Exception as e:
                 # Otherwise throw an error
                 self.log.error("Opacity for molecule %s could not be loaded", key)
                 self.log.error(
@@ -102,7 +103,7 @@ class KTableCache(Singleton):
     def add_opacity(
         self, opacity: KTable, molecule_filter: t.Optional[t.List[str]] = None
     ) -> None:
-        """Adds a :class:`~taurex.opacity.ktable.KTable` object to the cache
+        """Adds a :class:`~taurex.opacity.ktable.KTable` object to the cache.
 
         Parameters
         ----------
@@ -174,7 +175,6 @@ class KTableCache(Singleton):
             :func:`__getitem__` for filtering
 
         """
-
         from taurex.parameter.classfactory import ClassFactory
 
         cf = ClassFactory()
@@ -210,16 +210,16 @@ class KTableCache(Singleton):
     ) -> None:
         """Main function to use when loading molecular opacities.
 
-        Handles both cross sections and paths. Handles lists of either so lists of
-        :class:`~taurex.opacity.opacity.Opacity` objects or lists of paths can be used
-        to load multiple files/objects
+        Handles both cross sections and paths. Handles lists of either so
+        lists of :class:`~taurex.opacity.opacity.Opacity` objects or lists
+        of paths can be used to load multiple files/objects.
 
 
         Parameters
         ----------
         opacities : :class:`~taurex.opacity.opacity.Opacity` or
-        :obj:`list` of :class:`~taurex.opacity.opacity.Opacity` , optional
-            Object(s) to include in cache
+            :obj:`list` of :class:`~taurex.opacity.opacity.Opacity` , optional
+                Object(s) to include in cache
 
         opacity_path : str or :obj:`list` of str, optional
             search path(s) to look for molecular opacities
@@ -251,9 +251,6 @@ class KTableCache(Singleton):
                 raise Exception("Unknown type passed into opacities")
         else:
             self.load_opacity_from_path(opacity_path, molecule_filter=molecule_filter)
-            # if isinstance(opacity_path,(list,)):
-            #     for path in opacity_path:
-            #         self.load_opacity_from_path(path,molecule_filter=molecule_filter)
 
     def clear_cache(self) -> None:
         """Clears all currently loaded cross-sections."""

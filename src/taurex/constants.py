@@ -1,8 +1,10 @@
-"""Defines constants used in taurex"""
+"""Defines constants used in taurex."""
+
 import astropy.constants as c
 import numpy as np
 
 from taurex.util import conversion_factor
+
 
 AMU = conversion_factor("u", "kg")
 KBOLTZ = c.k_B.value
@@ -19,6 +21,7 @@ SPDLIGT = conversion_factor("c", "m/s")
 
 
 def get_constant(name, unit=None):
+    """Get a physical constant and optionally convert it to a different unit."""
     from taurex.util import conversion_factor
 
     const = getattr(c, name)

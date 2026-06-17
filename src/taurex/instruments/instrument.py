@@ -1,4 +1,5 @@
 """Base instrument model class."""
+
 import typing as t
 
 from taurex.binning import BinDownType
@@ -11,7 +12,6 @@ from taurex.types import ModelOutputType
 class Instrument(Logger, Citable):
     """Instrument noise model.
 
-
     *Abstract class*
 
     Defines some method that transforms
@@ -22,10 +22,18 @@ class Instrument(Logger, Citable):
     BIBTEX_ENTRIES = [
         r"""
 @ARTICLE{2025A&A...699A.219C,
-       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and {Venot}, O.},
-        title = "{Cloud and haze parameterization in atmospheric retrievals: Insights from Titan's Cassini data and JWST observations of hot Jupiters}",
+       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and
+                 {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and
+                 {Venot}, O.},
+        title = "{Cloud and haze parameterization in atmospheric retrievals:
+                  Insights from Titan's Cassini data and JWST observations of
+                  hot Jupiters}",
       journal = {\aap},
-     keywords = {techniques: spectroscopic, planets and satellites: atmospheres, infrared: planetary systems, Earth and Planetary Astrophysics, Instrumentation and Methods for Astrophysics},
+     keywords = {techniques: spectroscopic,
+                 planets and satellites: atmospheres,
+                 infrared: planetary systems,
+                 Earth and Planetary Astrophysics,
+                 Instrumentation and Methods for Astrophysics},
          year = 2025,
         month = jul,
        volume = {699},
@@ -60,7 +68,6 @@ archivePrefix = {arXiv},
 
         Parameters
         ----------
-
         model: :class:`~taurex.model.model.ForwardModel`
             Forward model to pass.
 
@@ -70,7 +77,6 @@ archivePrefix = {arXiv},
         num_observations: int, optional
             Number of observations to simulate
         """
-
         raise NotImplementedError
 
     @classmethod

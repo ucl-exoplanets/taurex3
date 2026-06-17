@@ -18,6 +18,7 @@ from taurex.util import clip_native_to_wngrid
 
 from .model import ForwardModel
 
+
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution
 else:
@@ -54,7 +55,6 @@ class SimpleForwardModel(ForwardModel):
     ):
         """Initialize a 1D forward model.
 
-
         Parameters
         ----------
         name: str
@@ -67,8 +67,8 @@ class SimpleForwardModel(ForwardModel):
             Star model, default star is Sun-like
 
         pressure_profile:
-            Pressure model, alternative is to set ``nlayers``, ``atm_min_pressure``
-            and ``atm_max_pressure``
+            Pressure model, alternative is to set ``nlayers``,
+            ``atm_min_pressure`` and ``atm_max_pressure``
 
         temperature_profile:
             Temperature model, default is an
@@ -88,6 +88,9 @@ class SimpleForwardModel(ForwardModel):
 
         atm_max_pressure: float, optional
             Pressure at BOA. Used if ``pressure_profile`` is not defined.
+
+        contributions: list, optional
+            List of contributions to include
 
         """
         import warnings
@@ -124,7 +127,7 @@ class SimpleForwardModel(ForwardModel):
 
         if self.WARN:
             warnings.warn(
-                "SimpleForwardModel is deprecated. Use OneDForwardModel instead",
+                "SimpleForwardModel is deprecated. " "Use OneDForwardModel instead",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -135,7 +138,8 @@ class SimpleForwardModel(ForwardModel):
         """Compute an initial molecular profile."""
         import warnings
 
-        from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+        from taurex.data.profiles.chemistry import ConstantGas
+        from taurex.data.profiles.chemistry import TaurexChemistry
 
         warnings.warn(
             "This method is deprecated and will be removed in a "
@@ -149,7 +153,10 @@ class SimpleForwardModel(ForwardModel):
         self._inital_mu = tc
 
     def _setup_defaults(
-        self, nlayers: int, atm_min_pressure: float, atm_max_pressure: float
+        self,
+        nlayers: int,
+        atm_min_pressure: float,
+        atm_max_pressure: float,
     ) -> None:
         """Setup default profiles if not defined.
 
@@ -163,8 +170,6 @@ class SimpleForwardModel(ForwardModel):
 
         atm_max_pressure: float
             Pressure at BOA
-
-
 
 
         """
@@ -201,7 +206,8 @@ class SimpleForwardModel(ForwardModel):
             self._temperature_profile = Isothermal()
 
         if self._chemistry is None:
-            from taurex.data.profiles.chemistry import ConstantGas, TaurexChemistry
+            from taurex.data.profiles.chemistry import ConstantGas
+            from taurex.data.profiles.chemistry import TaurexChemistry
 
             tc = TaurexChemistry()
             self.warning(
@@ -226,21 +232,6 @@ class SimpleForwardModel(ForwardModel):
         self._temperature_profile.initialize_profile(
             self._planet, self.pressure.nLayers, self.pressure.profile
         )
-
-        # Initialize the atmosphere with a constant gas profile
-        # if self._initialized is False:
-        #     self._inital_mu.initialize_chemistry(
-        #         self.pressure.nLayers,
-        #         self.temperatureProfile,
-        #         self.pressureProfile,
-        #         None,
-        #     )
-
-        #     self._compute_altitude_gravity_scaleheight_profile(
-        #         self._inital_mu.muProfile
-        #     )
-
-        #     self._initialized = True
 
         # Setup any photochemistry
         self._chemistry.set_star_planet(self.star, self.planet)
@@ -274,7 +265,8 @@ class SimpleForwardModel(ForwardModel):
             self._fitting_parameters.update(contrib.fitting_parameters())
 
         self.debug(
-            "Available Fitting params: %s", list(self._fitting_parameters.keys())
+            "Available Fitting params: %s",
+            list(self._fitting_parameters.keys()),
         )
 
     def collect_derived_parameters(self):
@@ -294,7 +286,8 @@ class SimpleForwardModel(ForwardModel):
             self._derived_parameters.update(contrib.derived_parameters())
 
         self.debug(
-            "Available derived params: %s", list(self._derived_parameters.keys())
+            "Available derived params: %s",
+            list(self._derived_parameters.keys()),
         )
 
     def build(self) -> None:
@@ -304,7 +297,6 @@ class SimpleForwardModel(ForwardModel):
 
         Will automatically be called by :func:`model` if not called before.
         """
-
         self.contribution_list.sort(key=lambda x: x.order)
 
         self.info("Building model........")
@@ -323,9 +315,11 @@ class SimpleForwardModel(ForwardModel):
 
     # altitude, gravity and scale height profile
     def _compute_altitude_gravity_scaleheight_profile(
-        self, mu_profile: t.Optional[npt.NDArray[np.float64]] = None
+        self,
+        mu_profile: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
         """Computes altitude, gravity and scale height of the atmosphere.
+
         Only call after :func:`build` has been called at least once.
 
         Parameters
@@ -334,7 +328,6 @@ class SimpleForwardModel(ForwardModel):
             Molecular weight profile at each layer
 
         """
-
         # from taurex.constants import KBOLTZ
         if mu_profile is None:
             mu_profile = self._chemistry.muProfile
@@ -402,13 +395,14 @@ class SimpleForwardModel(ForwardModel):
         return self._planet
 
     def set_native_grid(
-        self, spectral_grid: t.Union[u.Quantity, npt.NDArray[np.float64]]
+        self,
+        spectral_grid: t.Union[u.Quantity, npt.NDArray[np.float64]],
     ) -> None:
         """Sets the native grid.
 
         Parameters
         ----------
-        wngrid:
+        spectral_grid:
             Wavenumber grid
         """
         if isinstance(spectral_grid, u.Quantity):
@@ -433,7 +427,6 @@ class SimpleForwardModel(ForwardModel):
 
         Returns
         -------
-
         wngrid: :obj:`array`
             Native grid
 
@@ -482,7 +475,6 @@ class SimpleForwardModel(ForwardModel):
 
         Parameters
         ----------
-
         wngrid:
             Wavenumber grid, default is to use native grid
 
@@ -491,7 +483,6 @@ class SimpleForwardModel(ForwardModel):
 
         Returns
         -------
-
         native_grid:
             Native wavenumber grid, clipped if ``wngrid`` passed
 
@@ -535,11 +526,31 @@ class SimpleForwardModel(ForwardModel):
         t.Dict[
             str,
             t.Tuple[
-                npt.NDArray[np.float64], npt.NDArray[np.float64], t.Optional[t.Any]
+                npt.NDArray[np.float64],
+                npt.NDArray[np.float64],
+                t.Optional[t.Any],
             ],
         ],
     ]:
-        """Models each contribution seperately."""
+        """Models each contribution seperately.
+
+        Parameters
+        ----------
+        wngrid:
+            Wavenumber grid, default is to use native grid
+
+        cutoff_grid:
+            Run model only on ``wngrid`` given, default is ``True``
+
+        Returns
+        -------
+        native_grid:
+            Native wavenumber grid, clipped if ``wngrid`` passed
+
+        all_contrib_dict:
+            Dictionary of absorption, tau, and extra for each contribution.
+
+        """
         # Setup profiles
         self.initialize_profiles()
 
@@ -627,13 +638,13 @@ class SimpleForwardModel(ForwardModel):
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
     ) -> t.Tuple[
-        t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]
+        t.Dict[str, npt.NDArray[np.float64]],
+        t.Dict[str, npt.NDArray[np.float64]],
     ]:
         """Computes standard deviations from samples.
 
         Parameters
         ----------
-
         samples:
             A callable function that returns a weight for each sample
 
@@ -641,7 +652,8 @@ class SimpleForwardModel(ForwardModel):
             Wavenumber grid, default is to use native grid
 
         binner:
-            A :class:`~taurex.binning.binner.Binner` object to bin the spectrum
+            A :class:`~taurex.binning.binner.Binner` object to bin the
+            spectrum
 
         """
         from taurex.util.math import OnlineVariance
@@ -672,7 +684,8 @@ class SimpleForwardModel(ForwardModel):
 
             if binned_spectrum is not None:
                 binned = np.maximum(
-                    np.nan_to_num(binner.bindown(native_grid, native)[1]), 1e-20
+                    np.nan_to_num(binner.bindown(native_grid, native)[1]),
+                    1e-20,
                 )
 
                 binned_spectrum.update(binned, weight=weight)
@@ -697,11 +710,14 @@ class SimpleForwardModel(ForwardModel):
         return profile_dict, spectrum_dict
 
     def path_integral(
-        self, wngrid: npt.NDArray[np.float64], return_contrib: t.Optional[bool]
+        self,
+        wngrid: npt.NDArray[np.float64],
+        return_contrib: t.Optional[bool],
     ) -> t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Main integration function.
 
-        Must return the absorption and optical depth for the given wngrid.
+        Must return the absorption and optical depth for the given
+        wngrid.
 
         """
         raise NotImplementedError
@@ -718,6 +734,15 @@ class SimpleForwardModel(ForwardModel):
         """Write forward model to output group.
 
         Will also write all components to the output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
 
         """
         # Run a model if needed
@@ -775,9 +800,8 @@ class OneDForwardModel(SimpleForwardModel):
 
     Must implement the following methods:
         - :func:`path_integral`
-            - Main integration function that must
-            return the absorption and optical depth
-            for the given wngrid.
+            - Main integration function, must return the absorption and tau
+
 
     """
 

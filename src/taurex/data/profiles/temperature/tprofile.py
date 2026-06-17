@@ -1,11 +1,13 @@
 """Base temperature class."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
 from taurex.data.citation import Citable
-from taurex.data.fittable import Fittable, derivedparam
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import derivedparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
@@ -41,19 +43,7 @@ class TemperatureProfile(Fittable, Logger, Writeable, Citable):
         nlayers: t.Optional[int] = 100,
         pressure_profile: t.Optional[npt.NDArray] = None,
     ):
-        """Initializes the profile.
-
-        Parameters
-        ----------
-        planet: :class:`~taurex.data.planet.Planet`
-
-        nlayers: int
-            Number of layers in atmosphere
-
-        pressure_profile: :obj:`array`
-            Pressure at each layer of the atmosphere
-
-        """
+        """Initializes the profile."""
         self.nlayers = nlayers
         self.nlevels = nlayers + 1
         self.pressure_profile = pressure_profile

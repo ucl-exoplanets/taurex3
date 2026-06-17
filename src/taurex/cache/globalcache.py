@@ -11,6 +11,7 @@ class GlobalCache(Singleton):
     """Allows for the storage of global variables."""
 
     def init(self):
+        """Initialize GlobalCache."""
         self.variable_dict: t.Dict[str, t.Any] = {}
         self.log = Logger("GlobalCache")
 

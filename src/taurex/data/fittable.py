@@ -1,7 +1,9 @@
 """This module relates to defining fitting parameters in TauREx3."""
 
 import typing as t
-from functools import partial, wraps
+from functools import partial
+from functools import wraps
+
 
 T = t.TypeVar("T")
 """Generic type."""
@@ -71,53 +73,16 @@ class DerivedCallable(t.Protocol):
         ...
 
 
-# class FittingType(t.TypedDict):
-#     """Fitting type."""
-
-#     param_name: str
-#     """Parameter name."""
-
-#     param_latex: str
-#     """Parameter name in latex."""
-
-#     fget: t.Callable[[], float]
-#     """Getter."""
-
-#     fset: t.Callable[[float], None]
-#     """Setter."""
-
-#     default_fit: bool
-#     """Fit by default?"""
-
-#     default_bounds: t.List[float]
-#     """Default fitting boundaries."""
-
-#     default_mode: t.Literal["linear", "log"]
-#     """Default fitting mode."""
-
-
-# class DerivedType(t.TypedDict):
-#     """Derived type."""
-
-#     param_name: str
-#     """Parameter name."""
-
-#     param_latex: str
-#     """Parameter name in latex."""
-
-#     fget: t.Callable[[], float]
-#     """Getter."""
-
-#     compute: bool
-#     """Compute by default?"""
-
-
 class FitPropertyType:
+    """Fitting property type."""
+
     fget: FittingCallable
     fset: t.Callable[[T], None]
 
 
 class DerivedPropertyType:
+    """Derived property type."""
+
     fget: DerivedCallable
 
 
@@ -261,7 +226,6 @@ def derivedparam(
         By default, is this computed?
 
     """
-
     if f is None:
         return partial(
             derivedparam,
@@ -292,8 +256,8 @@ def derivedparam(
 class Fittable:
     """A class that manages fitting parameters.
 
-    Not really used on its own it should really be inherited from to be used properly.
-    It also provides class with the ability to read and write
+    Not really used on its own it should really be inherited from to be used
+    properly. It also provides class with the ability to read and write
     fitting parameters using their params names, for example,
     if we create a class like this:
 
@@ -304,7 +268,8 @@ class Fittable:
             def __init__(self):
                 self.value = 10
 
-            @fitparam(param_name='foobar',param_latex='$Foo^{bar}$',default_bounds=[1,12])
+            @fitparam(param_name='foobar', param_latex='$Foo^{bar}$',
+                    default_bounds=[1,12])
             def bar(self):
                 return self.value
 
@@ -351,11 +316,11 @@ class Fittable:
     ) -> None:
         """Adds a fittable parameter to the internal dictionary.
 
-
         Used during init to add all :func:`fitparam` decorated methods
-        and can also be utilized by a user to manually add new fitting parameters.
-        This is useful for giving fitting parameters names that depend on certain
-        attributes (e.g. molecule name in a gas profile
+        and can also be utilized by a user to manually add new fitting
+        parameters. This is useful for giving fitting parameters names
+        that depend on certain attributes
+        (e.g. molecule name in a gas profile
         see
         :class:`~taurex.data.profiles.chemistry.gas.constantgas.ConstantGas`)
         or when converting lists into fitting parameters
@@ -414,6 +379,20 @@ class Fittable:
         fget: t.Callable[[], float],
         compute: bool,
     ) -> None:
+        """Add a derived parameter's name, latex, getter, and compute flag.
+
+        Parameters
+        ----------
+        param_name : str
+            Parameter name.
+        param_latex : str
+            Parameter name in LaTeX form.
+        fget : t.Callable[[], float]
+            Function that returns the value of the parameter.
+        compute : bool
+            Whether to compute by default.
+
+        """
         if param_name in self._param_dict:
             raise AttributeError(f"derived param name {param_name} already exists")
 
@@ -448,8 +427,8 @@ class Fittable:
                 def_bounds,
             )
 
-        for derivedparam in self.find_derivedparams():
-            get_func = derivedparam.fget
+        for derivedparam_item in self.find_derivedparams():
+            get_func = derivedparam_item.fget
             param_name = get_func.param_name
             param_latex = get_func.param_latex
             compute = get_func.compute
@@ -457,7 +436,7 @@ class Fittable:
             self.add_derived_param(param_name, param_latex, get_func, compute)
 
     def modify_bounds(self, parameter: str, new_bounds: t.Tuple[float, float]):
-        """Modifies the fitting boundary of a parameter
+        """Modifies the fitting boundary of a parameter.
 
         Parameters
         ----------
@@ -472,7 +451,15 @@ class Fittable:
 
         bounds = new_bounds
 
-        self._param_dict[parameter] = name, latex, fget, fset, mode, to_fit, bounds
+        self._param_dict[parameter] = (
+            name,
+            latex,
+            fget,
+            fset,
+            mode,
+            to_fit,
+            bounds,
+        )
 
     def __getitem__(self, key: str) -> float:
         """Returns the value of a fitting parameter."""
@@ -481,6 +468,7 @@ class Fittable:
         return param[2]()
 
     def __setitem__(self, key: str, value: float) -> None:
+        """Set the value of a fitting parameter."""
         return self._param_dict[key][3](value)
 
     def find_fitparams(self) -> t.Generator[FitPropertyType, None, None]:
@@ -499,13 +487,16 @@ class Fittable:
                         if prop.decorated == "fitparam":
                             yield method
 
-    def find_derivedparams(self) -> t.Generator[DerivedPropertyType, None, None]:
-        """Finds and returns fitting parameters.
+    def find_derivedparams(
+        self,
+    ) -> t.Generator[DerivedPropertyType, None, None]:
+        """Finds and returns derived parameters.
 
         Yields
         ------
         method : function
-            class method that is defined with the :func:`derivedparam` decorator
+            class method that is defined with the
+            :func:`derivedparam` decorator
         """
         for klass in self.__class__.mro():
             for method in klass.__dict__.values():

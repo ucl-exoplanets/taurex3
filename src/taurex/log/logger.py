@@ -1,7 +1,9 @@
 """Taurex logging module."""
+
 import io
 import logging
 import typing as t
+
 
 logging.getLogger("taurex").addHandler(logging.NullHandler())
 """Root logger for taurex"""
@@ -40,6 +42,7 @@ class TauRexHandler(logging.StreamHandler):
     """
 
     def __init__(self, stream: io.IOBase = None) -> None:
+        """Initialize TauRexHandler."""
         from taurex.mpi import get_rank
 
         super().__init__(stream=stream)
@@ -47,6 +50,7 @@ class TauRexHandler(logging.StreamHandler):
         self._rank = get_rank()
 
     def emit(self, record: logging.LogRecord) -> None:
+        """Emit log record."""
         # print(record)
         if self._rank == 0 or record.levelno >= logging.ERROR:
             # msg = '[{}] {}'.format(self._rank,record.msg)

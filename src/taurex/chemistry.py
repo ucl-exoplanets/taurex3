@@ -1,11 +1,26 @@
+"""Alias for chemistry profiles."""
+
+from taurex.data.profiles.chemistry import AutoChemistry
+from taurex.data.profiles.chemistry import Chemistry
+from taurex.data.profiles.chemistry import ChemistryFile
+from taurex.data.profiles.chemistry import ConstantGas
+from taurex.data.profiles.chemistry import CustomGas
+from taurex.data.profiles.chemistry import Gas
+from taurex.data.profiles.chemistry import PowerGas
+from taurex.data.profiles.chemistry import TaurexChemistry
+from taurex.data.profiles.chemistry import TwoLayerGas
+from taurex.data.profiles.chemistry import TwoPointGas
 
 
-from .data.profiles.chemistry import ChemistryFile
-from .data.profiles.chemistry.chemistry import Chemistry
-from .data.profiles.chemistry import TaurexChemistry
-from .data.profiles.chemistry.gas.gas import Gas
-from .data.profiles.chemistry import ConstantGas
-from .data.profiles.chemistry import TwoLayerGas
-from .data.profiles.chemistry import PowerGas
-from .data.profiles.chemistry.gas.arraygas import ArrayGas
-from .data.profiles.chemistry import AutoChemistry
+__all__ = [
+    "Chemistry",
+    "Gas",
+    "ConstantGas",
+    "TwoLayerGas",
+    "TwoPointGas",
+    "PowerGas",
+    "CustomGas",
+    "TaurexChemistry",
+    "AutoChemistry",
+    "ChemistryFile",
+]

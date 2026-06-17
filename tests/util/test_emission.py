@@ -7,7 +7,8 @@ import pytest
 from astropy.modeling.models import BlackBody
 from hypothesis.strategies import floats
 
-from taurex.util.emission import black_body, black_body_numpy
+from taurex.util.emission import black_body
+from taurex.util.emission import black_body_numpy
 
 
 @hypothesis.given(floats(300, 10000))

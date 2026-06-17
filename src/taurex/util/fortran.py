@@ -1,3 +1,5 @@
+"""Module for calling fortran code safely."""
+
 import importlib
 import io
 import multiprocessing as mp
@@ -6,15 +8,20 @@ import sys
 import tempfile
 import typing as t
 from contextlib import contextmanager
-from queue import Empty, Full, Queue
+from queue import Empty
+from queue import Full
+from queue import Queue
 
 from taurex.log import Logger
 
-from .module import getattr_recursive, runfunc_recursive, setattr_recursive
+from .module import getattr_recursive
+from .module import runfunc_recursive
+from .module import setattr_recursive
 
 
 @contextmanager
 def stdout_redirector(stream: t.IO):
+    """Context manager to redirect stdout."""
     # The original fd stdout points to. Usually 1 on POSIX systems.
     try:
         original_stdout_fd = sys.stdout.fileno()
@@ -52,7 +59,7 @@ def stdout_redirector(stream: t.IO):
         os.close(saved_stdout_fd)
 
 
-class FortranStopException(Exception):  # noqa
+class FortranStopException(Exception):  # noqa: N818
     """Raised when the fortran process crashes or is stopped."""
 
     pass
@@ -62,9 +69,11 @@ class StreamToLogQueue:
     """Fake file-like stream object that redirects writes to a queue."""
 
     def __init__(self, log_queue):
+        """Initialize StreamToLogQueue."""
         self.log_queue = log_queue
 
     def write(self, buf):
+        """Write to queue."""
         for line in buf.rstrip().splitlines():
             out = line.rstrip()
 
@@ -92,6 +101,7 @@ class SafeFortranProcess(mp.Process):
         module_string: str,
         log_queue: t.Optional[Queue] = None,
     ):
+        """Initialize SafeFortranProcess."""
         super().__init__()
         self._module_string = module_string
         self.work_queue = work_queue

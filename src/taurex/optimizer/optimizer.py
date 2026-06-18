@@ -230,7 +230,6 @@ class Optimizer(Logger, Citable):
 
     def set_binner(self, binner) -> None:
         """Override the default observation-derived binner."""
-
         self._binner = binner
 
     def compile_params(self) -> None:

@@ -1,25 +1,27 @@
 """Instrument loaded from file."""
+
 import math
 import typing as t
 
 import numpy as np
 
-from taurex.binning import BinDownType, Binner, FluxBinner
+from taurex.binning import BinDownType
+from taurex.binning import Binner
+from taurex.binning import FluxBinner
 from taurex.model import ForwardModel
-from taurex.types import ModelOutputType, PathLike
+from taurex.types import ModelOutputType
+from taurex.types import PathLike
 from taurex.util import wnwidth_to_wlwidth
 
 from .instrument import Instrument
 
 
 class InstrumentFile(Instrument):
-    """Loads a 2-3 column file
+    """Loads a 2-3 column file.
 
     The first column is the wavelength grid, the second column is the noise
     and the third column is the width of the wavelength bin. If the third column
     is not present, the width is computed from the wavelength grid.
-
-
     """
 
     def __init__(
@@ -30,6 +32,7 @@ class InstrumentFile(Instrument):
         use_cols: t.Optional[t.Tuple[int, ...]] = None,
         binner: t.Optional[Binner] = None,
     ) -> None:
+        """Initialise with a spectrum file and optional binner."""
         super().__init__()
 
         self._spectrum = np.loadtxt(
@@ -71,16 +74,12 @@ class InstrumentFile(Instrument):
 
         Parameters
         ----------
-
         model:
             Forward model to pass.
-
         model_res:
             Result from :func:`~taurex.model.model.ForwardModel.model`
-
         num_observations:
             Number of observations to simulate
-
         """
         if model_res is None:
             model_res = model.model()
@@ -91,6 +90,7 @@ class InstrumentFile(Instrument):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return the input keyword for the class factory."""
         return (
             "file",
             "fromfile",

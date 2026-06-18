@@ -1,3 +1,5 @@
+"""Parse TauREx input parameter files and construct pipeline objects."""
+
 import pathlib
 import typing as t
 
@@ -8,23 +10,22 @@ from taurex.log import Logger
 from taurex.optimizer import Optimizer
 from taurex.types import PathLike
 
-from .factory import (
-    create_chemistry,
-    create_instrument,
-    create_model,
-    create_observation,
-    create_optimizer,
-    create_planet,
-    create_pressure_profile,
-    create_star,
-    create_temperature_profile,
-)
+from .factory import create_chemistry
+from .factory import create_instrument
+from .factory import create_model
+from .factory import create_observation
+from .factory import create_optimizer
+from .factory import create_planet
+from .factory import create_pressure_profile
+from .factory import create_star
+from .factory import create_temperature_profile
 
 
 class ParameterParser(Logger):
     """Parse input file and generate appropriate objects."""
 
     def __init__(self):
+        """Initialise the parameter parser."""
         super().__init__("ParamParser")
         self._read = False
 
@@ -65,7 +66,9 @@ class ParameterParser(Logger):
 
     def setup_globals(self):  # noqa: C901
         """Setup global cache from input file."""
-        from taurex.cache import CIACache, GlobalCache, OpacityCache
+        from taurex.cache import CIACache
+        from taurex.cache import GlobalCache
+        from taurex.cache import OpacityCache
 
         config = self._raw_config.dict()
 
@@ -281,11 +284,13 @@ class ParameterParser(Logger):
         return None
 
     def create_manual_binning(self, config):
+        """Create a manual binner from the config."""
         import math
 
         import numpy as np
 
-        from taurex.binning import FluxBinner, SimpleBinner
+        from taurex.binning import FluxBinner
+        from taurex.binning import SimpleBinner
 
         binning_class = SimpleBinner
 
@@ -351,10 +356,12 @@ class ParameterParser(Logger):
                     if observed_kwargs:
                         if observation is None or observation == "self":
                             raise ValueError(
-                                "Observed binning overrides require a concrete observation"
+                                "Observed binning overrides require a "
+                                "concrete observation"
                             )
+                        result_kwargs = observed_kwargs
                         return (
-                            observation.create_binner(**observed_kwargs),
+                            observation.create_binner(**result_kwargs),
                             observation.wavenumberGrid,
                         )
                     return "observed"
@@ -373,6 +380,7 @@ class ParameterParser(Logger):
         star=None,
         obs=None,
     ):
+        """Generate a forward model from the parsed config."""
         config = self._raw_config.dict()
         if "Model" in config:
             if chemistry is None:
@@ -400,6 +408,7 @@ class ParameterParser(Logger):
         return model
 
     def generate_chemistry_profile(self):
+        """Generate a chemistry profile from the parsed config."""
         config = self._raw_config.dict()
         if "Chemistry" in config:
             return create_chemistry(config["Chemistry"])
@@ -407,6 +416,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_pressure_profile(self):
+        """Generate a pressure profile from the parsed config."""
         config = self._raw_config.dict()
         if "Pressure" in config:
             return create_pressure_profile(config["Pressure"])
@@ -414,6 +424,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_temperature_profile(self):
+        """Generate a temperature profile from the parsed config."""
         config = self._raw_config.dict()
         if "Temperature" in config:
             return create_temperature_profile(config["Temperature"])
@@ -421,6 +432,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_planet(self):
+        """Generate a planet from the parsed config."""
         config = self._raw_config.dict()
 
         if "Planet" in config:
@@ -429,6 +441,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_star(self):
+        """Generate a star from the parsed config."""
         config = self._raw_config.dict()
 
         if "Star" in config:
@@ -437,6 +450,7 @@ class ParameterParser(Logger):
             return None
 
     def generate_fitting_parameters(self):
+        """Generate fitting parameters from the parsed config."""
         from .factory import create_prior
 
         config = self._raw_config.dict()
@@ -469,6 +483,7 @@ class ParameterParser(Logger):
             return {}
 
     def generate_derived_parameters(self):
+        """Generate derived parameters from the parsed config."""
         config = self._raw_config.dict()
         if "Derive" in config:
             fitting_config = config["Derive"]

@@ -7,8 +7,8 @@ from unittest.mock import patch
 
 import numpy as np
 
-from taurex.binning import FluxBinnerConv
 from taurex.binning import FluxBinner
+from taurex.binning import FluxBinnerConv
 from taurex.data.spectrum.observed import ObservedSpectrum
 from taurex.data.spectrum.offsetspectrum import OffsetSpectra
 from taurex.data.spectrum.offsetspectrum import OffsetSpectraCont
@@ -224,10 +224,14 @@ class TaurexSpectrumTest(unittest.TestCase):
 
 
 class OffsetSpectraContTest(unittest.TestCase):
+    """Tests for OffsetSpectraCont with multi-spectrum systematics."""
+
     def setUp(self):
+        """Create a temporary directory for test files."""
         self.test_dir = tempfile.mkdtemp()
 
     def tearDown(self):
+        """Clean up temporary directory."""
         shutil.rmtree(self.test_dir)
 
     def _create_spectrum_file(self, filename, data):
@@ -238,6 +242,7 @@ class OffsetSpectraContTest(unittest.TestCase):
         return file_path
 
     def test_multi_spectrum_systematics(self):
+        """Check offsets, slopes, and error scales are applied."""
         first = np.array(
             [
                 [1.0, 10.0, 0.1, 0.05],
@@ -272,6 +277,7 @@ class OffsetSpectraContTest(unittest.TestCase):
         self.assertIsInstance(spectrum.create_binner(), FluxBinnerConv)
 
     def test_offset_spectra_uses_plain_binner_until_overridden(self):
+        """Check that plain binner is used when no broadening is configured."""
         first = np.array(
             [
                 [1.0, 10.0, 0.1, 0.05],

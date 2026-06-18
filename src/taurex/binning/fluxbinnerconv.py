@@ -32,6 +32,7 @@ class FluxBinnerConv(Binner):
         factor_cut: int = 5,
         wlres: float = 15000,
     ) -> None:
+        """Initialise with wavelength grids and optional broadening profiles."""
         super().__init__()
 
         if len(wlgrids) != len(wlgrid_widths):
@@ -40,7 +41,7 @@ class FluxBinnerConv(Binner):
         self._wlshifts = self._normalize_wlshift(wlshift, len(wlgrids))
         self._wlgrids = [
             np.asarray(grid, dtype=np.float64) + shift
-            for grid, shift in zip(wlgrids, self._wlshifts)
+            for grid, shift in zip(wlgrids, self._wlshifts, strict=False)
         ]
         self._wlgrid_widths = [
             np.asarray(widths, dtype=np.float64) for widths in wlgrid_widths
@@ -55,7 +56,7 @@ class FluxBinnerConv(Binner):
         self._wlgrid_width = np.concatenate(self._wlgrid_widths)
 
         self.binners: t.List[FluxBinner] = []
-        for grid, widths in zip(self._wlgrids, self._wlgrid_widths):
+        for grid, widths in zip(self._wlgrids, self._wlgrid_widths, strict=False):
             sorter = np.argsort(grid)
             self.binners.append(FluxBinner(10000.0 / grid[sorter], widths[sorter]))
 
@@ -90,11 +91,10 @@ class FluxBinnerConv(Binner):
         self, files: t.Sequence[str]
     ) -> t.Tuple[t.List[npt.NDArray[np.float64]], t.List[FluxBinner]]:
         """Load STScI-style resolution profiles from FITS or text files."""
-
         profiles: t.List[npt.NDArray[np.float64]] = []
         grid_fbs: t.List[FluxBinner] = []
 
-        for file_name, wlgrid in zip(files, self._wlgrids):
+        for file_name, wlgrid in zip(files, self._wlgrids, strict=False):
             try:
                 with fits.open(file_name) as hdu:
                     science_data = hdu[1].data
@@ -133,7 +133,6 @@ class FluxBinnerConv(Binner):
         x: npt.NDArray[np.float64], mean: float, std: float
     ) -> npt.NDArray[np.float64]:
         """Compute a normalized Gaussian profile."""
-
         return (
             1.0
             / (np.sqrt(2.0 * np.pi) * std)
@@ -144,7 +143,6 @@ class FluxBinnerConv(Binner):
         self, binned_output: BinDownType, profile: npt.NDArray[np.float64]
     ) -> BinDownType:
         """Convolve a binned spectrum with a wavelength-dependent profile."""
-
         grid, flux, error, widths = binned_output
         convolved_flux = np.zeros_like(flux)
 
@@ -187,7 +185,6 @@ class FluxBinnerConv(Binner):
         error: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> BinDownType:
         """Bind a native model spectrum to the configured instrument grids."""
-
         wlgrid, flux, wlerror, wlwidth = self._prepare_input(
             wngrid, spectrum, grid_width=grid_width, error=error
         )
@@ -248,7 +245,6 @@ class FluxBinnerConv(Binner):
         output_size: t.Optional[OutputSize] = OutputSize.heavy,
     ) -> BinnedSpectrumType:
         """Generate a TauREx-style spectrum output dictionary."""
-
         output = super().generate_spectrum_output(model_output, output_size=output_size)
         output["binned_wngrid"] = 10000.0 / self._wlgrid
         output["binned_wlgrid"] = self._wlgrid

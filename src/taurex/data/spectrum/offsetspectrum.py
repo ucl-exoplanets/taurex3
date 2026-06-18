@@ -100,12 +100,13 @@ class _OffsetSpectrumBase(BaseSpectrum):
         self._wnwidths = np.concatenate(self._raw_wnwidths)
 
     def _combine_raw_spectra(self) -> npt.NDArray[np.float64]:
+        """Combine raw spectra into a single array."""
         if not self._raw:
             return np.empty((0, 4), dtype=np.float64)
 
         normalized = [
             np.column_stack([spectrum[:, :3], widths])
-            for spectrum, widths in zip(self._raw, self._raw_bin_widths)
+            for spectrum, widths in zip(self._raw, self._raw_bin_widths, strict=False)
         ]
         return np.vstack(normalized)
 
@@ -132,9 +133,10 @@ class _OffsetSpectrumBase(BaseSpectrum):
     @property
     def spectrum(self) -> npt.NDArray[np.float64]:
         """Spectrum with per-instrument systematic corrections applied."""
-
         fluxes = []
-        for spectrum, offset, slope in zip(self._raw, self.offsets, self.slopes):
+        for spectrum, offset, slope in zip(
+            self._raw, self.offsets, self.slopes, strict=False
+        ):
             corrected = copy.deepcopy(spectrum[:, 1])
             wavelengths = spectrum[:, 0]
 
@@ -158,15 +160,14 @@ class _OffsetSpectrumBase(BaseSpectrum):
     @property
     def errorBar(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Error bars with per-instrument scaling applied."""
-
         errors = [
-            scale * spectrum[:, 2] for spectrum, scale in zip(self._raw, self.escale)
+            scale * spectrum[:, 2]
+            for spectrum, scale in zip(self._raw, self.escale, strict=False)
         ]
         return np.concatenate(errors) if errors else np.array([], dtype=np.float64)
 
     def generate_offset_fitting_params(self) -> None:
         """Create fittable parameters for each input spectrum."""
-
         bounds = (-0.001, 0.001)
         for index in range(len(self.offsets)):
             point_num = index + 1
@@ -245,7 +246,6 @@ class _OffsetSpectrumBase(BaseSpectrum):
         Multi-spectrum observations can optionally promote response-function
         handling into the binner layer by passing convolution settings here.
         """
-
         if not kwargs:
             return super().create_binner()
 
@@ -277,7 +277,6 @@ class OffsetSpectra(_OffsetSpectrumBase):
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
         """Input keywords for the basic multi-spectrum implementation."""
-
         return ("spectra_w_offsets", "observation_w_offsets")
 
 
@@ -298,6 +297,7 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
         factor_cut: int = 5,
         wlres: float = 15000,
     ) -> None:
+        """Initialise with spectrum paths and systematic correction parameters."""
         self._wlshift = wlshift
         self._broadening_profiles = list(broadening_profiles or [])
         self._profile_type = broadening_type
@@ -315,16 +315,13 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
 
     def create_binner(self, **kwargs: t.Any) -> FluxBinnerConv:
         """Create a multi-grid binner for the instrument spectra."""
-
         return self._create_convolution_binner(
             broadening_profiles=kwargs.get(
                 "broadening_profiles", self._broadening_profiles
             ),
             broadening_type=kwargs.get("broadening_type", self._profile_type),
             wlshift=kwargs.get("wlshift", self._wlshift),
-            max_wlbroadening=kwargs.get(
-                "max_wlbroadening", self._max_wlbroadening
-            ),
+            max_wlbroadening=kwargs.get("max_wlbroadening", self._max_wlbroadening),
             factor_cut=kwargs.get("factor_cut", self._factor_cut),
             wlres=kwargs.get("wlres", self._wlres),
         )
@@ -332,5 +329,4 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
         """Input keywords for the instrument-systematics implementation."""
-
         return ("spectra_instr", "observation_instr")

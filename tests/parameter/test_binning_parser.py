@@ -1,3 +1,5 @@
+"""Tests for observed binning overrides in the parameter parser."""
+
 import textwrap
 
 from taurex.binning import FluxBinnerConv
@@ -6,6 +8,7 @@ from taurex.parameter import ParameterParser
 
 
 def test_observed_binning_overrides_are_reused_by_instrument(tmp_path):
+    """Check that binning overrides are applied per instrument."""
     first = tmp_path / "spec_1.dat"
     first.write_text("1.0 0.01 0.001 0.05\n1.2 0.02 0.001 0.05\n")
 

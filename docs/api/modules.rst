@@ -24,3 +24,4 @@ Taurex API Documentation
    taurex.parameter
    taurex.mixin
    taurex.mpi
+   taurex.catalogue

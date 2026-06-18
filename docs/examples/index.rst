@@ -23,3 +23,4 @@ The notebook source files live in ``examples/notebooks``.
     Spectral binning <09_binning>
     Fitting parameters and retrievals <10_retrievals>
     Multimodel example <11_multimodel>
+    Phoenix4All star and planetary catalogue <12_phoenix4all_and_catalogue>

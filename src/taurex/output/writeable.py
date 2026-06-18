@@ -1,5 +1,7 @@
 """Writeable class."""
-from abc import ABCMeta, abstractmethod
+
+from abc import ABCMeta
+from abc import abstractmethod
 
 
 class Writeable(metaclass=ABCMeta):
@@ -7,4 +9,11 @@ class Writeable(metaclass=ABCMeta):
 
     @abstractmethod
     def write(self, output):
-        pass
+        """Write to output.
+
+        Parameters
+        ----------
+        output : OutputGroup
+            Output group to write to.
+
+        """

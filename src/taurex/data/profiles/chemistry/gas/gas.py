@@ -1,4 +1,5 @@
 """Base Gas class."""
+
 import typing as t
 
 import numpy as np
@@ -13,13 +14,14 @@ from taurex.output.writeable import Writeable
 
 class Gas(Fittable, Logger, Writeable, Citable):
     """This class is a base for a single molecule or gas.
+
     Its used to describe how it mixes at each layer and combined
     with
     :class:`~taurex.data.profile.chemistry.taurexchemistry.TaurexChemistry`
     is used to build a chemical profile of the planets atmosphere.
     Requires implementation of:
 
-    - func:`~mixProfile`
+    - :func:`mixProfile`
 
     """
 
@@ -33,7 +35,6 @@ class Gas(Fittable, Logger, Writeable, Citable):
         molecule_name: str
             Name of molecule
 
-
         """
         Logger.__init__(self, name)
         Fittable.__init__(self)
@@ -42,7 +43,8 @@ class Gas(Fittable, Logger, Writeable, Citable):
 
     @property
     def molecule(self) -> str:
-        """
+        """Molecule name.
+
         Returns
         -------
         molecule_name: str
@@ -53,6 +55,7 @@ class Gas(Fittable, Logger, Writeable, Citable):
     @property
     def mixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Return mix profile for each layer.
+
         **Requires implementation**
 
         Should return mix profile of molecule/gas at each layer
@@ -95,12 +98,12 @@ class Gas(Fittable, Logger, Writeable, Citable):
         pass
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """
-        Writes class and arguments to file
+        """Writes class and arguments to file.
 
         Parameters
         ----------
         output: :class:`~taurex.output.output.Output`
+            Output object to write to.
 
         """
         gas_entry = output.create_group(self.molecule)

@@ -1,4 +1,5 @@
 """Ktables loaded from HDF5."""
+
 import pathlib
 import typing as t
 
@@ -9,14 +10,13 @@ import numpy.typing as npt
 from taurex.types import PathLike
 from taurex.util import sanitize_molecule_string
 
-from ..interpolateopacity import InterpModeType, InterpolatingOpacity
+from ..interpolateopacity import InterpModeType
+from ..interpolateopacity import InterpolatingOpacity
 from .ktable import KTable
 
 
 class HDF5KTable(KTable, InterpolatingOpacity):
-    """
-    This is the base class for computing opactities using correlated k tables
-    """
+    """This is the base class for computing opactities using correlated k tables."""
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Tuple[pathlib.Path, str]]]:
@@ -94,6 +94,7 @@ class HDF5KTable(KTable, InterpolatingOpacity):
         return self._xsec_grid
 
     def _load_hdf_file(self, filename: pathlib.Path):
+        """Load HDF5 file."""
         import astropy.units as u
 
         # Load the hdf file

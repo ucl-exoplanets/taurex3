@@ -1,10 +1,21 @@
-from taurex.data.spectrum.spectrum import BaseSpectrum
-from taurex.data.spectrum.observed import ObservedSpectrum
+"""Spectrum module for TauREx."""
+
 from taurex.data.spectrum.array import ArraySpectrum
 from taurex.data.spectrum.iraclis import IraclisSpectrum
+from taurex.data.spectrum.observed import ObservedSpectrum
+from taurex.data.spectrum.spectrum import BaseSpectrum
 
 
 try:
     from taurex.data.spectrum.lightcurve import ObservedLightCurve
 except ImportError:
-    print('pylightcurve not install. Ignoring')
+    print("pylightcurve not install. Ignoring")
+
+
+__all__ = [
+    "BaseSpectrum",
+    "ObservedSpectrum",
+    "ArraySpectrum",
+    "IraclisSpectrum",
+    "ObservedLightCurve",
+]

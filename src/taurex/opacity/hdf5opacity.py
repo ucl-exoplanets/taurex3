@@ -11,7 +11,8 @@ from taurex.cache import GlobalCache
 from taurex.mpi import allocate_as_shared
 from taurex.types import PathLike
 
-from .interpolateopacity import InterpModeType, InterpolatingOpacity
+from .interpolateopacity import InterpModeType
+from .interpolateopacity import InterpolatingOpacity
 
 
 class HDF5Opacity(InterpolatingOpacity):
@@ -23,6 +24,7 @@ class HDF5Opacity(InterpolatingOpacity):
 
     @classmethod
     def priority(cls) -> int:
+        """Opacity priority."""
         return 5
 
     @classmethod
@@ -191,7 +193,7 @@ class HDF5Opacity(InterpolatingOpacity):
             self._spec_dict.close()
 
     def handle_pybtex(self) -> None:
-        """Handle citations"""
+        """Handle citations."""
         from taurex.cache import GlobalCache
         from taurex.data.citation import doi_to_bibtex
         from taurex.util import ensure_string_utf8

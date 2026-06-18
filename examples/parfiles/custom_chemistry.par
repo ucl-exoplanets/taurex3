@@ -6,13 +6,13 @@ cia_path = /path/to/cia
 # ----Forward Model related -----------
 
 [Chemistry]
-#  We will use the custom chemistry from 
+#  We will use the custom chemistry from
 chemistry_type = custom
 python_file = ../examples/library/example_chem.py
 molecules = H2, He, H2O, CH4
 fractions = 1000, 400, 1, 0.1
 
-    
+
 
 [Temperature]
 profile_type = isothermal
@@ -25,7 +25,7 @@ nlayers = 10
 
 [Planet]
 planet_type = Simple
-planet_mass = 1.0 
+planet_mass = 1.0
 planet_radius = 1.0
 
 [Star]
@@ -33,12 +33,12 @@ star_type = blackbody
 
 [Model]
 model_type = transmission
-    
+
     [[Absorption]]
-    
+
     [[CIA]]
     cia_pairs = H2-He,H2-H2
-    
+
     [[Rayleigh]]
 
 # ---------Creating an observation for retrieval--------

@@ -4,20 +4,23 @@ Most functions will do nothing if mpi4py is not present and will simply
 replicate expected behaviour. This allows for MPI and non-MPI code to be
 run without any changes (In theory...).
 """
+
 import enum
 import logging
 import typing as t
-from functools import lru_cache, wraps
+from functools import lru_cache
+from functools import wraps
 
 import numpy as np
 
 from .types import AnyValType
 
+
 T = t.TypeVar("T", bound=AnyValType)
 
 
 class Ops(str, enum.Enum):
-    """Available MPI operations"""
+    """Available MPI operations."""
 
     SUM = "sum"
     PROD = "prod"
@@ -26,7 +29,7 @@ class Ops(str, enum.Enum):
 
 
 def has_mpi() -> bool:
-    """Checks if mpi4py is installed
+    """Checks if mpi4py is installed.
 
     Returns
     -------
@@ -42,7 +45,19 @@ def has_mpi() -> bool:
 
 
 def convert_op(operation: Ops) -> t.Any:
-    """Converts string to MPI operation."""
+    """Converts string to MPI operation.
+
+    Parameters
+    ----------
+    operation : Ops
+        Operation to convert.
+
+    Returns
+    -------
+    t.Any
+        MPI operation.
+
+    """
     from mpi4py import MPI
 
     return getattr(MPI, str(operation.upper()))
@@ -61,7 +76,7 @@ def shared_comm() -> t.Any:
 
 @lru_cache(maxsize=10)
 def nprocs() -> int:
-    """Gets number of processes or returns 1 if mpi is not installed
+    """Gets number of processes or returns 1 if mpi is not installed.
 
     Returns
     -------
@@ -80,7 +95,9 @@ def nprocs() -> int:
 
 
 def allgather(value: T) -> t.List[T]:
-    """Gathers all values from all processes or returns value if mpi is not installed
+    """Gathers all values from all processes.
+
+    Returns value if mpi is not installed.
 
     Parameters
     ----------
@@ -90,7 +107,8 @@ def allgather(value: T) -> t.List[T]:
     Returns
     -------
     list:
-        List of gathered values or list containing value if mpi is not installed
+        List of gathered values or list containing value if mpi
+        is not installed
 
     """
     try:
@@ -106,7 +124,9 @@ def allgather(value: T) -> t.List[T]:
 
 
 def allreduce(value: T, op: Ops) -> T:
-    """Reduces all values from all processes or returns value if mpi is not installed
+    """Reduces all values from all processes.
+
+    Returns value if mpi is not installed.
 
     Parameters
     ----------
@@ -122,7 +142,6 @@ def allreduce(value: T, op: Ops) -> T:
         Reduced value or value if mpi is not installed
 
     """
-
     try:
         from mpi4py import MPI
     except ImportError:
@@ -136,7 +155,7 @@ def allreduce(value: T, op: Ops) -> T:
 
 
 def broadcast(array: T, rank: t.Optional[int] = 0) -> T:
-    """Broadcasts array from rank or returns array if mpi is not installed
+    """Broadcasts array from rank or returns array if mpi is not installed.
 
     Parameters
     ----------
@@ -174,11 +193,10 @@ def broadcast(array: T, rank: t.Optional[int] = 0) -> T:
 
 @lru_cache(maxsize=10)
 def get_rank(comm: t.Any = None) -> int:
-    """Gets rank or returns 0 if mpi is not installed
+    """Gets rank or returns 0 if mpi is not installed.
 
     Parameters
     ----------
-
     comm: int, optional
         MPI communicator, default is MPI_COMM_WORLD
 
@@ -207,12 +225,10 @@ def barrier(comm: t.Any = None) -> None:
 
     Parameters
     ----------
-
     comm: int, optional
         MPI communicator, default is MPI_COMM_WORLD
 
     """
-
     try:
         from mpi4py import MPI
     except ImportError:
@@ -223,7 +239,19 @@ def barrier(comm: t.Any = None) -> None:
 
 
 def only_master_rank(f) -> t.Callable:
-    """A decorator to ensure only the master MPI rank can run it."""
+    """A decorator to ensure only the master MPI rank can run it.
+
+    Parameters
+    ----------
+    f: callable
+        Function to decorate
+
+    Returns
+    -------
+    callable
+        Decorated function
+
+    """
 
     @wraps(f)
     def wrapper(*args, **kwargs):
@@ -235,7 +263,7 @@ def only_master_rank(f) -> t.Callable:
 
 @lru_cache(maxsize=10)
 def shared_rank() -> int:
-    """Gets rank within shared memory communicator. (MPI only)"""
+    """Gets rank within shared memory communicator (MPI only)."""
     return shared_comm().Get_rank()
 
 
@@ -258,7 +286,6 @@ def allocate_as_shared(
 
     Parameters
     ----------
-
     arr: numpy array
         Array to convert
 
@@ -292,7 +319,7 @@ def allocate_as_shared(
         buf, itemsize = window.Shared_query(0)
         if itemsize != arr.itemsize:
             raise Exception(
-                f"Shared memory size {itemsize} != array itemsize {arr.itemsize}"
+                f"Shared memory size {itemsize} != array " f"itemsize {arr.itemsize}"
             )
 
         shared_array = np.ndarray(buffer=buf, dtype=arr.dtype, shape=arr.shape)

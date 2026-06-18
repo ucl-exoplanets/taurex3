@@ -1,10 +1,12 @@
-"""Types for TauREx 3"""
+"""Types for TauREx 3."""
+
 import os
 import pathlib
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
+
 
 T = t.TypeVar("T")
 

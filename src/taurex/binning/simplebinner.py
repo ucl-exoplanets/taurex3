@@ -1,12 +1,23 @@
-from taurex import OutputSize
-from taurex.util import bindown, compute_bin_edges, wnwidth_to_wlwidth
+"""Simple binning module."""
 
+import typing as t
+
+import numpy as np
+import numpy.typing as npt
+
+from taurex import OutputSize
+from taurex.util import bindown
+from taurex.util import compute_bin_edges
+from taurex.util import wnwidth_to_wlwidth
+
+from ..types import ModelOutputType
+from .binner import BinDownType
 from .binner import Binner
 
 
 class SimpleBinner(Binner):
-    """
-    Bins to a wavenumber grid given by ``wngrid``.
+    """Bins to a wavenumber grid given by ``wngrid``.
+
     The method places flux into the correct bins
     using histogramming methods. This is fast but can
     suffer as it assumes that there are no gaps in the
@@ -17,7 +28,6 @@ class SimpleBinner(Binner):
 
     Parameters
     ----------
-
     wngrid: :obj:`array`
         Wavenumber grid
 
@@ -29,16 +39,38 @@ class SimpleBinner(Binner):
 
     """
 
-    def __init__(self, wngrid, wngrid_width=None):
+    def __init__(
+        self,
+        wngrid: npt.NDArray[np.float64],
+        wngrid_width: t.Optional[npt.NDArray[np.float64]] = None,
+    ):
+        """Initialize SimpleBinner.
+
+        Parameters
+        ----------
+        wngrid: :obj:`array`
+            Wavenumber grid
+
+        wngrid_width: :obj:`array`, optional
+            Must have same shape as ``wngrid``
+            Full bin widths for each wavenumber grid point
+            given in ``wngrid``. If not provided then
+            this is automatically computed from ``wngrid``.
+
+        """
         self._wngrid = wngrid
         self._wn_width = wngrid_width
         if self._wn_width is None:
             self._wn_width = compute_bin_edges(self._wngrid)[-1]
 
-    def bindown(self, wngrid, spectrum, grid_width=None, error=None):
-        """
-
-        Bins down spectrum.
+    def bindown(
+        self,
+        wngrid: npt.NDArray[np.float64],
+        spectrum: npt.NDArray[np.float64],
+        grid_width: t.Optional[npt.NDArray[np.float64]] = None,
+        error: t.Optional[npt.NDArray[np.float64]] = None,
+    ) -> BinDownType:
+        """Bins down spectrum.
 
         Parameters
         ----------
@@ -80,7 +112,12 @@ class SimpleBinner(Binner):
             self._wn_width,
         )
 
-    def generate_spectrum_output(self, model_output, output_size=OutputSize.heavy):
+    def generate_spectrum_output(
+        self,
+        model_output: ModelOutputType,
+        output_size: t.Optional[OutputSize] = OutputSize.heavy,
+    ) -> dict:
+        """Generate spectrum output."""
         output = super().generate_spectrum_output(model_output, output_size=output_size)
         output["binned_wngrid"] = self._wngrid
         output["binned_wlgrid"] = 10000 / self._wngrid

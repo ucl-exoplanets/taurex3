@@ -1,4 +1,5 @@
 """Chemistry that automatically seperates out active and inactive gases."""
+
 import typing as t
 
 import numpy as np
@@ -8,9 +9,7 @@ from .chemistry import Chemistry
 
 
 class AutoChemistry(Chemistry):
-    """
-    Chemistry class that automatically seperates out
-    active and inactive gases
+    """Chemistry class that automatically seperates out active and inactive gases.
 
     Has a helper function that should be called at the
     end of initialization. :func:`determine_active_inactive`
@@ -26,7 +25,6 @@ class AutoChemistry(Chemistry):
 
         Parameters
         ----------
-
         name: str
             Name of class
 
@@ -42,7 +40,12 @@ class AutoChemistry(Chemistry):
         """Determines active and inactive gases."""
         try:
             self._active, self._active_mask = zip(
-                *[(m, i) for i, m in enumerate(self.gases) if m in self.availableActive]
+                *[
+                    (m, i)
+                    for i, m in enumerate(self.gases)
+                    if m in self.availableActive
+                ],
+                strict=True,
             )
         except ValueError:
             self.debug("No active gases detected")
@@ -54,7 +57,8 @@ class AutoChemistry(Chemistry):
                     (m, i)
                     for i, m in enumerate(self.gases)
                     if m not in self.availableActive
-                ]
+                ],
+                strict=True,
             )
         except ValueError:
             self.debug("No inactive gases detected")
@@ -67,20 +71,19 @@ class AutoChemistry(Chemistry):
             self._inactive_mask = np.array(self._inactive_mask)
 
     def compute_mu_profile(self, nlayers: t.Optional[int] = None) -> None:
-        """Computes molecular weight of atmosphere for each layer
+        """Computes molecular weight of atmosphere for each layer.
 
         Parameters
         ----------
         nlayers: int
             Number of layers, deprecated
         """
-
         if self.mixProfile is not None:
             mix_profile = self.mixProfile
             self.mu_profile = np.sum(
                 [
                     self.get_molecular_mass(gas) * mix
-                    for gas, mix in zip(self.gases, mix_profile)
+                    for gas, mix in zip(self.gases, mix_profile, strict=True)
                 ],
                 axis=0,
             )
@@ -108,8 +111,10 @@ class AutoChemistry(Chemistry):
         return self._inactive
 
     @property
-    def activeGasMixProfile(self) -> t.Optional[npt.NDArray[np.float64]]:  # noqa: N802
-        """Active gas layer by layer mix profile
+    def activeGasMixProfile(
+        self,
+    ) -> t.Optional[npt.NDArray[np.float64]]:  # noqa: N802
+        """Active gas layer by layer mix profile.
 
         Returns
         -------
@@ -118,7 +123,6 @@ class AutoChemistry(Chemistry):
 
 
         """
-
         if self.mixProfile is None:
             raise ValueError("No mix profile computed.")
 

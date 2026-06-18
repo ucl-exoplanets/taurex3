@@ -6,7 +6,11 @@ from taurex.parameter import factory
 
 
 def test_get_keywordarg_dict_non_mixin():
+    """Test get keyword arg dict."""
+
     class TestClass:
+        """Test class."""
+
         def __init__(self, a, b, c=1, d=2):
             pass
 
@@ -16,17 +20,24 @@ def test_get_keywordarg_dict_non_mixin():
 
 
 def test_get_keywordarg_dict_mixin():
+    """Test get keyword arg dict mixin."""
     from taurex.mixin import Mixin
 
     class TestClass:
+        """Test class."""
+
         def __init__(self, a, b, c=1, d=2):
             pass
 
     class TestMixin(Mixin):
+        """Test mixin."""
+
         def __init_mixin__(self, e, f, g=10, h=20):
             pass
 
     class TestClass2(TestMixin, TestClass):
+        """Test class 2."""
+
         pass
 
     kwargs, has_kvar = factory.get_keywordarg_dict(TestClass2)
@@ -63,7 +74,9 @@ def test_create_klass():
 
 def test_generic_factory():
     """Test finding best class from factory."""
-    from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
+    from taurex.temperature import Guillot2010
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     klass = factory.generic_factory("isothermal", TemperatureProfile)
 
@@ -79,7 +92,9 @@ def test_generic_factory():
 
 def test_determine_klass_type():
     """Test whether the factory can determine the correct class."""
-    from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
+    from taurex.temperature import Guillot2010
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     klass = factory.determine_klass(
         {
@@ -130,7 +145,9 @@ def test_determine_klass_exception():
 
 def test_determine_klass_alttype():
     """Test whether the factory can determine the correct class."""
-    from taurex.temperature import Guillot2010, Isothermal, TemperatureProfile
+    from taurex.temperature import Guillot2010
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     klass = factory.determine_klass(
         {
@@ -155,7 +172,8 @@ def test_determine_klass_alttype():
 
 def test_determine_klass_defaulttype():
     """Tests whether the factory can determine the correct class without types."""
-    from taurex.temperature import Isothermal, TemperatureProfile
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     klass = factory.determine_klass(
         {},
@@ -169,7 +187,8 @@ def test_determine_klass_defaulttype():
 def test_determine_klass_mixin():
     """Tests whether the factory can determine the correct class with mixins."""
     from taurex.mixin import TempScaler
-    from taurex.temperature import Isothermal, TemperatureProfile
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     klass = factory.determine_klass(
         {
@@ -200,8 +219,10 @@ def test_determine_klass_mixin():
 
 def test_create_generic():
     """Test if it can create from generic config."""
-    from taurex.optimizer import NestleOptimizer, Optimizer
-    from taurex.temperature import Isothermal, TemperatureProfile
+    from taurex.optimizer import NestleOptimizer
+    from taurex.optimizer import Optimizer
+    from taurex.temperature import Isothermal
+    from taurex.temperature import TemperatureProfile
 
     config = {
         "type": "isothermal",

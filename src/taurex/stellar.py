@@ -1,3 +1,14 @@
-from taurex.data.stellar.star import Star, BlackbodyStar
-from taurex.data.stellar.phoenix import PhoenixStar
-from taurex.data.stellar.phoenix4all import Phoenix4AllStar
+"""Alias for stellar module."""
+
+from taurex.data.stellar import BlackbodyStar
+from taurex.data.stellar import PhoenixStar
+from taurex.data.stellar import Phoenix4AllStar
+from taurex.data.stellar import Star
+
+
+__all__ = [
+    "Star",
+    "BlackbodyStar",
+    "PhoenixStar",
+    "Phoenix4AllStar",
+]

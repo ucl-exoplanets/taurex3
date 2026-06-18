@@ -1,5 +1,4 @@
-"""Optimized Math functions used in taurex"""
-
+"""Optimized Math functions used in taurex."""
 
 import typing as t
 
@@ -9,10 +8,12 @@ import numpy.typing as npt
 from taurex.log import setup_log
 from taurex.types import AnyValType
 
+
 _log = setup_log(__name__)
 
 try:
-    from .math_numba import intepr_bilin_numba_II, interp_lin_numba
+    from .math_numba import intepr_bilin_numba_II
+    from .math_numba import interp_lin_numba
 
     numba_enabled = True
 except ImportError:
@@ -56,22 +57,25 @@ def interp_exp_and_lin_numpy(
         Coordinate to exp interpolate to
 
     temperature_min: float
-        Nearest known temperature coordinate where temperature_min < temperature
+        Nearest known temperature coordinate where
+        temperature_min < temperature
 
     temperature_max: float
-        Nearest known temperature coordinate where temperature < temperature_max
+        Nearest known temperature coordinate where
+        temperature < temperature_max
 
     pressure: float
         Coordinate to linear interpolate to
 
     pressure_min: float
-        Nearest known pressure coordinate where pressure_min < pressure
+        Nearest known pressure coordinate where
+        pressure_min < pressure
 
     pressure_max: float
-        Nearest known pressure coordinate where pressure < pressure_max
+        Nearest known pressure coordinate where
+        pressure < pressure_max
 
     """
-
     return (
         (x11 * (pressure_max - pressure_min) - (pressure - pressure_min) * (x11 - x21))
         * np.exp(
@@ -100,6 +104,33 @@ def interp_exp_numpy(
     temperature_min,
     temperature_max,
 ) -> npt.NDArray[np.float64]:
+    """Exponential interpolation.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to temperature_min
+
+    x12: array
+        Array corresponding to temperature_max
+
+    temperature: float
+        Coordinate to exp interpolate to
+
+    temperature_min: float
+        Nearest known temperature coordinate where
+        temperature_min < temperature
+
+    temperature_max: float
+        Nearest known temperature coordinate where
+        temperature < temperature_max
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     return x11 * np.exp(
         temperature_max
         * (-temperature + temperature_min)
@@ -115,6 +146,33 @@ def interp_lin_numpy(
     pressure_min: float,
     pressure_max: float,
 ) -> npt.NDArray[np.float64]:
+    """Linear interpolation.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to pressure_min
+
+    x12: array
+        Array corresponding to pressure_max
+
+    pressure: float
+        Coordinate to linear interpolate to
+
+    pressure_min: float
+        Nearest known pressure coordinate where
+        pressure_min < pressure
+
+    pressure_max: float
+        Nearest known pressure coordinate where
+        pressure < pressure_max
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     return (
         x11 * (pressure_max - pressure_min) - (pressure - pressure_min) * (x11 - x12)
     ) / (pressure_max - pressure_min)
@@ -132,6 +190,46 @@ def interp_bilin_numpy(
     pressure_min: float,
     pressure_max: float,
 ) -> npt.NDArray[np.float64]:
+    """Bilinear interpolation.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to pressure_min,temperature_min
+
+    x12: array
+        Array corresponding to pressure_min,temperature_max
+
+    x21: array
+        Array corresponding to pressure_max,temperature_min
+
+    x22: array
+        Array corresponding to pressure_max,temperature_max
+
+    temperature: float
+        Temperature coordinate
+
+    temperature_min: float
+        Minimum temperature coordinate
+
+    temperature_max: float
+        Maximum temperature coordinate
+
+    pressure: float
+        Pressure coordinate
+
+    pressure_min: float
+        Minimum pressure coordinate
+
+    pressure_max: float
+        Maximum pressure coordinate
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     pressure_diff = pressure_max - pressure_min
     temperature_diff = temperature_max - temperature_min
     pressure_scale = (pressure - pressure_min) / pressure_diff
@@ -157,15 +255,59 @@ def intepr_bilin_numexpr(
     pressure_min: float,
     pressure_max: float,
 ) -> npt.NDArray[np.float64]:
+    """Bilinear interpolation using numexpr.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to pressure_min,temperature_min
+
+    x12: array
+        Array corresponding to pressure_min,temperature_max
+
+    x21: array
+        Array corresponding to pressure_max,temperature_min
+
+    x22: array
+        Array corresponding to pressure_max,temperature_max
+
+    temperature: float
+        Temperature coordinate
+
+    temperature_min: float
+        Minimum temperature coordinate
+
+    temperature_max: float
+        Maximum temperature coordinate
+
+    pressure: float
+        Pressure coordinate
+
+    pressure_min: float
+        Minimum pressure coordinate
+
+    pressure_max: float
+        Maximum pressure coordinate
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     import numexpr as ne
 
     return ne.evaluate(
-        "(x11*(pressure_max - pressure_min)*(temperature_max - temperature_min)"
-        " - (pressure - pressure_min)*(temperature_max - temperature_min)*(x11 - x21)"
-        " - (temperature - temperature_min)*(-(pressure - pressure_min)*(x11 - x21)"
-        " + (pressure - pressure_min)*(x12 - x22) + (pressure_max - "
-        "pressure_min)*(x11 - x12)))/((pressure_max - "
-        "pressure_min)*(temperature_max - temperature_min))"
+        "(x11*(pressure_max - pressure_min)*"
+        "(temperature_max - temperature_min)"
+        " - (pressure - pressure_min)*(temperature_max - "
+        "temperature_min)*(x11 - x21)"
+        " - (temperature - temperature_min)*"
+        "(-(pressure - pressure_min)*(x11 - x21)"
+        " + (pressure - pressure_min)*(x12 - x22) + "
+        "(pressure_max - pressure_min)*(x11 - x12)))"
+        "/((pressure_max - pressure_min)*"
+        "(temperature_max - temperature_min))"
     )
 
 
@@ -181,9 +323,61 @@ def intepr_bilin_double(
     pressure_min: float,
     pressure_max: float,
 ) -> npt.NDArray[np.float64]:
+    """Bilinear interpolation using double.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to pressure_min,temperature_min
+
+    x12: array
+        Array corresponding to pressure_min,temperature_max
+
+    x21: array
+        Array corresponding to pressure_max,temperature_min
+
+    x22: array
+        Array corresponding to pressure_max,temperature_max
+
+    temperature: float
+        Temperature coordinate
+
+    temperature_min: float
+        Minimum temperature coordinate
+
+    temperature_max: float
+        Maximum temperature coordinate
+
+    pressure: float
+        Pressure coordinate
+
+    pressure_min: float
+        Minimum pressure coordinate
+
+    pressure_max: float
+        Maximum pressure coordinate
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     return interp_lin_only(
-        interp_lin_only(x11, x12, temperature, temperature_min, temperature_max),
-        interp_lin_only(x21, x22, temperature, temperature_min, temperature_max),
+        interp_lin_only(
+            x11,
+            x12,
+            temperature,
+            temperature_min,
+            temperature_max,
+        ),
+        interp_lin_only(
+            x21,
+            x22,
+            temperature,
+            temperature_min,
+            temperature_max,
+        ),
         pressure,
         pressure_min,
         pressure_max,
@@ -202,6 +396,46 @@ def intepr_bilin_old(
     pressure_min: float,
     pressure_max: float,
 ) -> npt.NDArray[np.float64]:
+    """Bilinear interpolation old.
+
+    Parameters
+    ----------
+    x11: array
+        Array corresponding to pressure_min,temperature_min
+
+    x12: array
+        Array corresponding to pressure_min,temperature_max
+
+    x21: array
+        Array corresponding to pressure_max,temperature_min
+
+    x22: array
+        Array corresponding to pressure_max,temperature_max
+
+    temperature: float
+        Temperature coordinate
+
+    temperature_min: float
+        Minimum temperature coordinate
+
+    temperature_max: float
+        Maximum temperature coordinate
+
+    pressure: float
+        Pressure coordinate
+
+    pressure_min: float
+        Minimum pressure coordinate
+
+    pressure_max: float
+        Maximum pressure coordinate
+
+    Returns
+    -------
+    array
+        Interpolated array.
+
+    """
     return (
         x11 * (pressure_max - pressure_min) * (temperature_max - temperature_min)
         - (pressure - pressure_min) * (temperature_max - temperature_min) * (x11 - x21)
@@ -220,7 +454,25 @@ def compute_rayleigh_cross_section(
     n_air: t.Optional[float] = 2.6867805e25,
     king: t.Optional[float] = 1.0,
 ) -> npt.NDArray[np.float64]:
-    """Compute Rayleigh cross section."""
+    """Compute Rayleigh cross section.
+
+    Parameters
+    ----------
+    wngrid : npt.NDArray[np.float64]
+        Wavenumber grid.
+    n : float
+        Refractive index.
+    n_air : t.Optional[float], optional
+        Number density of air, by default 2.6867805e25.
+    king : t.Optional[float], optional
+        King correction factor, by default 1.0.
+
+    Returns
+    -------
+    npt.NDArray[np.float64]
+        Rayleigh cross section.
+
+    """
     wlgrid = (10000 / wngrid) * 1e-6
 
     n_factor = (n**2 - 1) / (n_air * (n**2 + 2))
@@ -230,7 +482,19 @@ def compute_rayleigh_cross_section(
 
 
 def test_nan(val: t.Union[float, npt.ArrayLike]) -> bool:
-    """Test if a value is nan."""
+    """Test if a value is nan.
+
+    Parameters
+    ----------
+    val : t.Union[float, npt.ArrayLike]
+        Value to test.
+
+    Returns
+    -------
+    bool
+        True if nan, False otherwise.
+
+    """
     if hasattr(val, "__len__"):
         try:
             return np.isnan(val).any()
@@ -253,7 +517,7 @@ interp_exp_only = interp_exp_numpy
 
 
 class OnlineVariance:
-    """USes the M2 algorithm to compute the variance in a streaming fashion"""
+    """Uses the M2 algorithm to compute the variance in a streaming fashion."""
 
     def __init__(self) -> None:
         """Initialise the class."""
@@ -267,8 +531,21 @@ class OnlineVariance:
         self.mean = None
         self.M2 = None
 
-    def update(self, value: AnyValType, weight: t.Optional[float] = 1.0):
-        """Update the variance."""
+    def update(
+        self,
+        value: AnyValType,
+        weight: t.Optional[float] = 1.0,
+    ):
+        """Update the variance.
+
+        Parameters
+        ----------
+        value : AnyValType
+            Value to update with.
+        weight : t.Optional[float], optional
+            Weight for the value, by default 1.0.
+
+        """
         self.count += 1
         self.wcount += weight
         self.wcount2 += weight * weight
@@ -300,47 +577,32 @@ class OnlineVariance:
         else:
             return self.M2 / (self.wcount - 1)
 
-    # def combine_variance(self,averages, variances, counts):
-    #     good_idx = [idx for idx,a in enumerate(averages) if not test_nan(a)]
-    #     averages = [averages[idx] for idx in good_idx]
-    #     variances = [variances[idx] for idx in good_idx]
-    #     counts = [counts[idx] for idx in good_idx]
-    #     good_variance = None
-    #     if not test_nan(variances):
-    #         try:
-    #             good_variance = variances[np.where(~np.isnan(variances))[0][0]]*0.0
-    #         except IndexError:
-    #             good_variance = None
-    #     #print(good_idx,'Good',good_variance)
-    #     variances = [v if not test_nan(v) else good_variance for v in variances]
-    #     #print('NEWAVERAGES',averages)
-    #     #print('NEW WEIGHTS',counts)
-
-    #     average = np.average(averages, weights=counts,axis=0)
-
-    #     #print('final average',average)
-    #     size = np.sum(counts)
-
-    #     counts = np.array(counts) * size/np.sum(counts)
-    #     if hasattr(average,'__len__'):
-    #         average = average[None,...]
-    #         for x in range(1,len(average.shape)):
-    #             counts = counts[:,None]
-    #     squares = 0.0
-    #     if good_variance is not None:
-    #         squares = counts*np.nan_to_num(variances)
-    #     #print(counts,variances,squares)
-    #     squares = squares + counts*(average - averages)**2
-
-    #     return average,np.sum(squares,axis=0)/size
-
     def combine_variance(
-        self, averages: npt.ArrayLike, variance: npt.ArrayLike, counts: npt.ArrayLike
+        self,
+        averages: npt.ArrayLike,
+        variance: npt.ArrayLike,
+        counts: npt.ArrayLike,
     ) -> t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
-        """Combine different variance calculations together."""
+        """Combine different variance calculations together.
+
+        Parameters
+        ----------
+        averages : npt.ArrayLike
+            Averages.
+        variance : npt.ArrayLike
+            Variances.
+        counts : npt.ArrayLike
+            Counts.
+
+        Returns
+        -------
+        t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]
+            Combined average and variance.
+
+        """
         average = None
         size = np.sum(counts)
-        for avg, cnt in zip(averages, counts):
+        for avg, cnt in zip(averages, counts, strict=True):
             if cnt == 0:
                 continue
 
@@ -356,7 +618,7 @@ class OnlineVariance:
 
         squares = None
 
-        for avg, cnt, var in zip(averages, counts, variance):
+        for avg, cnt, var in zip(averages, counts, variance, strict=True):
             # print('COUNT ',cnt)
             if cnt == 0.0:
                 continue

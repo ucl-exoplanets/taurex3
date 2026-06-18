@@ -1,4 +1,5 @@
 """Rodgers 2000 temperature profile."""
+
 import typing as t
 
 import numpy as np
@@ -11,12 +12,13 @@ from .tprofile import TemperatureProfile
 
 
 class Rodgers2000(TemperatureProfile):
-    """Layer-by-layer temperature introduced in Rodgers et al (2000)
+    """Layer-by-layer temperature introduced in Rodgers et al (2000).
 
     Inverse Methods for Atmospheric Sounding (equation 3.26).
     Featured in NEMESIS code (Irwin et al., 2008,
     J. Quant. Spec., 109, 1136 (equation 19)
     Used in all Barstow et al. papers.
+
     """
 
     def __init__(
@@ -27,15 +29,15 @@ class Rodgers2000(TemperatureProfile):
     ) -> None:
         """Initialize Rodgers 2000 temperature profile.
 
-
         Parameters
         ----------
         temperature_layers : :obj:`list`
             Temperature in Kelvin per layer of pressure
 
         correlation_length : float
-            In scaleheights, Line et al. 2013 sets this to 7, Irwin et al sets
-            this to 1.5 may be left as free and Pressure dependent parameter later.
+            In scaleheights, Line et al. 2013 sets this to 7, Irwin et al
+            sets this to 1.5 may be left as free and Pressure dependent
+            parameter later.
 
         covariance_matrix : :obj:`array` , optional
             User can supply their own covaraince matrix
@@ -58,7 +60,19 @@ class Rodgers2000(TemperatureProfile):
         )
 
     def correlate_temp(self, cov_mat: npt.NDArray[np.float64]) -> np.float64:
-        """Correlate the temperature profile using the covariance matrix."""
+        """Correlate the temperature profile using the covariance matrix.
+
+        Parameters
+        ----------
+        cov_mat : npt.NDArray[np.float64]
+            Covariance matrix.
+
+        Returns
+        -------
+        np.float64
+            Correlated temperature profile.
+
+        """
         cov_mat_sum = np.sum(cov_mat, axis=0)
         weights = cov_mat[:, :] / cov_mat_sum[:, None]
         return weights.dot(self.temperature_layers)
@@ -84,17 +98,23 @@ class Rodgers2000(TemperatureProfile):
 
     @correlationLength.setter
     def correlationLength(self, value: float) -> None:  # noqa: N802
-        """Correlation length in scale heights."""
+        """Correlation length in scale heights.
+
+        Parameters
+        ----------
+        value : float
+            Correlation length in scale heights.
+
+        """
         self._tp_corr_length = value
 
     def generate_temperature_fitting_params(self) -> None:
-        """Generates the temperature fitting parameters
+        """Generates the temperature fitting parameters.
 
         Parameters are generated for each layer of the
         atmosphere For a 4 layer atmosphere the fitting parameters generated
         are ``T_0``, ``T_1``, ``T_2`` and ``T_3``
         """
-
         bounds = [1e5, 1e3]
         for idx, _ in enumerate(self.temperature_layers):
             point_num = idx + 1
@@ -107,11 +127,12 @@ class Rodgers2000(TemperatureProfile):
             def write_point(self, value, idx=idx):
                 self.temperature_layers[idx] = value
 
-            read_point.__doc__ = f"""Temperature at layer {point_num} in Kelvin"""
+            read_point.__doc__ = f"Temperature at layer {point_num} in Kelvin"
 
             fget_point = read_point
 
             fset_point = write_point
+
             default_fit = False
             self.add_fittable_param(
                 param_name,
@@ -124,7 +145,18 @@ class Rodgers2000(TemperatureProfile):
             )
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write Rodgers 2000 temperature profile to output group."""
+        """Write Rodgers 2000 temperature profile to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         temperature = super().write(output)
 
         cov_mat = self._covariance
@@ -151,7 +183,8 @@ class Rodgers2000(TemperatureProfile):
                 title = "{Inverse Methods for Atmospheric
                 Sounding - Theory and Practice}",
         howpublished = {Inverse Methods for Atmospheric Sounding - Theory
-        and Practice. Series: Series on Atmospheric Oceanic and Planetary Physics},
+        and Practice. Series: Series on Atmospheric Oceanic and Planetary
+        Physics},
                 year = "2000",
                 month = "Jan",
                 doi = {10.1142/9789812813718},

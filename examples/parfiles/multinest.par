@@ -71,7 +71,7 @@ H2O:bounds = 1e-12, 1e-1
 T_irr:fit = True
 
 # Set Boundaries to multiple of prior value
-T_irr:factor = 0.3, 2.5  
+T_irr:factor = 0.3, 2.5
 
 kappa_v1:fit = True
 kappa_v1:bounds = 0.1, 0.007

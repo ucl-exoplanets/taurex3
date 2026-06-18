@@ -1,4 +1,5 @@
 """Lightcurve data class."""
+
 import logging
 import typing as t
 
@@ -6,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.log import Logger
-from taurex.output import OutputGroup, Writeable
+from taurex.output import OutputGroup
+from taurex.output import Writeable
 
 
 class LightCurveInstrumentData(t.TypedDict):
@@ -33,6 +35,7 @@ class LightCurveData(Logger, Writeable):
         name: InstrumentType,
         lc_data: LCDataType,
     ):
+        """Create LightCurveData from instrument name."""
         log = logging.getLogger()
         if name.lower() in ("wfc3",):
             return cls(lc_data, "wfc3", (1.1, 1.8))

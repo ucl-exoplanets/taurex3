@@ -1,4 +1,5 @@
 """Retrieval using nestle library."""
+
 import time
 import typing as t
 
@@ -9,9 +10,11 @@ import numpy.typing as npt
 from taurex.model import ForwardModel
 from taurex.output import OutputGroup
 from taurex.spectrum import BaseSpectrum
-from taurex.util import quantile_corner, recursively_save_dict_contents_to_output
+from taurex.util import quantile_corner
+from taurex.util import recursively_save_dict_contents_to_output
 
-from .optimizer import FitParamOutput, Optimizer
+from .optimizer import FitParamOutput
+from .optimizer import Optimizer
 
 
 class NestleStatsOutput(t.TypedDict):
@@ -32,10 +35,7 @@ class NestleSolutionOutput(t.TypedDict):
 
 
 class NestleOptimizer(Optimizer):
-    """An optimizer that uses the `nestle <http://kylebarbary.com/nestle/>`_ library
-    to perform optimization.
-
-    """
+    """An optimizer that uses the `nestle <http://kylebarbary.com/nestle/>`_ library."""
 
     def __init__(
         self,
@@ -47,7 +47,6 @@ class NestleOptimizer(Optimizer):
         sigma_fraction: t.Optional[float] = 0.1,
     ):
         """Initialize and setup nestle.
-
 
         Parameters
         ----------
@@ -61,9 +60,9 @@ class NestleOptimizer(Optimizer):
             Number of live points to use in sampling
 
         method:
-            Nested sampling method to use. ``classic`` uses MCMC exploration,
-            ``single`` uses a single ellipsoid and ``multi`` uses
-            multiple ellipsoids (similar to Multinest)
+            Nested sampling method to use. ``classic`` uses MCMC
+            exploration, ``single`` uses a single ellipsoid and
+            ``multi`` uses multiple ellipsoids (similar to Multinest)
 
         tol:
             Evidence tolerance value to stop the fit. This is based on
@@ -71,7 +70,8 @@ class NestleOptimizer(Optimizer):
             contribution to the evidence.
 
         sigma_fraction:
-            Fraction of weights to use in computing the error. (Default: 0.1)
+            Fraction of weights to use in computing the error.
+            (Default: 0.1)
 
         """
         super().__init__("Nestle", observed, model, sigma_fraction)
@@ -102,11 +102,17 @@ class NestleOptimizer(Optimizer):
         self._nlive = value
 
     def compute_fit(self) -> None:
-        """Computes the fit using nestle."""
+        """Computes the fit using nestle.
+
+        The fit is performed using the settings provided during the
+        initialization of the class.
+
+        """
 
         def nestle_uniform_prior(theta):
-            # prior distributions called by multinest. Implements a uniform prior
-            # converting parameters from normalised grid to uniform prior
+            # prior distributions called by multinest. Implements
+            # a uniform prior converting parameters from
+            # normalised grid to uniform prior
 
             return tuple(self.prior_transform(theta))
 
@@ -140,11 +146,35 @@ class NestleOptimizer(Optimizer):
         self._nestle_output = self.store_nestle_output(res)
 
     def get_samples(self, solution_idx: int) -> npt.NDArray[np.float64]:
-        """Returns the samples from the fit."""
+        """Returns the samples from the fit.
+
+        Parameters
+        ----------
+        solution_idx : int
+            Index of the solution.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of samples.
+
+        """
         return self._nestle_output["solution"]["samples"]
 
     def get_weights(self, solution_idx: int) -> npt.NDArray[np.float64]:
-        """Returns the weights of the samples."""
+        """Returns the weights of the samples.
+
+        Parameters
+        ----------
+        solution_idx : int
+            Index of the solution.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of weights.
+
+        """
         return self._nestle_output["solution"]["weights"]
 
     def get_solution(
@@ -156,19 +186,27 @@ class NestleOptimizer(Optimizer):
             npt.NDArray[np.float64],
             t.Tuple[
                 t.Tuple[t.Literal["Statistics"], float],
-                t.Tuple[t.Literal["fit_params"], t.Dict[str, FitParamOutput]],
-                t.Tuple[t.Literal["tracedata"], npt.NDArray[np.float64]],
-                t.Tuple[t.Literal["weights"], npt.NDArray[np.float64]],
+                t.Tuple[
+                    t.Literal["fit_params"],
+                    t.Dict[str, FitParamOutput],
+                ],
+                t.Tuple[
+                    t.Literal["tracedata"],
+                    npt.NDArray[np.float64],
+                ],
+                t.Tuple[
+                    t.Literal["weights"],
+                    npt.NDArray[np.float64],
+                ],
             ],
         ],
         None,
         None,
     ]:
-        """Generator for solutions and their median and MAP values
+        """Generator for solutions and their median and MAP values.
 
         Yields
         ------
-
         solution_no:
             Solution number (always 0)
 
@@ -182,26 +220,43 @@ class NestleOptimizer(Optimizer):
             statistics, fit_params, tracedata, weights
 
         """
-
         names = self.fit_names
         opt_map = self.fit_values
         opt_values = self.fit_values
         for k, v in self._nestle_output["solution"]["fitparams"].items():
-            # if k.endswith('_derived'):
-            #     continue
             idx = names.index(k)
             opt_map[idx] = v["map"]
             opt_values[idx] = v["value"]
 
         yield 0, opt_map, opt_values, (
             ("Statistics", self._nestle_output["Stats"]),
-            ("fit_params", self._nestle_output["solution"]["fitparams"]),
-            ("tracedata", self._nestle_output["solution"]["samples"]),
-            ("weights", self._nestle_output["solution"]["weights"]),
+            (
+                "fit_params",
+                self._nestle_output["solution"]["fitparams"],
+            ),
+            (
+                "tracedata",
+                self._nestle_output["solution"]["samples"],
+            ),
+            (
+                "weights",
+                self._nestle_output["solution"]["weights"],
+            ),
         )
 
     def write_optimizer(self, output: OutputGroup) -> OutputGroup:
-        """Writes the optimizer to the output group."""
+        """Writes the optimizer to the output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         opt = super().write_optimizer(output)
 
         # number of live points
@@ -214,7 +269,18 @@ class NestleOptimizer(Optimizer):
         return opt
 
     def write_fit(self, output: OutputGroup) -> OutputGroup:
-        """Writes the fit to the output group."""
+        """Writes the fit to the output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         fit = super().write_fit(output)
 
         if self._nestle_output:
@@ -223,9 +289,19 @@ class NestleOptimizer(Optimizer):
         return fit
 
     def store_nestle_output(self, result: nestle.Result) -> NestleSolutionOutput:
-        """This turns the output fron nestle into a dictionary
+        """Turn the output from nestle into a dictionary.
 
         Contains summary statistics and the solution.
+
+        Parameters
+        ----------
+        result : nestle.Result
+            Nestle result object.
+
+        Returns
+        -------
+        NestleSolutionOutput
+            Formatted nestle output.
 
         """
         nestle_output = {}
@@ -271,6 +347,7 @@ class NestleOptimizer(Optimizer):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for NestleOptimizer."""
         return ("nestle",)
 
     BIBTEX_ENTRIES = [

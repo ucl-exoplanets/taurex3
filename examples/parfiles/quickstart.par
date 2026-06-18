@@ -46,6 +46,3 @@ model_type = transmission
 optimizer = nestle
 num_live_points=100
 method = single
-
-
-

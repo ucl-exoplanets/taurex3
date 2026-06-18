@@ -1,17 +1,20 @@
 """Direct imaging model."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.constants import PI
-
 from .emission import EmissionModel
 
+
 def compute_direct_image_final_flux(
-    f_total, planet_radius, star_distance
-):
-    return f_total*(planet_radius**2)/(star_distance**2)
+    f_total: npt.NDArray[np.float64],
+    planet_radius: float,
+    star_distance: float,
+) -> npt.NDArray[np.float64]:
+    """Compute the final flux at the observer."""
+    return f_total * (planet_radius**2) / (star_distance**2)
 
 
 class DirectImageModel(EmissionModel):
@@ -26,8 +29,8 @@ class DirectImageModel(EmissionModel):
         from an exo-planet.
 
         """
-        return (
-            compute_direct_image_final_flux(f_total, self._planet.fullRadius, self._star.distance * 3.08567758e16)
+        return compute_direct_image_final_flux(
+            f_total, self._planet.fullRadius, self._star.distance * 3.08567758e16
         )
 
     @classmethod

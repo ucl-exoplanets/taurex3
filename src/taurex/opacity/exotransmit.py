@@ -4,13 +4,15 @@ Exo_Transmit is a code for calculating transmission spectra for exoplanet
 atmospheres of varied composition. Its opacities are based on HITRAN and
 have the format `opac{molecule}.dat`.
 """
+
 import pathlib
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.opacity.interpolateopacity import InterpModeType, InterpolatingOpacity
+from taurex.opacity.interpolateopacity import InterpModeType
+from taurex.opacity.interpolateopacity import InterpolatingOpacity
 from taurex.types import PathLike
 
 

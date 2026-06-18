@@ -363,8 +363,7 @@ def find_source(name: str) -> type[PhoenixSource]:
         return _source_registry[name]
     except KeyError:
         raise KeyError(
-            f"Unknown source {name!r}. "
-            f"Available: [{', '.join(_source_registry)}]"
+            f"Unknown source {name!r}. " f"Available: [{', '.join(_source_registry)}]"
         ) from None
 
 

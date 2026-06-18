@@ -1,4 +1,5 @@
 """Tests for Phoenix4AllStar."""
+
 from unittest.mock import patch
 
 import numpy as np
@@ -6,6 +7,7 @@ import pytest
 from astropy import units as u
 
 from taurex.data.stellar.phoenix4all import Phoenix4AllStar
+
 
 RSOL = 6.957e8  # Solar radius in metres
 
@@ -63,8 +65,9 @@ def test_phoenix4all_source_keyword(mock_get_spectrum):
     flux = np.ones(nw) * 1e-9 * u.W / (u.m**2 * u.um)
     mock_get_spectrum.return_value = (wlgrid, flux)
 
-    star = Phoenix4AllStar(temperature=5000, radius=1.0, metallicity=0.0,
-                           source="synphot")
+    star = Phoenix4AllStar(
+        temperature=5000, radius=1.0, metallicity=0.0, source="synphot"
+    )
     wngrid = np.linspace(300, 30000, 1000)
     star.initialize(wngrid)
 

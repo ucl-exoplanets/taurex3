@@ -25,14 +25,11 @@ import numpy.typing as npt
 
 from taurex.data.stellar.star import Star
 from taurex.output import OutputGroup
-
-
 from taurex.phoenix4all import get_spectrum
 
 
 class Phoenix4AllStar(Star):
-    """A star that uses the ``phoenix4all`` library to obtain PHOENIX
-    synthetic stellar atmosphere spectra.
+    """A star that uses the ``phoenix4all`` for PHOENIX stellar atmosphere spectra.
 
     The ``phoenix4all`` package supports several back-end sources:
 
@@ -93,6 +90,7 @@ class Phoenix4AllStar(Star):
         model_name: t.Optional[str] = "bt-settl-cifist",
         logg: t.Optional[float] = None,
     ) -> None:
+        """Initialize the Phoenix4AllStar."""
         super().__init__(
             temperature=temperature,
             radius=radius,
@@ -197,6 +195,7 @@ class Phoenix4AllStar(Star):
     # —── Registry ————————————————————————————————————————————
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Return the input keywords for this star model."""
         return ("phoenix4all",)
 
     BIBTEX_ENTRIES = [

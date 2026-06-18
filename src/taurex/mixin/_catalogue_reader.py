@@ -77,9 +77,7 @@ class FileReader(CatalogueReader):
                 unit_match = re.search(r"\[(.+?)\]", col)
                 planet_units.append(unit_match.group(1) if unit_match else None)
 
-        star_params = list(
-            zip(star_field, star_values, star_units, strict=False)
-        )
+        star_params = list(zip(star_field, star_values, star_units, strict=False))
         planet_params = list(
             zip(planet_field, planet_values, planet_units, strict=False)
         )

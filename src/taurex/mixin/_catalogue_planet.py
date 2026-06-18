@@ -127,25 +127,24 @@ class PlanetCatalogueExomast(PlanetMixin):
         """Populate planet parameters from the ExoMAST API."""
         if planet_name is not None and planet_mass is None:
             pmass, prad, pdist, pper, pincl, pecc, ptrans = (
-                planet_mass, planet_radius, planet_distance,
-                orbital_period, inclination, eccentricity, transit_time,
+                planet_mass,
+                planet_radius,
+                planet_distance,
+                orbital_period,
+                inclination,
+                eccentricity,
+                transit_time,
             )
             try:
                 data = self._fetch_exomast(planet_name)
                 if pmass is None and "pl_masse" in data:
                     val = float(data["pl_masse"][0])
                     pmass = (
-                        val * MJUP.value
-                        if data.get("pl_masse_unit") == "Mj"
-                        else val
+                        val * MJUP.value if data.get("pl_masse_unit") == "Mj" else val
                     )
                 if prad is None and "pl_rade" in data:
                     val = float(data["pl_rade"][0])
-                    prad = (
-                        val * RJUP.value
-                        if data.get("pl_rade_unit") == "Rj"
-                        else val
-                    )
+                    prad = val * RJUP.value if data.get("pl_rade_unit") == "Rj" else val
                 if pdist is None and "pl_orbsmax" in data:
                     pdist = float(data["pl_orbsmax"][0])
                 if pper is None and "pl_orbper" in data:

@@ -5,10 +5,12 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from taurex.cache import GlobalCache, OpacityCache
+from taurex.cache import GlobalCache
+from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
-from taurex.data.citation import Citable
-from taurex.data.fittable import Fittable, derivedparam
+from taurex.core import Citable
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import derivedparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
@@ -18,6 +20,7 @@ from taurex.stellar import Star
 
 class Chemistry(Fittable, Logger, Writeable, Citable):
     """Skeleton for defining chemistry.
+
     *Abstract Class*
 
     Must implement methods:
@@ -68,13 +71,12 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
             ]
 
     def set_star_planet(self, star: Star, planet: Planet):
-        """Supplies the star and planet to chemistryfor photochemistry reasons.
+        """Supplies the star and planet to chemistry for photochemistry.
 
         Does nothing by default
 
         Parameters
         ----------
-
         star: :class:`~taurex.data.stellar.star.Star`
             A star object
 
@@ -115,6 +117,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
     @property
     def inactiveGases(self) -> t.List[str]:  # noqa: N802
         """Non absorbing gases.
+
         **Requires implementation**
 
         Should return a list of molecule names
@@ -137,7 +140,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
         """Initialize the profile.
 
         Parameters
-        -----------
+        ----------
         nlayers : int
             number of layers
         temperature_profile : np.ndarray
@@ -153,6 +156,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
     @property
     def activeGasMixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Mix profile of actively absorbing gases.
+
         **Requires implementation**
 
         Should return profiles of shape ``(nactivegases,nlayers)``. Active
@@ -161,7 +165,6 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
         are used.
 
         """
-
         raise NotImplementedError
 
     @property
@@ -177,7 +180,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
 
     @property
     def muProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Molecular weight for each layer of atmosphere in kg
+        """Molecular weight for each layer of atmosphere in kg.
 
         Returns
         -------
@@ -189,7 +192,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
         return self.mu_profile
 
     def get_gas_mix_profile(self, gas_name: str) -> npt.NDArray[np.float64]:
-        """Returns the mix profile of a particular gas
+        """Returns the mix profile of a particular gas.
 
         Parameters
         ----------
@@ -212,27 +215,30 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
             raise KeyError
 
     def compute_mu_profile(self, nlayers: t.Optional[int] = None) -> None:
-        """Computes molecular weight of atmosphere for each layer
+        """Computes molecular weight of atmosphere for each layer.
 
         Parameters
         ----------
         nlayers: int
             Number of layers, deprecated
         """
-
         active = []
         inactive = []
 
         if self.activeGasMixProfile is not None:
             active = [
                 mix * self.get_molecular_mass(gasname)
-                for mix, gasname in zip(self.activeGasMixProfile, self.activeGases)
+                for mix, gasname in zip(
+                    self.activeGasMixProfile, self.activeGases, strict=True
+                )
             ]
 
         if self.inactiveGasMixProfile is not None:
             inactive = [
                 mix * self.get_molecular_mass(gasname)
-                for mix, gasname in zip(self.inactiveGasMixProfile, self.inactiveGases)
+                for mix, gasname in zip(
+                    self.inactiveGasMixProfile, self.inactiveGases, strict=True
+                )
             ]
 
         total = active + inactive
@@ -243,11 +249,12 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
 
     @property
     def gases(self) -> t.List[str]:
-        """Total list of gases in atmosphere"""
+        """Total list of gases in atmosphere."""
         return self.activeGases + self.inactiveGases
 
     @property
     def mixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Mixing profile for all gases."""
         return np.concatenate((self.activeGasMixProfile, self.inactiveGasMixProfile))
 
     @derivedparam(param_name="mu", param_latex=r"$\mu$", compute=True)
@@ -263,6 +270,12 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
         Parameters
         ----------
         output: :class:`~taurex.output.output.Output`
+            output group to write to
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+            Modified output group
 
         """
         gas_entry = output.create_group("Chemistry")
@@ -275,8 +288,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
 
     @property
     def condensates(self) -> t.List[str]:
-        """
-        Returns a list of condensates in the atmosphere.
+        """Returns a list of condensates in the atmosphere.
 
         Returns
         -------
@@ -284,7 +296,6 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
             List of condensates
 
         """
-
         return []
 
     @property
@@ -295,6 +306,7 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
     @property
     def condensateMixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Get condensate mix profile.
+
         **Requires implementation**
 
         Should return profiles of shape ``(ncondensates,nlayers)``.
@@ -327,7 +339,19 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
             raise KeyError(f"Condensate {condensate_name} not found in chemistry")
 
     def get_molecular_mass(self, molecule: str) -> float:
-        """Returns the molecular mass of a molecule."""
+        """Returns the molecular mass of a molecule.
+
+        Parameters
+        ----------
+        molecule : str
+            Name of the molecule
+
+        Returns
+        -------
+        float
+            Molecular mass of the molecule.
+
+        """
         from taurex.util import get_molecular_weight
 
         return get_molecular_weight(molecule)

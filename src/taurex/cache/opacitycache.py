@@ -7,6 +7,7 @@ from taurex.log import Logger
 
 from .globalcache import GlobalCache
 
+
 if t.TYPE_CHECKING:
     from ..opacity import Opacity
 else:
@@ -27,8 +28,8 @@ class OpacityCache(Singleton):
     >>> opt == opt2
     True
 
-    Importantly this class will automatically search directories for cross-sections
-    set using the :func:`set_opacity_path` method:
+    Importantly this class will automatically search directories for
+    cross-sections set using the :func:`set_opacity_path` method:
 
     >>> opt.set_opacity_path('path/to/crossections')
 
@@ -76,7 +77,11 @@ class OpacityCache(Singleton):
     """
 
     def init(self):
-        """Initialise the cache."""
+        """Initialise the cache.
+
+        Sets up the internal opacity dictionary, path, logger, forced active,
+        and interpolation mode.
+        """
         self.opacity_dict: t.Dict[str, Opacity] = {}
         self._opacity_path = None
         self.log = Logger("OpacityCache")
@@ -93,7 +98,6 @@ class OpacityCache(Singleton):
 
         Parameters
         ----------
-
         opacity_path : str or :obj:`list` of str, optional
             search path(s) to look for molecular opacities
 
@@ -104,7 +108,6 @@ class OpacityCache(Singleton):
             If (any) path does not exist
 
         """
-
         import pathlib
 
         GlobalCache()["xsec_path"] = opacity_path
@@ -135,13 +138,25 @@ class OpacityCache(Singleton):
             Whether to enable RADIS functionality (default = False)
 
         """
-
         GlobalCache()["enable_radis"] = enable
 
     def set_radis_wavenumber(
         self, wn_start: float, wn_end: float, wn_points: int
     ) -> None:
-        """Sets the wavenumber grid for RADIS."""
+        """Sets the wavenumber grid for RADIS.
+
+        This will clear the cache of any loaded opacities.
+
+        Parameters
+        ----------
+        wn_start: float
+            Wavenumber start in cm-1.
+        wn_end: float
+            Wavenumber end in cm-1.
+        wn_points: int
+            Number of wavenumber points.
+
+        """
         GlobalCache()["radius_grid"] = wn_start, wn_end, wn_points
 
         self.clear_cache()
@@ -159,7 +174,6 @@ class OpacityCache(Singleton):
             Whether HDF5 files should be streamed (False)
             or loaded into memory (True, default)
         """
-
         GlobalCache()["xsec_in_memory"] = in_memory
         self.clear_cache()
 
@@ -275,7 +289,14 @@ class OpacityCache(Singleton):
             self.opacity_dict[opacity.moleculeName] = opacity
 
     def find_list_of_molecules(self) -> None:
-        """Find molecules available to load."""
+        """Find molecules available to load.
+
+        Returns
+        -------
+        :obj:`set` of str
+            List of molecules that can be loaded
+
+        """
         from taurex.parameter.classfactory import ClassFactory
 
         opacity_klasses = ClassFactory().opacityKlasses
@@ -332,7 +353,7 @@ class OpacityCache(Singleton):
 
                 if op is not None and op.moleculeName not in self.opacity_dict:
                     self.add_opacity(op, molecule_filter=molecule_filter)
-                op = None  # Ensure garbage collection when run once
+                op = None
 
     def load_opacity(
         self,
@@ -341,16 +362,17 @@ class OpacityCache(Singleton):
         molecule_filter: t.Optional[t.List[str]] = None,
     ):
         """Main function to use when loading molecular opacities.
-        Handles both cross sections and paths. Handles lists of either so lists of
-        :class:`~taurex.opacity.opacity.Opacity` objects or lists of paths can be used
-        to load multiple files/objects
+
+        Handles both cross sections and paths. Handles lists of either so
+        lists of :class:`~taurex.opacity.opacity.Opacity` objects or lists
+        of paths can be used to load multiple files/objects
 
 
         Parameters
         ----------
         opacities : :class:`~taurex.opacity.opacity.Opacity` or
-        :obj:`list` of :class:`~taurex.opacity.opacity.Opacity` , optional
-            Object(s) to include in cache
+            :obj:`list` of :class:`~taurex.opacity.opacity.Opacity` , optional
+                Object(s) to include in cache
 
         opacity_path : str or :obj:`list` of str, optional
             search path(s) to look for molecular opacities

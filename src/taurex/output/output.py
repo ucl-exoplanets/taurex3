@@ -1,4 +1,4 @@
-"""Output base class"""
+"""Output base class."""
 
 import typing as t
 
@@ -6,16 +6,20 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.log import Logger
-from taurex.types import AnyValType, ArrayType, ScalarType
+from taurex.types import AnyValType
+from taurex.types import ArrayType
+from taurex.types import ScalarType
+
 
 MetadataType = t.Dict[str, AnyValType]
-"""Type for metadata"""
+"""Type for metadata."""
 
 
 class OutputGroup(Logger):
     """Stores output data in a hierarchical structure."""
 
     def __init__(self, name: str):
+        """Initialize OutputGroup."""
         super().__init__(name)
         self._name = name
 
@@ -25,6 +29,7 @@ class OutputGroup(Logger):
         array: ArrayType,
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write array."""
         raise NotImplementedError
 
     def write_list(
@@ -33,6 +38,7 @@ class OutputGroup(Logger):
         list_array: npt.ArrayLike,
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write list."""
         arr = np.array(list_array)
         self.write_array(list_name, arr)
 
@@ -42,11 +48,13 @@ class OutputGroup(Logger):
         scalar: ScalarType,
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write scalar."""
         raise NotImplementedError
 
     def write_string(
         self, string_name: str, string: str, metadata: t.Optional[MetadataType] = None
     ) -> None:
+        """Write string."""
         raise NotImplementedError
 
     def write_string_array(
@@ -55,6 +63,7 @@ class OutputGroup(Logger):
         string_array: t.Optional[str],
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
+        """Write string array."""
         raise NotImplementedError
 
     def create_group(self, group_name: str) -> "OutputGroup":
@@ -74,7 +83,7 @@ class OutputGroup(Logger):
 
 
 class Output(OutputGroup):
-    """Base calss for handling outputs from Taurex3"""
+    """Base class for handling outputs from Taurex3."""
 
     def __init__(self, name: str) -> None:
         """Initialize output.

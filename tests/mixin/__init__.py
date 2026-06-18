@@ -1,1 +1,1 @@
-"""Tests for mixins."""
+"""Tests for mixin module."""

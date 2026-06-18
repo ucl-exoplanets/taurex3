@@ -1,16 +1,17 @@
+"""Module for opacity interpolation."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.util.math import (
-    intepr_bilin,
-    interp_exp_and_lin,
-    interp_exp_only,
-    interp_lin_only,
-)
+from taurex.util.math import intepr_bilin
+from taurex.util.math import interp_exp_and_lin
+from taurex.util.math import interp_exp_only
+from taurex.util.math import interp_lin_only
 
 from .opacity import Opacity
+
 
 InterpModeType = t.Literal["linear", "exp"]
 

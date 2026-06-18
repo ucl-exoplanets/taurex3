@@ -1,4 +1,5 @@
 """Spectra from Iraclis pickle data."""
+
 import pickle  # noqa: S403
 import typing as t
 
@@ -12,15 +13,13 @@ from .array import ArraySpectrum
 class IraclisSpectrum(ArraySpectrum):
     """Loads an observation from Iraclis pickle data."""
 
-    def __init__(self, filename: t.Optional[PathLike] = None):
-        """Initialize.
+    def __init__(self, filename: t.Optional[PathLike] = None) -> None:
+        """Initialize IraclisSpectrum.
 
         Parameters
         ----------
         filename:
             Filename of Iraclis pickle data, by default None
-
-
         """
         self._filename = filename
         try:
@@ -41,4 +40,5 @@ class IraclisSpectrum(ArraySpectrum):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for this class."""
         return ("iraclis",)

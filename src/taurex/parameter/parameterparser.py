@@ -333,6 +333,7 @@ class ParameterParser(Logger):
         return binning_class(wngrid), wngrid
 
     def generate_binning(self, observation=None):
+        """Generate binning."""
         config = self._raw_config.dict()
         if "Binning" in config:
             binning_config = config["Binning"]

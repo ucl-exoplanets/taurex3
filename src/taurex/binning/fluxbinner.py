@@ -1,4 +1,4 @@
-"""Module for the flux binner class"""
+"""Module for the flux binner class."""
 
 import typing as t
 
@@ -9,20 +9,20 @@ from taurex import OutputSize
 from taurex.util import compute_bin_edges
 
 from ..types import ModelOutputType
-from .binner import BinDownType, BinnedSpectrumType, Binner
+from .binner import BinDownType
+from .binner import BinnedSpectrumType
+from .binner import Binner
 
 
 class FluxBinner(Binner):
-    """
-    Bins to a wavenumber grid given by ``wngrid`` using a
-    more accurate method that takes into account the amount
-    of contribution from each native bin. This method also
-    handles cases where bins are not continuous and/or
-    overlapping.
+    """Bins to a wavenumber grid given by ``wngrid`` using a more accurate method.
+
+    This method takes into account the amount of contribution from each
+    native bin. This method also handles cases where bins are not
+    continuous and/or overlapping.
 
     Parameters
     ----------
-
     wngrid: :obj:`array`
         Wavenumber grid
 
@@ -39,8 +39,20 @@ class FluxBinner(Binner):
         wngrid: npt.NDArray[np.float64],
         wngrid_width: t.Optional[npt.NDArray[np.float64]] = None,
     ):
-        super().__init__()
+        """Initialize FluxBinner.
 
+        Parameters
+        ----------
+        wngrid : obj:`array`
+            Wavenumber grid
+        wngrid_width : obj:`array`, optional
+            Must have same shape as ``wngrid``
+            Full bin widths for each wavenumber grid point
+            given in ``wngrid``. If not provided then
+            this is automatically computed from ``wngrid``.
+
+        """
+        super().__init__()
         sort_grid = wngrid.argsort()
         self._wngrid = wngrid[sort_grid]
         self._wngrid_width = wngrid_width
@@ -100,7 +112,6 @@ class FluxBinner(Binner):
             Binned error if given else ``None``
 
         """
-
         sorted_input = wngrid.argsort()
         wngrid = wngrid[sorted_input]
         spectrum = spectrum[..., sorted_input]
@@ -138,7 +149,9 @@ class FluxBinner(Binner):
         save_start = 0
         save_stop = 0
 
-        for idx, res in enumerate(zip(new_spec_wn, new_spec_wn_min, new_spec_wn_max)):
+        for idx, res in enumerate(
+            zip(new_spec_wn, new_spec_wn_min, new_spec_wn_max, strict=True)
+        ):
             wn, wn_min, wn_max = res
             sum_spectrum = 0
             sum_noise = 0
@@ -192,6 +205,7 @@ class FluxBinner(Binner):
         model_output: ModelOutputType,
         output_size: t.Optional[OutputSize] = OutputSize.heavy,
     ) -> BinnedSpectrumType:
+        """Generate spectrum output."""
         output = super().generate_spectrum_output(model_output, output_size=output_size)
         output["binned_wngrid"] = self._wngrid
         output["binned_wlgrid"] = 10000 / self._wngrid

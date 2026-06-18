@@ -1,4 +1,5 @@
 """Pressure profile from array."""
+
 import typing as t
 
 import numpy as np
@@ -10,7 +11,7 @@ from .pressureprofile import PressureProfile
 
 
 class ArrayPressureProfile(PressureProfile):
-    """Pressure profile from an array for each layer"""
+    """Pressure profile from an array for each layer."""
 
     def __init__(
         self,

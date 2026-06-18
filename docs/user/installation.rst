@@ -50,6 +50,15 @@ Then, just do::
 
     pip install .
 
+For development work, you can use either Poetry or direct ``pip`` installs::
+
+    poetry install
+
+or::
+
+    python -m pip install -e .[test]
+    python -m pip install -e .[lint]
+
 To test for correct setup you can do::
 
     python -c "import taurex; print(taurex.__version__)"
@@ -62,6 +71,11 @@ in the command line::
 
 After that, head to :ref:`practical_examples` for a guided first run or the
 notebook walkthroughs.
+
+For contributor checks, use::
+
+    pytest
+    pre-commit run --all-files --hook-stage=manual
 
 To build documentation do::
 

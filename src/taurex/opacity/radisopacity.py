@@ -1,4 +1,5 @@
-"""Opacity module using RADIS code"""
+"""Opacity module using RADIS code."""
+
 import typing as t
 from functools import lru_cache
 
@@ -27,6 +28,7 @@ class RadisHITRANOpacity(Opacity):
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Tuple[str, float, float, int]]]:
+        """Discover Radis HITRAN opacity."""
         from taurex.cache import GlobalCache
 
         if GlobalCache()["enable_radis"] is not True:

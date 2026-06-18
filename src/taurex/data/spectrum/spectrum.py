@@ -6,7 +6,9 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.binning import Binner
-from taurex.core import DerivedType, Fittable, FittingType
+from taurex.core import DerivedType
+from taurex.core import Fittable
+from taurex.core import FittingType
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
@@ -27,7 +29,6 @@ class BaseSpectrum(Logger, Fittable, Writeable):
 
         Parameters
         ----------
-
         name : str
             Name to be used in logging
 
@@ -60,6 +61,7 @@ class BaseSpectrum(Logger, Fittable, Writeable):
     @property
     def rawData(self) -> t.Any:  # noqa: N802
         """Raw data of the observation.
+
         **Requires Implementation**
 
 
@@ -76,7 +78,6 @@ class BaseSpectrum(Logger, Fittable, Writeable):
     def wavelengthGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Wavelength grid of the spectrum in microns.
 
-
         **Requires Implementation**
 
 
@@ -92,7 +93,7 @@ class BaseSpectrum(Logger, Fittable, Writeable):
 
     @property
     def wavenumberGrid(self):  # noqa: N802
-        """Wavenumber grid in :math:`cm^{-1}`
+        """Wavenumber grid in :math:`cm^{-1}`.
 
         Returns
         -------
@@ -104,6 +105,7 @@ class BaseSpectrum(Logger, Fittable, Writeable):
     @property
     def binEdges(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Bin edges of the wavenumber grid.
+
         **Requires Implementation**
 
 
@@ -118,7 +120,8 @@ class BaseSpectrum(Logger, Fittable, Writeable):
 
     @property
     def binWidths(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Widths of each bin in the wavenumber grid
+        """Widths of each bin in the wavenumber grid.
+
         **Requires Implementation**
 
 
@@ -134,6 +137,7 @@ class BaseSpectrum(Logger, Fittable, Writeable):
     @property
     def errorBar(self) -> npt.NDArray[np.float64]:  # noqa: N802
         """Return error or uncertainty of the spectrum.
+
         **Requires Implementation**
 
 
@@ -148,12 +152,16 @@ class BaseSpectrum(Logger, Fittable, Writeable):
         raise NotImplementedError
 
     @property
-    def fittingParameters(self) -> t.Dict[str, FittingType]:  # noqa: N802
+    def fittingParameters(  # noqa: N802
+        self,
+    ) -> t.Dict[str, FittingType]:
         """Return fitting parameters."""
         return self.fitting_parameters()
 
     @property
-    def derivedParameters(self) -> t.Dict[str, DerivedType]:  # noqa: N802
+    def derivedParameters(  # noqa: N802
+        self,
+    ) -> t.Dict[str, DerivedType]:
         """Return derived parameters."""
         return self.derived_parameters()
 
@@ -169,4 +177,5 @@ class BaseSpectrum(Logger, Fittable, Writeable):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for this class."""
         raise NotImplementedError

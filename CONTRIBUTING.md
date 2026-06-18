@@ -63,11 +63,15 @@ $ poetry run taurex
 
 ## How to test the project
 
-Run the full test suite:
+Run the full CI-style suite:
 
 ```console
 $ nox
 ```
+
+This runs more than the unit tests. In particular, the default Nox sessions also
+include linting/formatting checks and other validation such as doctest-style
+checks.
 
 List the available Nox sessions:
 
@@ -80,6 +84,14 @@ For example, invoke the unit test suite like this:
 
 ```console
 $ nox --session=tests
+```
+
+If you prefer not to use Poetry for local unit tests, install the package and the
+test extra directly with pip:
+
+```console
+$ python -m pip install -e .[test]
+$ pytest
 ```
 
 Unit tests are located in the _tests_ directory,
@@ -103,6 +115,13 @@ To run linting and code formatting checks before committing your change, you can
 
 ```console
 $ nox --session=pre-commit -- install
+```
+
+You can also run the same checks directly without Nox:
+
+```console
+$ python -m pip install -e .[lint]
+$ pre-commit run --all-files --hook-stage=manual
 ```
 
 It is recommended to open an issue before starting work on anything.

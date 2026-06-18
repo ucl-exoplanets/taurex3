@@ -1,15 +1,18 @@
 """Handling of molecular absorption."""
+
 import math
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 
-from taurex.cache import GlobalCache, OpacityCache
+from taurex.cache import GlobalCache
+from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
 from taurex.model.model import ForwardModel
 
 from .contribution import Contribution
+
 
 contribute_ktau: t.Callable[
     [
@@ -193,7 +196,8 @@ class AbsorptionContribution(Contribution):
             Path length, by default None
         """
         if self._use_ktables:
-            # startK,endK,density_offset,sigma,density,path,weights,tau,ngrid,layer,ngauss
+            # startK,endK,density_offset,sigma,density,
+            # path,weights,tau,ngrid,layer,ngauss
 
             contribute_ktau(
                 start_horz_layer,
@@ -221,6 +225,7 @@ class AbsorptionContribution(Contribution):
             )
 
     def __init__(self) -> None:
+        """Initialize AbsorptionContribution."""
         super().__init__("Absorption")
         self._opacity_cache = OpacityCache()
 
@@ -276,12 +281,13 @@ class AbsorptionContribution(Contribution):
                 sigma_xsec[...] = 0.0
 
             for idx_layer, tp in enumerate(
-                zip(model.temperatureProfile, model.pressureProfile)
+                zip(model.temperatureProfile, model.pressureProfile, strict=True)
             ):
                 self.debug("Got index,tp %s %s", idx_layer, tp)
 
                 temperature, pressure = tp
-                # print(gas,self._opacity_cache[gas].opacity(temperature,pressure,wngrid),gas_mix[idx_layer])
+                # print(gas,self._opacity_cache[gas].opacity(
+                #     temperature,pressure,wngrid),gas_mix[idx_layer])
                 sigma_xsec[idx_layer] += (
                     xsec.opacity(temperature, pressure, wngrid) * gas_mix[idx_layer]
                 )
@@ -294,6 +300,7 @@ class AbsorptionContribution(Contribution):
 
     def prepare(self, model: ForwardModel, wngrid: npt.NDArray[np.float64]) -> None:
         """Used to prepare the contribution for the calculation.
+
         Called before the forward model performs the main optical depth
         calculation. Default behaviour is to loop through :func:`prepare_each`
         and sum all results into a single cross-section.
@@ -306,7 +313,6 @@ class AbsorptionContribution(Contribution):
         wngrid: :obj:`array`
             Wavenumber grid
         """
-
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
@@ -324,7 +330,15 @@ class AbsorptionContribution(Contribution):
         self.info("Done")
 
     def finalize(self, model: ForwardModel) -> None:
-        """Finalize the contribution."""
+        """Finalize the contribution.
+
+        .. warning::
+            Not yet implemented.
+
+        Raises
+        ------
+        NotImplementedError
+        """
         raise NotImplementedError
 
     @property

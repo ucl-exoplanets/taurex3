@@ -1,7 +1,8 @@
-"""The main taurex program"""
+"""The main taurex program."""
 
 
 def parse_keywords(keywords):
+    """Parse keywords to display available components."""
     import tabulate
 
     from taurex.parameter.classfactory import ClassFactory
@@ -15,13 +16,18 @@ def parse_keywords(keywords):
         print("-----------------------------------------------")
         print("")
         table = [
-            (f"[[{c.__name__}]]", c.__module__.split(".")[0].split("_")[-1])
+            (
+                f"[[{c.__name__}]]",
+                c.__module__.split(".")[0].split("_")[-1],
+            )
             for c in cf.contributionKlasses
             if hasattr(c, "input_keywords")
         ]
         print(
             tabulate.tabulate(
-                table, headers=["Header", "Source"], tablefmt="fancy_grid"
+                table,
+                headers=["Header", "Source"],
+                tablefmt="fancy_grid",
             )
         )
 
@@ -89,7 +95,9 @@ def parse_keywords(keywords):
 
         print(
             tabulate.tabulate(
-                table, headers=["gas_type", "Class", "Source"], tablefmt="fancy_grid"
+                table,
+                headers=["gas_type", "Class", "Source"],
+                tablefmt="fancy_grid",
             )
         )
         print("\n")
@@ -110,7 +118,9 @@ def parse_keywords(keywords):
         ]
         print(
             tabulate.tabulate(
-                table, headers=["optimizer", "Class", "Source"], tablefmt="fancy_grid"
+                table,
+                headers=["optimizer", "Class", "Source"],
+                tablefmt="fancy_grid",
             )
         )
         print("\n")
@@ -121,13 +131,18 @@ def parse_keywords(keywords):
         print("-----------------------------------------------")
         print("")
         table = [
-            (f"{c.__name__}", c.__module__.split(".")[0].split("_")[-1])
+            (
+                f"{c.__name__}",
+                c.__module__.split(".")[0].split("_")[-1],
+            )
             for c in cf.priorKlasses
             if hasattr(c, "input_keywords")
         ]
         print(
             tabulate.tabulate(
-                table, headers=["prior", "Class", "Source"], tablefmt="fancy_grid"
+                table,
+                headers=["prior", "Class", "Source"],
+                tablefmt="fancy_grid",
             )
         )
         print("\n")
@@ -148,7 +163,9 @@ def parse_keywords(keywords):
         ]
         print(
             tabulate.tabulate(
-                table, headers=["model_type", "Class", "Source"], tablefmt="fancy_grid"
+                table,
+                headers=["model_type", "Class", "Source"],
+                tablefmt="fancy_grid",
             )
         )
         print("\n")
@@ -177,6 +194,7 @@ def parse_keywords(keywords):
 
 
 def show_parameters(model):
+    """Show available parameters."""
     import tabulate
 
     print("")
@@ -202,7 +220,7 @@ def show_parameters(model):
             short_desc.append(s)
 
     output = tabulate.tabulate(
-        zip(keywords, short_desc),
+        zip(keywords, short_desc, strict=True),
         headers=["Param Name", "Short Desc"],
         tablefmt="fancy_grid",
     )
@@ -234,7 +252,7 @@ def show_parameters(model):
             short_desc.append(s)
 
     output = tabulate.tabulate(
-        zip(keywords, short_desc),
+        zip(keywords, short_desc, strict=True),
         headers=["Param Name", "Short Desc"],
         tablefmt="fancy_grid",
     )
@@ -243,6 +261,7 @@ def show_parameters(model):
 
 
 def show_plugins():
+    """Show and discover plugins."""
     import logging
 
     from taurex.log import setLogLevel
@@ -267,8 +286,10 @@ def show_plugins():
 
 
 def output_citations(model, instrument, optimizer):  # noqa: C901
+    """Output citations."""
     from taurex.cache import OpacityCache
-    from taurex.mpi import barrier, get_rank
+    from taurex.mpi import barrier
+    from taurex.mpi import get_rank
 
     barrier()
     bib_tex = None
@@ -286,7 +307,8 @@ def output_citations(model, instrument, optimizer):  # noqa: C901
         print("\n")
         print("TauREx-Related")
         print("--------------\n")
-        from taurex._citation import __citations__, taurex_citation
+        from taurex._citation import __citations__  # noqa: F811
+        from taurex._citation import taurex_citation
 
         citation_string += __citations__
         all_citations.extend(taurex_citation.citations())
@@ -337,8 +359,8 @@ def output_citations(model, instrument, optimizer):  # noqa: C901
         if missing_citations:
             print("Missing Opacity Citations")
             print("------------------------\n")
-            print("These opacities do not have citation information, please")
-            print("determine their appropriate publications and cite them \n")
+            print("These opacities do not have citation " "information, please")
+            print("determine their appropriate publications " "and cite them \n")
             print(missing_citations)
             print("\n")
         from taurex.core import to_bibtex
@@ -351,6 +373,7 @@ def output_citations(model, instrument, optimizer):  # noqa: C901
 
 
 def only_bibtex(filename, pp):
+    """Generate and write bibtex."""
     model = pp.generate_appropriate_model()
     instrument = pp.generate_instrument()[0]
     optimizer = pp.generate_optimizer()
@@ -362,6 +385,7 @@ def only_bibtex(filename, pp):
 
 
 def main():  # noqa: C901
+    """Main taurex program."""
     import argparse
     import datetime
     import logging
@@ -369,7 +393,8 @@ def main():  # noqa: C901
     import numpy as np
 
     from taurex.log import setLogLevel
-    from taurex.log.logger import TauRexHandler, root_logger
+    from taurex.log.logger import TauRexHandler
+    from taurex.log.logger import root_logger
     from taurex.mpi import get_rank
     from taurex.output.hdf5 import HDF5Output
     from taurex.parameter import ParameterParser
@@ -389,7 +414,11 @@ def main():  # noqa: C901
     parser = argparse.ArgumentParser(description=f"TauREx {version}")
 
     parser.add_argument(
-        "-i", "--input", dest="input_file", type=str, help="Input par file to pass"
+        "-i",
+        "--input",
+        dest="input_file",
+        type=str,
+        help="Input par file to pass",
     )
 
     parser.add_argument(
@@ -453,9 +482,19 @@ def main():  # noqa: C901
         action="store_true",
     )
 
-    parser.add_argument("-o", "--output_file", dest="output_file", type=str)
+    parser.add_argument(
+        "-o",
+        "--output_file",
+        dest="output_file",
+        type=str,
+    )
 
-    parser.add_argument("-S", "--save-spectrum", dest="save_spectrum", type=str)
+    parser.add_argument(
+        "-S",
+        "--save-spectrum",
+        dest="save_spectrum",
+        type=str,
+    )
 
     parser.add_argument(
         "-v",
@@ -483,13 +522,16 @@ def main():  # noqa: C901
     )
 
     parser.add_argument(
-        "--bibtex", dest="bibtex", type=str, help="Output bibliography .bib to filepath"
+        "--bibtex",
+        dest="bibtex",
+        type=str,
+        help="Output bibliography .bib to filepath",
     )
 
     parser.add_argument(
         "--only-bib",
         dest="no_run",
-        help="Do not run anything, only store bibtex (must have --bibtex)",
+        help="Do not run anything, only store bibtex " "(must have --bibtex)",
         default=False,
         action="store_true",
     )
@@ -527,7 +569,10 @@ def main():  # noqa: C901
 
     root_logger.info("TauREx %s", version)
 
-    root_logger.info("TauREx PROGRAM START AT %s", datetime.datetime.now())
+    root_logger.info(
+        "TauREx PROGRAM START AT %s",
+        datetime.datetime.now(),
+    )
 
     # Parse the input file
     pp = ParameterParser()
@@ -557,7 +602,7 @@ def main():  # noqa: C901
     wngrid = None
 
     if binning == "observed" and observation is None:
-        logging.critical("Binning selected from Observation yet None provided")
+        logging.critical("Binning selected from Observation yet " "None provided")
         quit()
 
     if binning is None:
@@ -585,14 +630,16 @@ def main():  # noqa: C901
 
     if observation == "self" and instrument is None:
         logging.getLogger("taurex").critical(
-            "Instrument nust be specified when using self option"
+            "Instrument nust be specified when using " "self option"
         )
         raise ValueError("No instruemnt specified for self option")
 
     inst_result = None
     if instrument is not None:
         inst_result = instrument.model_noise(
-            model, model_res=model.model(), num_observations=num_obs
+            model,
+            model_res=model.model(),
+            num_observations=num_obs,
         )
 
     # Observation on self
@@ -600,13 +647,25 @@ def main():  # noqa: C901
         from taurex.data.spectrum import ArraySpectrum
         from taurex.util import wnwidth_to_wlwidth
 
-        inst_wngrid, inst_spectrum, inst_noise, inst_width = inst_result
+        (
+            inst_wngrid,
+            inst_spectrum,
+            inst_noise,
+            inst_width,
+        ) = inst_result
 
         inst_wlgrid = 10000 / inst_wngrid
 
         inst_wlwidth = wnwidth_to_wlwidth(inst_wngrid, inst_width)
         observation = ArraySpectrum(
-            np.vstack([inst_wlgrid, inst_spectrum, inst_noise, inst_wlwidth]).T
+            np.vstack(
+                [
+                    inst_wlgrid,
+                    inst_spectrum,
+                    inst_noise,
+                    inst_wlwidth,
+                ]
+            ).T
         )
         binning = observation.create_binner()
 
@@ -639,7 +698,10 @@ def main():  # noqa: C901
 
         end_time = time.time()
 
-        root_logger.info("Total Retrieval finish in %s seconds", end_time - start_time)
+        root_logger.info(
+            "Total Retrieval finish in %s seconds",
+            end_time - start_time,
+        )
 
         for _, optimized, _, _ in optimizer.get_solution():
             optimizer.update_model(optimized)
@@ -649,7 +711,8 @@ def main():  # noqa: C901
 
     if args.save_spectrum is not None:
         # with open(args.save_spectrum, 'w') as f:
-        from taurex.util import compute_bin_edges, wnwidth_to_wlwidth
+        from taurex.util import compute_bin_edges
+        from taurex.util import wnwidth_to_wlwidth
 
         save_wnwidth = compute_bin_edges(wngrid)[1]
         save_wl = 10000 / wngrid
@@ -657,7 +720,12 @@ def main():  # noqa: C901
         save_model = binning.bin_model(result)[1]
         save_error = np.zeros_like(save_wl)
         if inst_result is not None:
-            inst_wngrid, inst_spectrum, inst_noise, inst_width = inst_result
+            (
+                inst_wngrid,
+                inst_spectrum,
+                inst_noise,
+                inst_width,
+            ) = inst_result
 
             save_model = inst_spectrum
             save_wl = 10000 / inst_wngrid
@@ -668,7 +736,14 @@ def main():  # noqa: C901
 
         np.savetxt(
             args.save_spectrum,
-            np.vstack((save_wl, save_model, save_error, save_wlwidth)).T,
+            np.vstack(
+                (
+                    save_wl,
+                    save_model,
+                    save_error,
+                    save_wlwidth,
+                )
+            ).T,
         )
 
     if args.output_file:
@@ -691,7 +766,9 @@ def main():  # noqa: C901
 
             try:
                 spectrum["Contributions"] = store_contributions(
-                    binning, model, output_size=output_size - 3
+                    binning,
+                    model,
+                    output_size=output_size - 3,
                 )
             except Exception:  # noqa: S110
                 pass
@@ -744,7 +821,10 @@ def main():  # noqa: C901
 
             if observation is not None:
                 if is_lightcurve:
-                    ax.plot(observation.spectrum.flatten(), label="observation")
+                    ax.plot(
+                        observation.spectrum.flatten(),
+                        label="observation",
+                    )
                 else:
                     ax.errorbar(
                         observation.wavelengthGrid,
@@ -760,7 +840,12 @@ def main():  # noqa: C901
                 if inst_result is not None:
                     from taurex.util import wnwidth_to_wlwidth
 
-                    inst_wngrid, inst_spectrum, inst_noise, inst_width = inst_result
+                    (
+                        inst_wngrid,
+                        inst_spectrum,
+                        inst_noise,
+                        inst_width,
+                    ) = inst_result
 
                     inst_wlgrid = 10000 / inst_wngrid
 
@@ -776,26 +861,40 @@ def main():  # noqa: C901
                     )
 
                 else:
-                    ax.plot(wlgrid, binning.bin_model(result)[1], label="forward model")
+                    ax.plot(
+                        wlgrid,
+                        binning.bin_model(result)[1],
+                        label="forward model",
+                    )
 
                 ax.set_xscale("log")
 
             if args.contrib:
                 native_grid, contrib_result = model.model_contrib(wngrid=wngrid)
 
-                for contrib_name, contrib in contrib_result.items():
+                for (
+                    contrib_name,
+                    contrib,
+                ) in contrib_result.items():
                     flux, tau, extras = contrib
 
                     binned = binning.bindown(native_grid, flux)
                     if is_lightcurve:
                         ax.plot(binned[1], label=contrib_name)
                     else:
-                        ax.plot(wlgrid, binned[1], label=contrib_name)
+                        ax.plot(
+                            wlgrid,
+                            binned[1],
+                            label=contrib_name,
+                        )
 
             if args.full_contrib:
                 native_grid, contrib_result = model.model_full_contrib(wngrid=wngrid)
 
-                for contrib_name, contrib in contrib_result.items():
+                for (
+                    contrib_name,
+                    contrib,
+                ) in contrib_result.items():
                     for name, flux, _, _ in contrib:
                         label = f"{contrib_name} - {name}"
 
@@ -803,7 +902,11 @@ def main():  # noqa: C901
                         if is_lightcurve:
                             ax.plot(binned[1], label=label)
                         else:
-                            ax.plot(wlgrid, binned[1], label=label)
+                            ax.plot(
+                                wlgrid,
+                                binned[1],
+                                label=label,
+                            )
 
             plt.legend()
             plt.show()

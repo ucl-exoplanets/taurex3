@@ -1,4 +1,5 @@
 """Test main contribution function."""
+
 import numpy as np
 import pytest
 
@@ -40,10 +41,28 @@ def test_contribute_consistent():
     for x in range(100):
         path = np.random.rand(100 - x)
         contrib.contribute_tau_numpy(
-            0, 100 - x, x, sigma, density, path, 100, 200, x, tau1
+            0,
+            100 - x,
+            x,
+            sigma,
+            density,
+            path,
+            100,
+            200,
+            x,
+            tau1,
         )
         contrib.contribute_tau_numba(
-            0, 100 - x, x, sigma, density, path, 100, 200, x, tau2
+            0,
+            100 - x,
+            x,
+            sigma,
+            density,
+            path,
+            100,
+            200,
+            x,
+            tau2,
         )
 
     np.testing.assert_array_equal(tau1, tau2)
@@ -51,16 +70,12 @@ def test_contribute_consistent():
 
 def test_leemie_no_break():
     """Tests if LeeMie breaks the optimizer."""
-
+    from taurex.contributions import AbsorptionContribution
+    from taurex.contributions import LeeMieContribution
     from taurex.model import TransmissionModel
-    from taurex.contributions import LeeMieContribution, AbsorptionContribution
-    from taurex.optimizer import NestleOptimizer
+
     tm = TransmissionModel(nlayers=100)
     tm.add_contribution(AbsorptionContribution())
     tm.add_contribution(LeeMieContribution())
-    #tm.model()
-    #opt = NestleOptimizer()
-
-    #opt.set_model(tm)
 
     assert True

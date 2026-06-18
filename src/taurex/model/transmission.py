@@ -1,4 +1,5 @@
 """Transit forward model."""
+
 import typing as t
 
 import numpy as np
@@ -11,6 +12,7 @@ from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 
 from .simplemodel import OneDForwardModel
+
 
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution

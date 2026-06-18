@@ -1,9 +1,12 @@
 """Handles citation information for Taurex."""
+
 import typing as t
 from functools import lru_cache
-from urllib.error import HTTPError, URLError
+from urllib.error import HTTPError
+from urllib.error import URLError
 
 from taurex.log.logger import setup_log
+
 
 _log = setup_log(__name__)
 

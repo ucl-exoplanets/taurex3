@@ -19,7 +19,7 @@ wavelength_res = 0.6,4.1,100
 [Instrument]
 instrument = custom
 python_file = ../library/example_inst.py
-noise_scale = 1e-4 
+noise_scale = 1e-4
 
 [Observation]
 taurex_spectrum = self
@@ -33,4 +33,3 @@ num_live_points = 50
 [Fitting]
 planet_radius:fit = True
 planet_radius:factor = 0.8, 2.0
-

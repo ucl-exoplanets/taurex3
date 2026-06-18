@@ -15,11 +15,13 @@ import numpy.typing as npt
 from taurex.binning.lightcurvebinner import LightcurveBinner
 from taurex.chemistry import Chemistry
 from taurex.data.fittable import fitparam
-from taurex.model import ForwardModel, OneDForwardModel
+from taurex.model import ForwardModel
+from taurex.model import OneDForwardModel
 from taurex.pressure import PressureProfile
 from taurex.types import PathLike
 
-from .lightcurvedata import InstrumentType, LightCurveData
+from .lightcurvedata import InstrumentType
+from .lightcurvedata import LightCurveData
 
 
 class LightCurveModel(ForwardModel):
@@ -332,7 +334,8 @@ class LightCurveModel(ForwardModel):
         """Create model light-curve and lightcurve chain."""
         import pylightcurve as plc
 
-        from taurex.model import EmissionModel, TransmissionModel
+        from taurex.model import EmissionModel
+        from taurex.model import TransmissionModel
 
         result = []
         sqrt_model = np.sqrt(model)

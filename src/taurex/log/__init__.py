@@ -6,6 +6,7 @@ from .logger import Loggable
 from .logger import Loggable as Logger
 from .logger import setup_log
 
+
 last_log = logging.INFO
 
 

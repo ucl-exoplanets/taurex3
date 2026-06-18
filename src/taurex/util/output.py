@@ -1,47 +1,54 @@
+"""Module for handling output of Taurex data."""
 
 import os
 
-import numpy as np
 import h5py
+import numpy as np
+
 from taurex import OutputSize
-def store_taurex_results(output,model,native_grid,absp,tau,contributions,observed=None,optimizer=None):
 
 
-    o = output.create_group('Output')
-
+def store_taurex_results(
+    output,
+    model,
+    native_grid,
+    absp,
+    tau,
+    contributions,
+    observed=None,
+    optimizer=None,
+):
+    """Store Taurex results."""
+    o = output.create_group("Output")
 
     if observed:
-        obs = o.create_group('Observed')
+        obs = o.create_group("Observed")
         observed.write(obs)
-
-
-    
 
     if optimizer:
 
-        p = output.create_group('Parameters')
+        p = output.create_group("Parameters")
         store_planet(p, model)
         store_star(p, model)
         store_temperature(p, model)
         store_pressure(p, model)
         store_chemistry(p, model)
 
-        opt = output.create_group('Optimizer')
+        opt = output.create_group("Optimizer")
         store_optimizer(opt, model, optimizer)
 
-        #pr = o.create_group('Profiles')
-        #store_profiles(pr, model)
+        # pr = o.create_group('Profiles')
+        # store_profiles(pr, model)
 
         store_fit(o, model, optimizer)
 
-
     else:
-        fm = o.create_group('Forward')
-        sp = fm.create_group('Spectrum')
-        co = fm.create_group('Contributions')
-        pr = fm.create_group('Profiles')
+        fm = o.create_group("Forward")
+        sp = fm.create_group("Spectrum")
+        co = fm.create_group("Contributions")
+        pr = fm.create_group("Profiles")
 
-        p = output.create_group('Parameters')
+        p = output.create_group("Parameters")
 
         store_profiles(pr, model)
         store_planet(p, model)
@@ -56,260 +63,343 @@ def store_taurex_results(output,model,native_grid,absp,tau,contributions,observe
     optimizer.add_data_from_solutions(output)
 
 
-def store_profiles(output,model):
-    output.write_array('density_profile',model.densityProfile)
-    output.write_array('scaleheight_profile',model.scaleheight_profile)
-    output.write_array('altitude_profile',model.altitudeProfile)
-    output.write_array('gravity_profile',model.gravity_profile)
-    output.write_array('pressure_profile', model.pressure.profile)
-    output.write_array('temp_profile', model.temperatureProfile)
-    #output.write_array('temp_profile', model._temperature_profile.profile)
+def store_profiles(output, model):
+    """Store atmospheric profiles."""
+    output.write_array("density_profile", model.densityProfile)
+    output.write_array(
+        "scaleheight_profile",
+        model.scaleheight_profile,
+    )
+    output.write_array("altitude_profile", model.altitudeProfile)
+    output.write_array("gravity_profile", model.gravity_profile)
+    output.write_array("pressure_profile", model.pressure.profile)
+    output.write_array("temp_profile", model.temperatureProfile)
+    # output.write_array(
+    #     'temp_profile', model._temperature_profile.profile
+    # )
 
-    output.write_array('active_mix_profile', model.chemistry.activeGasMixProfile)
-    output.write_array('inactive_mix_profile', model.chemistry.inactiveGasMixProfile)
+    output.write_array(
+        "active_mix_profile",
+        model.chemistry.activeGasMixProfile,
+    )
+    output.write_array(
+        "inactive_mix_profile",
+        model.chemistry.inactiveGasMixProfile,
+    )
 
-def store_fwspectrum(output,native_grid,absp,tau):
 
-    output.write_array('native_wngrid', native_grid)
-    output.write_array('native_wlgrid', 10000/native_grid)
-    output.write_array('native_spectrum', absp)
-    output.write_array('native_tau', tau)
+def store_fwspectrum(output, native_grid, absp, tau):
+    """Store forward spectrum."""
+    output.write_array("native_wngrid", native_grid)
+    output.write_array("native_wlgrid", 10000 / native_grid)
+    output.write_array("native_spectrum", absp)
+    output.write_array("native_tau", tau)
 
-def store_fwcontrib(output,contributions):
+
+def store_fwcontrib(output, contributions):
+    """Store forward contributions."""
     for name, value in contributions:
         output.write_array(name, value)
 
 
-def store_optimizer(output,model,opt):
+def store_optimizer(output, model, opt):
+    """Store optimizer."""
     opt.write_optimizer(output)
 
 
 def store_fit(output, model, opt):
+    """Store fit."""
     opt.write_fit(output)
 
 
-def store_planet(output,model):
+def store_planet(output, model):
+    """Store planet."""
     model._planet.write(output)
-def store_star(output,model):
+
+
+def store_star(output, model):
+    """Store star."""
     model._star.write(output)
 
-def store_temperature(output,model):
+
+def store_temperature(output, model):
+    """Store temperature."""
     model._temperature_profile.write(output)
 
-def store_pressure(output,model):
+
+def store_pressure(output, model):
+    """Store pressure."""
     model._pressure_profile.write(output)
 
-def store_chemistry(output,model):
+
+def store_chemistry(output, model):
+    """Store chemistry."""
     model._chemistry.write(output)
 
 
-
 def generate_profile_dict(model):
+    """Generate profile dictionary."""
     out = {}
-    out['temp_profile']=model.temperatureProfile
-    out['active_mix_profile']=model.chemistry.activeGasMixProfile
-    out['inactive_mix_profile']=model.chemistry.inactiveGasMixProfile
-    out['density_profile']=model.densityProfile
-    out['scaleheight_profile']=model.scaleheight_profile
-    out['altitude_profile']=model.altitudeProfile
-    out['gravity_profile']=model.gravity_profile
-    out['pressure_profile']=model.pressureProfile
+    out["temp_profile"] = model.temperatureProfile
+    out["active_mix_profile"] = model.chemistry.activeGasMixProfile
+    out["inactive_mix_profile"] = model.chemistry.inactiveGasMixProfile
+    out["density_profile"] = model.densityProfile
+    out["scaleheight_profile"] = model.scaleheight_profile
+    out["altitude_profile"] = model.altitudeProfile
+    out["gravity_profile"] = model.gravity_profile
+    out["pressure_profile"] = model.pressureProfile
     if model.chemistry.hasCondensates:
-        out['condensate_profile'] = model.chemistry.condensateMixProfile
+        out["condensate_profile"] = model.chemistry.condensateMixProfile
     return out
 
-def generate_spectra_dict(result, contrib_result, native_grid, bin_grid=None):
+
+def generate_spectra_dict(  # noqa: C901
+    result, contrib_result, native_grid, bin_grid=None
+):
+    """Generate spectra dictionary."""
     from taurex.util import bindown
+
     out = {}
 
-    
-
-    #Store model output
-    #out['binned_model'] = result[0] 
-    out['native_spectrum'] = result[1]
-    out['native_tau'] = result[2]
-    out['native_wngrid']= native_grid
-    out['native_wlgrid']= 10000/native_grid
+    # Store model output
+    # out['binned_model'] = result[0]
+    out["native_spectrum"] = result[1]
+    out["native_tau"] = result[2]
+    out["native_wngrid"] = native_grid
+    out["native_wlgrid"] = 10000 / native_grid
 
     if bin_grid is not None:
-        out['bin_wngrid']= bin_grid
-        out['bin_wlgrid']= 10000 / bin_grid
-        out['bin_spectrum']= result[0]
+        out["bin_wngrid"] = bin_grid
+        out["bin_wlgrid"] = 10000 / bin_grid
+        out["bin_spectrum"] = result[0]
 
         if native_grid.shape[0] != result[2].shape[1]:
-            native_grid = native_grid[(native_grid >= bin_grid.min()) & (native_grid <= bin_grid.max())]
-        
-        out['bin_tau']= bindown(native_grid,result[2],bin_grid)
+            native_grid = native_grid[
+                (native_grid >= bin_grid.min()) & (native_grid <= bin_grid.max())
+            ]
 
-
-
+        out["bin_tau"] = bindown(native_grid, result[2], bin_grid)
 
     contributions = {}
-    
+
     main_contrib = result[-1]
 
     if contrib_result is not None:
-        
-        for contrib_name,contrib_list in contrib_result.items(): #Loop through each contribtuion
-            
+
+        for (
+            contrib_name,
+            contrib_list,
+        ) in contrib_result.items():  # Loop through each contribtuion
+
             contributions[contrib_name] = {}
 
-            for k,v in main_contrib[contrib_name].items():
+            for k, v in main_contrib[contrib_name].items():
                 contributions[contrib_name][k] = v
-            
-            
-            for c in contrib_list: #Loop through its components
+
+            for c in contrib_list:  # Loop through its components
                 name = c[0]
                 native = None
                 binned = None
-                tau = None
                 extra = None
-                #Cause I had no forsight
+                # Cause I had no forsight
                 if len(c) == 3:
 
                     native = c[1]
-                    tau = c[2]
-                elif len(c)>3:
-                    if isinstance(c[3],tuple):
+
+                elif len(c) > 3:
+                    if isinstance(c[3], tuple):
                         native = c[1]
-                        tau=c[2]
                         extra = c[3:]
                     else:
                         binned = c[1]
-                        native=c[2]
-                        tau=c[3]
-                        extra=c[4:]
-                
-                #tau = c[3] # necessary?
+                        native = c[2]
+                        extra = c[4:]
+
                 contrib_comp = {}
                 if binned is not None:
-                    contrib_comp['binned'] = binned
-                contrib_comp['native'] = native
-                #contrib_comp['tau'] = tau
+                    contrib_comp["binned"] = binned
+                contrib_comp["native"] = native
+                # contrib_comp['tau'] = tau
                 if extra is not None:
-                    for k,v in extra:
+                    for k, v in extra:
                         contrib_comp[k] = v
 
                 contributions[contrib_name][name] = contrib_comp
 
-    out['Contributions'] = contributions
+    out["Contributions"] = contributions
     return out
 
 
 def plot_taurex_results_from_hdf5(arg_output):
+    """Plot Taurex results from HDF5."""
+    file = h5py.File(arg_output, "r")
 
-    file = h5py.File(arg_output,'r')
-
-
-
-    solution_name = file['Output']['solutions']
-    spectrum = np.zeros((len(solution_name['solution0']['Spectra']['bin_wngrid']),len(solution_name)*2))
+    solution_name = file["Output"]["solutions"]
+    spectrum = np.zeros(
+        (
+            len(solution_name["solution0"]["Spectra"]["bin_wngrid"]),
+            len(solution_name) * 2,
+        )
+    )
 
     for s in range(len(solution_name)):
-        spectrum[:,2 * s] = 10000/solution_name['solution{}'.format(s)]['Spectra']['bin_wngrid'][:]
-        spectrum[:,2 * s + 1] = solution_name['solution{}'.format(s)]['Spectra']['bin_spectrum'][:]
+        spectrum[:, 2 * s] = (
+            10000 / solution_name[f"solution{s}"]["Spectra"]["bin_wngrid"][:]
+        )
+        spectrum[:, 2 * s + 1] = solution_name[f"solution{s}"]["Spectra"][
+            "bin_spectrum"
+        ][:]
 
-    observed = np.zeros((len(file['Output']['Observed']['spectrum']), 4))
-    observed[:,0] = file['Output']['Observed']['wlgrid'][:]
-    observed[:, 1]= file['Output']['Observed']['spectrum'][:]
-    observed[:, 2]= file['Output']['Observed']['errorbars'][:]
-    observed[:, 3]= file['Output']['Observed']['binwidths'][:]
+    observed = np.zeros((len(file["Output"]["Observed"]["spectrum"]), 4))
+    observed[:, 0] = file["Output"]["Observed"]["wlgrid"][:]
+    observed[:, 1] = file["Output"]["Observed"]["spectrum"][:]
+    observed[:, 2] = file["Output"]["Observed"]["errorbars"][:]
+    observed[:, 3] = file["Output"]["Observed"]["binwidths"][:]
 
-    plot_spectrum(spectrum, os.path.splitext(arg_output)[0] +'_spectrum.pdf', observed=observed)
+    plot_spectrum(
+        spectrum,
+        os.path.splitext(arg_output)[0] + "_spectrum.pdf",
+        observed=observed,
+    )
 
-def plot_spectrum(spectrum, arg_output, observed = None):
+
+def plot_spectrum(spectrum, arg_output, observed=None):
+    """Plot spectrum."""
     import matplotlib.pyplot as plt
     from matplotlib import cm
-    cmap = cm.get_cmap('Set1')
 
+    cmap = cm.get_cmap("Set1")
 
     plt.figure()
-    for i in range(int(len(spectrum[0,:])/2)):
-        plt.plot(spectrum[:, 2*i], spectrum[:, 2*i+1], label="Fit", color=cmap(float(i / 12.)))
+    for i in range(int(len(spectrum[0, :]) / 2)):
+        plt.plot(
+            spectrum[:, 2 * i],
+            spectrum[:, 2 * i + 1],
+            label="Fit",
+            color=cmap(float(i / 12.0)),
+        )
 
-    plt.plot(observed[:, 0], observed[:, 1], '.', color='blue', alpha=0.6, label="Observed")
-    plt.plot([observed[:, 0], observed[:, 0]],
-             [observed[:, 1] - observed[:, 2], observed[:, 1] + observed[:, 2]], '-',
-             color='blue', alpha=0.6)
-    plt.plot([observed[:, 0] - observed[:, 3] / 2, observed[:, 0] + observed[:, 3] / 2],
-             [observed[:, 1], observed[:, 1]], '-', color='blue', alpha=0.6)
+    plt.plot(
+        observed[:, 0],
+        observed[:, 1],
+        ".",
+        color="blue",
+        alpha=0.6,
+        label="Observed",
+    )
+    plt.plot(
+        [observed[:, 0], observed[:, 0]],
+        [
+            observed[:, 1] - observed[:, 2],
+            observed[:, 1] + observed[:, 2],
+        ],
+        "-",
+        color="blue",
+        alpha=0.6,
+    )
+    plt.plot(
+        [
+            observed[:, 0] - observed[:, 3] / 2,
+            observed[:, 0] + observed[:, 3] / 2,
+        ],
+        [observed[:, 1], observed[:, 1]],
+        "-",
+        color="blue",
+        alpha=0.6,
+    )
 
-    plt.gca().set_xscale('log')
-    plt.xlabel(r'Wavelength ($\mu$m)')
-    plt.ylabel('$(R_p / R_s)^2$')
+    plt.gca().set_xscale("log")
+    plt.xlabel(r"Wavelength ($\mu$m)")
+    plt.ylabel("$(R_p / R_s)^2$")
     plt.xticks([0.5, 1, 2, 5, 10], [0.5, 1, 2, 5, 10])
-    plt.legend(loc='upper left')
+    plt.legend(loc="upper left")
     plt.savefig(os.path.join(arg_output), dpi=1000)
 
 
-def store_contributions(binner,model,output_size=OutputSize.heavy):
-
-    native_grid,contribs = model.model_contrib()
-    native_grid,contribs_component = model.model_full_contrib()
+def store_contributions(binner, model, output_size=OutputSize.heavy):  # noqa: C901
+    """Store contributions."""
+    native_grid, contribs = model.model_contrib()
+    (
+        native_grid,
+        contribs_component,
+    ) = model.model_full_contrib()
 
     contribution_dict = {}
 
-    for contrib_name,main_contribution in contribs.items():
-        
-        flux,tau,extras = main_contribution
-        
-        this_contrib_dict = binner.generate_spectrum_output((native_grid,flux,tau,extras),output_size=output_size)
+    for (
+        contrib_name,
+        main_contribution,
+    ) in contribs.items():
+
+        flux, tau, extras = main_contribution
+
+        this_contrib_dict = binner.generate_spectrum_output(
+            (native_grid, flux, tau, extras),
+            output_size=output_size,
+        )
 
         try:
-            del this_contrib_dict['native_wngrid']
-            del this_contrib_dict['native_wnwidth']
-        except KeyError:
-            pass
-        
-        try:
-            del this_contrib_dict['native_wlgrid']
-            del this_contrib_dict['native_wlwidth']
-        except KeyError:
-            pass
-
-        try:
-            del this_contrib_dict['binned_wngrid']
-            del this_contrib_dict['binned_wnwidth']
+            del this_contrib_dict["native_wngrid"]
+            del this_contrib_dict["native_wnwidth"]
         except KeyError:
             pass
 
         try:
-            del this_contrib_dict['binned_wlgrid']
-            del this_contrib_dict['binned_wlwidth']
+            del this_contrib_dict["native_wlgrid"]
+            del this_contrib_dict["native_wlwidth"]
         except KeyError:
             pass
 
-        for name,flux,tau,extras in contribs_component[contrib_name]:
-            
+        try:
+            del this_contrib_dict["binned_wngrid"]
+            del this_contrib_dict["binned_wnwidth"]
+        except KeyError:
+            pass
 
-            component_contrib_dict = binner.generate_spectrum_output((native_grid,flux,tau,extras),output_size=output_size)
+        try:
+            del this_contrib_dict["binned_wlgrid"]
+            del this_contrib_dict["binned_wlwidth"]
+        except KeyError:
+            pass
+
+        for (
+            name,
+            flux,
+            tau,
+            extras,
+        ) in contribs_component[contrib_name]:
+
+            component_contrib_dict = binner.generate_spectrum_output(
+                (native_grid, flux, tau, extras),
+                output_size=output_size,
+            )
 
             try:
-                del component_contrib_dict['native_wngrid']
-                del component_contrib_dict['native_wnwidth']
+                del component_contrib_dict["native_wngrid"]
+                del component_contrib_dict["native_wnwidth"]
             except KeyError:
                 pass
-            
+
             try:
-                del component_contrib_dict['native_wlgrid']
-                del component_contrib_dict['native_wlwidth']
+                del component_contrib_dict["native_wlgrid"]
+                del component_contrib_dict["native_wlwidth"]
             except KeyError:
                 pass
 
             try:
-                del component_contrib_dict['binned_wngrid']
-                del component_contrib_dict['binned_wnwidth']
+                del component_contrib_dict["binned_wngrid"]
+                del component_contrib_dict["binned_wnwidth"]
             except KeyError:
                 pass
 
             try:
-                del component_contrib_dict['binned_wlgrid']
-                del component_contrib_dict['binned_wlwidth']
+                del component_contrib_dict["binned_wlgrid"]
+                del component_contrib_dict["binned_wlwidth"]
             except KeyError:
                 pass
 
             this_contrib_dict[name] = component_contrib_dict
 
         contribution_dict[contrib_name] = this_contrib_dict
-    
+
     return contribution_dict

@@ -9,14 +9,21 @@ import numpy.typing as npt
 
 from taurex import OutputSize
 from taurex.cache import GlobalCache
-from taurex.core import DerivedType, FittingType
-from taurex.core.priors import LogUniform, Prior, PriorMode, Uniform
+from taurex.core import DerivedType
+from taurex.core import FittingType
+from taurex.core.priors import LogUniform
+from taurex.core.priors import Prior
+from taurex.core.priors import PriorMode
+from taurex.core.priors import Uniform
 from taurex.data.citation import Citable
-from taurex.log import Logger, disableLogging, enableLogging
+from taurex.log import Logger
+from taurex.log import disableLogging
+from taurex.log import enableLogging
 from taurex.model import ForwardModel
 from taurex.output import OutputGroup
 from taurex.spectrum import BaseSpectrum
 from taurex.types import AnyValType
+
 
 SQRTPI = np.sqrt(2 * np.pi)
 
@@ -122,7 +129,23 @@ def compile_params(
     driveparams: t.Dict[str, DerivedType],
     fit_priors: t.Dict[str, Prior] = None,
 ):
-    """Compile fitting and derived parameters."""
+    """Compile fitting and derived parameters.
+
+    Parameters
+    ----------
+    fitparams : t.Dict[str, FittingType]
+        Dictionary of fitting parameters.
+    driveparams : t.Dict[str, DerivedType]
+        Dictionary of derived parameters.
+    fit_priors : t.Dict[str, Prior], optional
+        Dictionary of fitting priors, by default None.
+
+    Returns
+    -------
+    Tuple
+        List of FitParam and list of DerivedParam.
+
+    """
     fitting_parameters = [
         FitParam(*params, prior=fit_priors.get(params[0]))
         for params in fitparams.values()
@@ -162,7 +185,8 @@ class Optimizer(Logger, Citable):
             Model to be optimized
 
         sigma_fraction:
-            Fraction of weights to use in computing the error. (Default: 10%)
+            Fraction of weights to use in computing the error.
+            (Default: 10%)
 
 
         """
@@ -179,7 +203,7 @@ class Optimizer(Logger, Citable):
         self.set_observed(observed)
 
     def set_model(self, model: ForwardModel) -> None:
-        """Sets the model to be optimized/fit
+        """Sets the model to be optimized/fit.
 
         Parameters
         ----------
@@ -210,11 +234,11 @@ class Optimizer(Logger, Citable):
         self._binner = binner
 
     def compile_params(self) -> None:
-        """Dummy, does nothing and will be depcreated"""
+        """Dummy, does nothing and will be depcreated."""
         import warnings
 
         warnings.warn(
-            "compile_params is deprecated and will be removed in future versions. ",
+            "compile_params is deprecated and will be removed " "in future versions. ",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -286,9 +310,22 @@ class Optimizer(Logger, Citable):
 
         Employ mixins to override this method.
 
+        Parameters
+        ----------
+        cube : npt.ArrayLike
+            Unit cube.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Transformed cube.
+
         """
         return np.array(
-            [fit.fit_prior.sample(c) for fit, c in zip(self.fitting_parameters, cube)]
+            [
+                fit.fit_prior.sample(c)
+                for fit, c in zip(self.fitting_parameters, cube, strict=True)
+            ]
         )
 
     def log_likelihood(self, parameters: npt.ArrayLike) -> float:
@@ -298,9 +335,20 @@ class Optimizer(Logger, Citable):
 
         .. math::
 
-            \log \mathcal{L} = -\sum_i \sigma_i \sqrt{2\pi}) - \frac{1}{2} \chi^2
+            \log \mathcal{L} = -\sum_i \sigma_i \sqrt{2\pi})
+            - \frac{1}{2} \chi^2
 
         Employ mixins to override this method.
+
+        Parameters
+        ----------
+        parameters : npt.ArrayLike
+            Parameter values.
+
+        Returns
+        -------
+        float
+            Log likelihood.
 
         """
         parameters = np.asarray(parameters)
@@ -313,35 +361,37 @@ class Optimizer(Logger, Citable):
         return loglike
 
     def update_model(self, fit_params: t.List[float]) -> None:
-        """Updates the model with new parameters
+        """Updates the model with new parameters.
 
         Parameters
         ----------
         fit_params : :obj:`list`
-            A list of new values to apply to the model. The list of values are
-            assumed to be in the same order as the parameters given by
-            :func:`fit_names`
+            A list of new values to apply to the model. The list of
+            values are assumed to be in the same order as the
+            parameters given by :func:`fit_names`
 
 
         """
         if len(fit_params) != len(self.fitting_parameters):
             self.error(
-                "Trying to update model with more fitting parameters" " than enabled"
+                "Trying to update model with more fitting " "parameters than enabled"
             )
             self.error(
-                f"No. enabled parameters:{len(self.fitting_parameters)}"
+                f"No. enabled parameters:"
+                f"{len(self.fitting_parameters)}"
                 f" Update length: {len(fit_params)}"
             )
             raise ValueError(
                 "Trying to update model with more fitting" " parameters than enabled"
             )
 
-        for value, param in zip(fit_params, self.fitting_parameters):
+        for value, param in zip(fit_params, self.fitting_parameters, strict=True):
             param.value = value
 
     @property
     def fit_values_nomode(self) -> t.List[float]:
         """Returns a list of the current values of a fitting parameter.
+
         Regardless of the ``mode`` setting
 
         Returns
@@ -350,7 +400,6 @@ class Optimizer(Logger, Citable):
             List of each value of a fitting parameter
 
         """
-
         return [c.value for c in self.fitting_parameters]
 
     @property
@@ -365,31 +414,35 @@ class Optimizer(Logger, Citable):
             List of each value of a fitting parameter
 
         """
-
         return [c.fit_value for c in self.fitting_parameters]
 
     @property
     def fit_boundaries(self):
-        """
-
-        Returns the fitting boundaries of the parameter
+        """Returns the fitting boundaries of the parameter.
 
         Returns
         -------
         :obj:`list`:
-            List of boundaries for each fitting parameter. It takes the form of
-            a python :obj:`tuple` with the form
+            List of boundaries for each fitting parameter. It takes the
+            form of a python :obj:`tuple` with the form
             ( ``bound_min`` , ``bound_max`` )
 
         """
         return [
-            c[-1] if c[4] == "linear" else (math.log10(c[-1][0]), math.log10(c[-1][1]))
+            (
+                c[-1]
+                if c[4] == "linear"
+                else (
+                    math.log10(c[-1][0]),
+                    math.log10(c[-1][1]),
+                )
+            )
             for c in self.fitting_parameters
         ]
 
     @property
     def fit_names(self) -> t.List[str]:
-        """Returns the names of the model parameters we will be fitting
+        """Returns the names of the model parameters we will be fitting.
 
         Returns
         -------
@@ -397,7 +450,6 @@ class Optimizer(Logger, Citable):
             List of names of parameters that will be fit
 
         """
-
         return [c.fit_name for c in self.fitting_parameters]
 
     @property
@@ -421,37 +473,108 @@ class Optimizer(Logger, Citable):
         return [c.fget() for c in self.derived_parameters]
 
     def enable_fit(self, parameter: str) -> None:
-        """Enables fitting of the parameter"""
+        """Enables fitting of the parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to enable fitting for.
+
+        """
         self.avail_fit_parameters[parameter].to_fit = True
 
     def enable_derived(self, parameter: str) -> None:
-        """Enables computation of derived parameter."""
+        """Enables computation of derived parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to enable derivation for.
+
+        """
         self.avail_derived_parameters[parameter].compute = True
 
     def disable_fit(self, parameter: str) -> None:
-        """Disables fitting of the parameter."""
+        """Disables fitting of the parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to disable fitting for.
+
+        """
         self.avail_fit_parameters[parameter].to_fit = False
 
     def disable_derived(self, parameter: str) -> None:
-        """Disables computation of derived parameter."""
+        """Disables computation of derived parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to disable derivation for.
+
+        """
         self.avail_derived_parameters[parameter].compute = False
 
     def set_boundary(self, parameter: str, new_boundaries: t.List[float]) -> None:
-        """Sets the boundary of the parameter."""
+        """Sets the boundary of the parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set boundary for.
+        new_boundaries : t.List[float]
+            New boundary values.
+
+        """
         self.avail_fit_parameters[parameter].bounds = new_boundaries
 
     def set_factor_boundary(self, parameter: str, factors: t.List[float]) -> None:
-        """Sets the boundary of the parameter based on a factor of value."""
+        """Sets the boundary of the parameter based on a factor.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set boundary for.
+        factors : t.List[float]
+            Factors to multiply the current value by.
+
+        """
         param = self.avail_fit_parameters[parameter]
-        bounds = (param.value * factors[0], param.value * factors[1])
+        bounds = (
+            param.value * factors[0],
+            param.value * factors[1],
+        )
         param.bounds = (min(bounds), max(bounds))
 
-    def set_mode(self, parameter: str, new_mode: t.Literal["linear", "log"]) -> None:
-        """Sets the fitting mode of a parameter."""
+    def set_mode(
+        self,
+        parameter: str,
+        new_mode: t.Literal["linear", "log"],
+    ) -> None:
+        """Sets the fitting mode of a parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set mode for.
+        new_mode : t.Literal["linear", "log"]
+            New fitting mode.
+
+        """
         self.avail_fit_parameters[parameter].mode = new_mode
 
     def set_prior(self, parameter: str, prior: Prior) -> None:
-        """Sets the prior of a parameter."""
+        """Sets the prior of a parameter.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set prior for.
+        prior : Prior
+            Prior object.
+
+        """
         self.avail_fit_parameters[parameter].prior = prior
 
     def chisq_trans(
@@ -460,17 +583,32 @@ class Optimizer(Logger, Citable):
         data: npt.NDArray[np.float64],
         datastd: npt.NDArray[np.float64],
     ) -> float:
-        """Computes the Chi-Squared of model and observation
+        """Computes the Chi-Squared of model and observation.
 
         Computes the Chi-Squared between the forward model and
         observation. The steps taken are:
             1. Forward model (FM) is updated with :func:`update_model`
             2. FM is then computed at its native grid then binned.
             3. Chi-squared between FM and observation is computed
+
+        Parameters
+        ----------
+        fit_params : npt.ArrayLike
+            Parameter values.
+        data : npt.NDArray[np.float64]
+            Observed data.
+        datastd : npt.NDArray[np.float64]
+            Observed data standard deviation.
+
+        Returns
+        -------
+        float
+            Chi-squared value.
+
         """
         from taurex.exceptions import InvalidModelException
 
-        #self.update_model(fit_params)
+        # self.update_model(fit_params)
         obs_bins = self._observed.wavenumberGrid
 
         try:
@@ -508,7 +646,19 @@ class Optimizer(Logger, Citable):
         raise NotImplementedError
 
     def fit(self, output_size=OutputSize.heavy) -> t.Dict[str, AnyValType]:
-        """Performs retrieval."""
+        """Performs retrieval.
+
+        Parameters
+        ----------
+        output_size : OutputSize, optional
+            Size of output, by default OutputSize.heavy
+
+        Returns
+        -------
+        t.Dict[str, AnyValType]
+            Solution dictionary.
+
+        """
         import time
 
         from tabulate import tabulate
@@ -528,7 +678,7 @@ class Optimizer(Logger, Citable):
         self.info("")
 
         output = tabulate(
-            zip(fit_names, fit_values, prior_type, args),
+            zip(fit_names, fit_values, prior_type, args, strict=True),
             headers=["Param", "Value", "Type", "Args"],
         )
 
@@ -550,22 +700,40 @@ class Optimizer(Logger, Citable):
         self.info("")
         self.info("Dimensionality of fit: %s", len(fit_names))
         self.info("")
-        for idx, optimized_map, optimized_median, _ in self.get_solution():
+        for (
+            idx,
+            optimized_map,
+            optimized_median,
+            _,
+        ) in self.get_solution():
             self.info("\n%s", f"---Solution {idx}------")
             output = tabulate(
-                zip(fit_names, optimized_map, optimized_median),
+                zip(
+                    fit_names,
+                    optimized_map,
+                    optimized_median,
+                    strict=True,
+                ),
                 headers=["Param", "MAP", "Median"],
             )
             self.info("\n%s\n\n", output)
         return solution
 
     def write_optimizer(self, output: OutputGroup) -> OutputGroup:
-        """Writes optimizer settings under the 'Optimizer' heading in an output file.
+        """Writes optimizer to file.
+
+        Writes settings under the 'Optimizer' heading in
+        an output file.
 
         Parameters
         ----------
         output:
             Group (or root) in output file to write to
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
         """
         output.write_string("optimizer", self.__class__.__name__)
         output.write_string_array("fit_parameter_names", self.fit_names)
@@ -592,29 +760,55 @@ class Optimizer(Logger, Citable):
         output:
             Group (or root) in output file to write to
 
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
         """
         fit = output.create_group("FitParams")
         fit.write_string("fit_format", self.__class__.__name__)
         fit.write_string_array("fit_parameter_names", self.fit_names)
         fit.write_string_array("fit_parameter_latex", self.fit_latex)
         fit.write_array(
-            "fit_boundary_low", np.array([x[0] for x in self.fit_boundaries])
+            "fit_boundary_low",
+            np.array([x[0] for x in self.fit_boundaries]),
         )
         fit.write_array(
-            "fit_boundary_high", np.array([x[1] for x in self.fit_boundaries])
+            "fit_boundary_high",
+            np.array([x[1] for x in self.fit_boundaries]),
         )
 
-        # This is the last sampled value ... should not be recorded to avoid confusion.
+        # This is the last sampled value ... should not be recorded
+        # to avoid confusion.
         # fit.write_list('fit_parameter_values',self.fit_values)
-        # fit.write_list('fit_parameter_values_nomode',self.fit_values_nomode)
+        # fit.write_list(
+        #     'fit_parameter_values_nomode',self.fit_values_nomode
+        # )
         return output
 
     def generate_profiles(
-        self, solution: int, binning: npt.NDArray[np.float64]
+        self,
+        solution: int,
+        binning: npt.NDArray[np.float64],
     ) -> t.Tuple[
-        t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]
+        t.Dict[str, npt.NDArray[np.float64]],
+        t.Dict[str, npt.NDArray[np.float64]],
     ]:
-        """Generates sigma plots for profiles"""
+        """Generates sigma plots for profiles.
+
+        Parameters
+        ----------
+        solution : int
+            Solution index.
+        binning : npt.NDArray[np.float64]
+            Binning wavenumber grid.
+
+        Returns
+        -------
+        t.Tuple
+            Profile and spectrum error dictionaries.
+
+        """
         from taurex import mpi
 
         sample_list: t.List[float] = []
@@ -628,7 +822,10 @@ class Optimizer(Logger, Citable):
 
         self.info("------------Variance generation step------------------")
 
-        self.info("We are sampling %s points for the profiles", len(sample_list))
+        self.info(
+            "We are sampling %s points for the profiles",
+            len(sample_list),
+        )
 
         rank = mpi.get_rank()
         size = mpi.nprocs()
@@ -650,34 +847,57 @@ class Optimizer(Logger, Citable):
                 enableLogging()
                 if rank == 0 and count % 10 == 0 and count > 0:
                     self.info(
-                        "Progress %.3f", count * 100.0 / (len(sample_list) / size)
+                        "Progress %.3f",
+                        count * 100.0 / (len(sample_list) / size),
                     )
                 disableLogging()
                 yield weight
                 count += 1
 
         return self._model.compute_error(
-            sample_iter, wngrid=binning, binner=self._binner
+            sample_iter,
+            wngrid=binning,
+            binner=self._binner,
         )
 
     def generate_solution(  # noqa: C901
         self, output_size=OutputSize.heavy
     ) -> t.Dict[str, AnyValType]:
-        """Generates a dictionary with all solutions and other useful parameters."""
+        """Generates a dictionary with all solutions.
+
+        Generates posteriors, spectra, profiles and other useful parameters.
+
+        Parameters
+        ----------
+        output_size : OutputSize, optional
+            Size of output, by default OutputSize.heavy
+
+        Returns
+        -------
+        t.Dict[str, AnyValType]
+            Solution dictionary.
+
+        """
         from taurex.util.output import store_contributions
 
         solution_dict = {}
 
         self.info("Post-processing - Generating spectra and profiles")
 
-        # Loop through each solution, grab optimized parameters and anything
-        # else we want to store
-        for solution, optimized_map, optimized_median, values in self.get_solution():
+        # Loop through each solution, grab optimized parameters and
+        # anything else we want to store
+        for (
+            solution,
+            optimized_map,
+            optimized_median,
+            values,
+        ) in self.get_solution():
             enableLogging()
             self.info("Computing solution %s", solution)
             sol_values = {}
 
-            # Include extra stuff we might want to store (provided by the child)
+            # Include extra stuff we might want to store (provided
+            # by the child)
             for k, v in values:
                 sol_values[k] = v
 
@@ -692,10 +912,12 @@ class Optimizer(Logger, Citable):
 
             try:
                 sol_values["Spectra"]["Contributions"] = store_contributions(
-                    self._binner, self._model, output_size=output_size - 3
+                    self._binner,
+                    self._model,
+                    output_size=output_size - 3,
                 )
             except Exception as e:
-                self.warning("Not bothering to store contributions since its broken")
+                self.warning("Not bothering to store contributions " "since its broken")
                 self.warning("%s ", str(e))
 
             # Update with the optimized median
@@ -746,7 +968,19 @@ class Optimizer(Logger, Citable):
         return solution_dict
 
     def compute_derived_trace(self, solution: int) -> t.Dict[str, AnyValType]:
-        """Computes derived parameters from traces."""
+        """Computes derived parameters from traces.
+
+        Parameters
+        ----------
+        solution : int
+            Solution index.
+
+        Returns
+        -------
+        t.Dict[str, AnyValType]
+            Dictionary of derived parameters.
+
+        """
         from taurex import mpi
         from taurex.util import quantile_corner
 
@@ -779,7 +1013,11 @@ class Optimizer(Logger, Citable):
             weight = weights[idx]
             self.update_model(parameters)
             self._model.initialize_profiles()
-            for p, v in zip(self.derived_names, self.derived_values):
+            for p, v in zip(
+                self.derived_names,
+                self.derived_values,
+                strict=True,
+            ):
                 derived_param[p][0].append(v)
                 derived_param[p][1].append(weight)
 
@@ -800,7 +1038,9 @@ class Optimizer(Logger, Citable):
             all_trace[sorted_weights] = all_trace[all_weight_sort]
 
             q_16, q_50, q_84 = quantile_corner(
-                np.array(all_trace), [0.16, 0.5, 0.84], weights=np.array(all_weight)
+                np.array(all_trace),
+                [0.16, 0.5, 0.84],
+                weights=np.array(all_weight),
             )
 
             mean = np.average(all_trace, weights=all_weight, axis=0)
@@ -818,7 +1058,9 @@ class Optimizer(Logger, Citable):
     def sample_parameters(
         self, solution: int
     ) -> t.Generator[t.Tuple[npt.NDArray[np.float64], float], None, None]:
-        """Read traces and weights and return a random ``sigma_fraction`` sample
+        """Read traces and weights.
+
+        Reads traces and weights and returns a random ``sigma_fraction`` sample.
 
         Parameters
         ----------
@@ -866,7 +1108,6 @@ class Optimizer(Logger, Citable):
 
         Yields
         ------
-
         solution_no:
             Solution number
 
@@ -886,15 +1127,39 @@ class Optimizer(Logger, Citable):
         raise NotImplementedError
 
     def get_samples(self, solution_id: int) -> npt.NDArray[np.float64]:
-        """Get traces for a particular solution."""
+        """Get traces for a particular solution.
+
+        Parameters
+        ----------
+        solution_id : int
+            Solution index.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of samples.
+
+        """
         raise NotImplementedError
 
     def get_weights(self, solution_id: int) -> npt.NDArray[np.float64]:
-        """Get weights for a particular solution."""
+        """Get weights for a particular solution.
+
+        Parameters
+        ----------
+        solution_id : int
+            Solution index.
+
+        Returns
+        -------
+        npt.NDArray[np.float64]
+            Array of weights.
+
+        """
         raise NotImplementedError
 
     def write(self, output: OutputGroup) -> None:
-        """Creates  'Optimizer' and writes output
+        """Creates  'Optimizer' and writes output.
 
         Parameters
         ----------

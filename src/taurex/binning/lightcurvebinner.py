@@ -1,3 +1,5 @@
+"""Binner for lightcurve models."""
+
 import typing as t
 
 import numpy as np
@@ -6,7 +8,8 @@ import numpy.typing as npt
 from taurex import OutputSize
 from taurex.types import ModelOutputType
 
-from .binner import BinDownType, Binner
+from .binner import BinDownType
+from .binner import Binner
 
 
 class LightcurveBinner(Binner):
@@ -26,7 +29,7 @@ class LightcurveBinner(Binner):
         grid_width: t.Optional[npt.NDArray[np.float64]] = None,
         error: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> BinDownType:
-        """Does nothing, only returns function arguments"""
+        """Does nothing, only returns function arguments."""
         return wngrid, spectrum, error, grid_width
 
     def generate_spectrum_output(
@@ -56,16 +59,15 @@ class LightcurveBinner(Binner):
 
 
         """
-
         output = {}
 
         wngrid, lightcurve, tau, extra = model_output
         native_grid, native, binned, extra = extra
 
         output["native_wngrid"] = native_grid
-        output["native_wlgrid"] = 10_000 / native_grid
+        output["native_wlgrid"] = 10000 / native_grid
         output["binned_wngrid"] = wngrid
-        output["binned_wlgrid"] = 10_000 / wngrid
+        output["binned_wlgrid"] = 10000 / wngrid
         output["lightcurve"] = lightcurve
         output["native_spectrum"] = native
         output["binned_spectrum"] = binned

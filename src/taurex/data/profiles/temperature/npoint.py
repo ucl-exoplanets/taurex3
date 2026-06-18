@@ -109,12 +109,19 @@ class NPoint(TemperatureProfile):
         default_bounds=[300, 2500],
     )
     def temperatureSurface(self) -> float:  # noqa: N802
-        """Temperature at planet surface in Kelvin"""
+        """Temperature at planet surface in Kelvin."""
         return self._T_surface
 
     @temperatureSurface.setter
     def temperatureSurface(self, value: float) -> None:  # noqa: N802
-        """Temperature at planet surface in Kelvin"""
+        """Temperature at planet surface in Kelvin.
+
+        Parameters
+        ----------
+        value : float
+            Surface temperature in Kelvin.
+
+        """
         self._T_surface = value
 
     @fitparam(
@@ -124,12 +131,19 @@ class NPoint(TemperatureProfile):
         default_bounds=[300, 2500],
     )
     def temperatureTop(self) -> float:  # noqa: N802
-        """Temperature at top of atmosphere in Kelvin"""
+        """Temperature at top of atmosphere in Kelvin."""
         return self._T_top
 
     @temperatureTop.setter
     def temperatureTop(self, value: float) -> None:  # noqa: N802
-        """Temperature at top of atmosphere in Kelvin"""
+        """Temperature at top of atmosphere in Kelvin.
+
+        Parameters
+        ----------
+        value : float
+            Top temperature in Kelvin.
+
+        """
         self._T_top = value
 
     @fitparam(
@@ -140,12 +154,19 @@ class NPoint(TemperatureProfile):
         default_mode="log",
     )
     def pressureSurface(self) -> float:  # noqa: N802
-        """Pressure at planet surface in Pa"""
+        """Pressure at planet surface in Pa."""
         return self._P_surface
 
     @pressureSurface.setter
     def pressureSurface(self, value: float) -> None:  # noqa: N802
-        """Pressure at planet surface in Pa"""
+        """Pressure at planet surface in Pa.
+
+        Parameters
+        ----------
+        value : float
+            Surface pressure in Pa.
+
+        """
         self._P_surface = value
 
     @fitparam(
@@ -156,22 +177,28 @@ class NPoint(TemperatureProfile):
         default_mode="log",
     )
     def pressureTop(self) -> float:  # noqa: N802
-        """Pressure at top of atmosphere in Pa"""
+        """Pressure at top of atmosphere in Pa."""
         return self._P_top
 
     @pressureTop.setter
     def pressureTop(self, value: float) -> None:  # noqa: N802
-        """Pressure at top of atmosphere in Pa"""
+        """Pressure at top of atmosphere in Pa.
+
+        Parameters
+        ----------
+        value : float
+            Top pressure in Pa.
+
+        """
         self._P_top = value
 
     def generate_pressure_fitting_params(self) -> None:
         """Generates the fitting parameters for the pressure points.
 
-        These are given the name ``P_point(number)`` for example, if two extra
-        pressure points are defined between the top and surface then the
-        fitting parameters generated are ``P_point0`` and ``P_point1``
+        These are given the name ``P_point(number)`` for example, if two
+        extra pressure points are defined between the top and surface then
+        the fitting parameters generated are ``P_point0`` and ``P_point1``
         """
-
         bounds = [1e5, 1e3]
         for idx, _ in enumerate(self._p_points):
             point_num = idx + 1
@@ -203,11 +230,10 @@ class NPoint(TemperatureProfile):
     def generate_temperature_fitting_params(self) -> None:
         """Generates the fitting parameters for the temperature points.
 
-        These are given the name ``T_point(number)`` for example, if two extra
-        temeprature points are defined between the top and surface then the
-        fitting parameters generated are ``T_point0`` and ``T_point1``
+        These are given the name ``T_point(number)`` for example, if two
+        extra temeprature points are defined between the top and surface then
+        the fitting parameters generated are ``T_point0`` and ``T_point1``
         """
-
         bounds = [300, 2500]
         for idx, _ in enumerate(self._t_points):
             point_num = idx + 1
@@ -255,7 +281,7 @@ class NPoint(TemperatureProfile):
         """
         if any(ppt[i] <= ppt[i + 1] for i in range(len(ppt) - 1)):
             self.warning(
-                "Temperature profile is not valid - a pressure point is inverted"
+                "Temperature profile is not valid - " "a pressure point is inverted"
             )
             raise InvalidTemperatureException
 
@@ -316,7 +342,18 @@ class NPoint(TemperatureProfile):
         return foo
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write NPoint temperature profile to output group."""
+        """Write NPoint temperature profile to output group.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         temperature = super().write(output)
 
         temperature.write_scalar("T_surface", self._T_surface)

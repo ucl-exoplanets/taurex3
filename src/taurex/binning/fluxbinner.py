@@ -216,36 +216,14 @@ class FluxBinner(Binner):
         return output
 
 
-
 class FluxBinnerGeneric(Binner):
-    """
-    Bins to a wavenumber or wavelength grid given by ``wngrid``/``wlgrid`` using a
-    more accurate method that takes into account the amount
+    """Bins to a wavenumber or wavelength grid using a more accurate method.
+
+    This method that takes into account the amount
     of contribution from each native bin. This method also
     handles cases where bins are not continuous and/or
-    overlapping.
-
-    Parameters
-    ----------
-
-    wngrid: :obj:`array`, optional
-        Wavenumber grid. If not set, then ``wlgrid`` must be.
-
-    wngrid_width: :obj:`array`, optional
-        Must have same shape as ``wngrid``
-        Full bin widths for each wavenumber grid point
-        given in ``wngrid``. If not provided then
-        this is automatically computed from ``wngrid``.
-
-    wlgrid: :obj:`array`, optional
-        Wavelength grid. If not set, then ``wngrid`` must be.
-
-    wlgrid_width: :obj:`array`, optional
-        Must have same shape as ``wlgrid``
-        Full bin widths for each wavelength grid point
-        given in ``wlgrid``. If not provided then
-        this is automatically computed from ``wlgrid``.
-
+    overlapping, and can handle wavelength grids as well
+    as wavenumber grids.
     """
 
     def __init__(
@@ -255,9 +233,33 @@ class FluxBinnerGeneric(Binner):
         wlgrid: t.Optional[npt.NDArray[np.float64]] = None,
         wlgrid_width: t.Optional[npt.NDArray[np.float64]] = None,
     ):
+        """Initializes the FluxBinner.
+
+        Parameters
+        ----------
+        wngrid: :obj:`array`, optional
+            Wavenumber grid. If not set, then ``wlgrid`` must be.
+
+        wngrid_width: :obj:`array`, optional
+            Must have same shape as ``wngrid``
+            Full bin widths for each wavenumber grid point
+            given in ``wngrid``. If not provided then
+            this is automatically computed from ``wngrid``.
+
+        wlgrid: :obj:`array`, optional
+            Wavelength grid. If not set, then ``wngrid`` must be.
+
+        wlgrid_width: :obj:`array`, optional
+            Must have same shape as ``wlgrid``
+            Full bin widths for each wavelength grid point
+            given in ``wlgrid``. If not provided then
+            this is automatically computed from ``wlgrid``.
+        """
         super().__init__()
 
-        if (wngrid is None and wlgrid is None) or (wngrid is not None and wlgrid is not None):
+        if (wngrid is None and wlgrid is None) or (
+            wngrid is not None and wlgrid is not None
+        ):
             raise ValueError("You must specify exactly one between wngrid and wlgrid")
         if wngrid is not None and wlgrid_width is not None:
             raise ValueError("You cannot use wlgrid_width with wngrid")
@@ -279,11 +281,13 @@ class FluxBinnerGeneric(Binner):
             self._bin_widths = compute_bin_edges(self._bin_centers)[-1]
         elif hasattr(self._bin_widths, "__len__"):
             if len(self._bin_widths) != len(self._bin_centers):
-                raise ValueError(f"w{'nl'[self._in_wl]}grid_width should be a scalar or np.array with the same shape as w{'nl'[self._in_wl]}grid")
+                raise ValueError(
+                    f"w{'nl'[self._in_wl]}grid_width should be a scalar or\
+                    np.array with the same shape as w{'nl'[self._in_wl]}grid"
+                )
             self._bin_widths = self._bin_widths[sort_grid]
         else:
             self._bin_widths = np.ones_like(self._bin_centers) * self._bin_widths
-
 
     def bindown(
         self,
@@ -302,9 +306,9 @@ class FluxBinnerGeneric(Binner):
         spectrum: :obj:`array`
             The spectra we wish to bin-down. Must be same shape as
             ``wngrid``. If the FluxBinner was initialized with a wavelength grid,
-            it must be a density over wavelength (default for spectra computed by taurex).
-            If instead the FluxBinner was initialized with a wavenumber grid,
-            it must be a density over wavenumbers.
+            it must be a density over wavelength (default for spectra computed
+            by taurex). If instead the FluxBinner was initialized with a
+            wavenumber grid, it must be a density over wavenumbers.
 
         grid_width: :obj:`array`, optional
             Wavenumber grid full-widths for the spectrum to be binned down.
@@ -328,9 +332,7 @@ class FluxBinnerGeneric(Binner):
 
         error: :obj:`array` or None
             Binned error if given else ``None``
-
         """
-
         # sort inputs
         sorted_input = wngrid.argsort()
         old_spect_wn = wngrid[sorted_input]
@@ -348,18 +350,21 @@ class FluxBinnerGeneric(Binner):
             grid_width = grid_width[sorted_input]
             old_spect_min = old_spect_wn - grid_width / 2
             old_spect_max = old_spect_wn + grid_width / 2
-        
+
         if self._in_wl:
             # convert input spectrum edges to wavelengths
             # must be flipped to remain sorted
-            old_spect_min, old_spect_max = 1e4 / old_spect_max[::-1], 1e4 / old_spect_min[::-1]
-            old_spect_flux = old_spect_flux[..., ::-1] # must be flipped as well
+            old_spect_min, old_spect_max = (
+                1e4 / old_spect_max[::-1],
+                1e4 / old_spect_min[::-1],
+            )
+            old_spect_flux = old_spect_flux[..., ::-1]  # must be flipped as well
             if old_spect_err is not None:
-                old_spect_err = old_spect_err[..., ::-1] # must be flipped as well
+                old_spect_err = old_spect_err[..., ::-1]  # must be flipped as well
 
         # we compute the edges of the bins of the binner
-        bin_mins = self._bin_centers - self._bin_widths/2
-        bin_maxes = self._bin_centers + self._bin_widths/2
+        bin_mins = self._bin_centers - self._bin_widths / 2
+        bin_maxes = self._bin_centers + self._bin_widths / 2
 
         # prepare outputs
         bin_spectrum = np.zeros(spectrum[..., 0].shape + self._bin_centers.shape)
@@ -369,8 +374,7 @@ class FluxBinnerGeneric(Binner):
         else:
             bin_error = None
 
-
-        for idx, (bin_min, bin_max) in enumerate(zip(bin_mins, bin_maxes)):
+        for idx, (bin_min, bin_max) in enumerate(zip(bin_mins, bin_maxes, strict=True)):
             sum_spectrum = 0
             sum_noise = 0
             sum_weight = 0
@@ -423,9 +427,15 @@ class FluxBinnerGeneric(Binner):
         model_output: ModelOutputType,
         output_size: t.Optional[OutputSize] = OutputSize.heavy,
     ) -> BinnedSpectrumType:
+        """Generate spectrum output."""
         output = super().generate_spectrum_output(model_output, output_size=output_size)
-        other_bin_centers = (1e4 / (self._bin_centers + self._bin_widths/2) + 1e4 / (self._bin_centers - self._bin_widths/2))/2
-        other_bin_widths = 1e4 / (self._bin_centers - self._bin_widths/2) - 1e4 / (self._bin_centers + self._bin_widths/2)
+        other_bin_centers = (
+            1e4 / (self._bin_centers + self._bin_widths / 2)
+            + 1e4 / (self._bin_centers - self._bin_widths / 2)
+        ) / 2
+        other_bin_widths = 1e4 / (self._bin_centers - self._bin_widths / 2) - 1e4 / (
+            self._bin_centers + self._bin_widths / 2
+        )
         if self._in_wl:
             output["binned_wngrid"] = other_bin_centers
             output["binned_wlgrid"] = self._bin_centers
@@ -441,24 +451,12 @@ class FluxBinnerGeneric(Binner):
 
 
 class FluxBinnerWL(Binner):
-    """
-    Bins to a wavenumber grid given by ``wngrid`` using a
-    more accurate method that takes into account the amount
+    """Bins to a wavenumber grid given by ``wngrid`` using a more accurate method.
+
+    This method takes into account the amount
     of contribution from each native bin. This method also
     handles cases where bins are not continuous and/or
     overlapping.
-
-    Parameters
-    ----------
-
-    wlgrid: :obj:`array`
-        Wavelength grid
-
-    wlgrid_width: :obj:`array`, optional
-        Must have same shape as ``wlgrid`` or be a scalar.
-        Full bin widths for each wavelength grid point
-        given in ``wlgrid``. If not provided then
-        this is automatically computed from ``wlgrid``.
 
     """
 
@@ -467,6 +465,19 @@ class FluxBinnerWL(Binner):
         wlgrid: npt.NDArray[np.float64],
         wlgrid_width: t.Optional[npt.NDArray[np.float64]] = None,
     ):
+        """Initializes the binner.
+
+        Parameters
+        ----------
+        wlgrid: :obj:`array`
+            Wavelength grid
+
+        wlgrid_width: :obj:`array`, optional
+            Must have same shape as ``wlgrid`` or be a scalar.
+            Full bin widths for each wavelength grid point
+            given in ``wlgrid``. If not provided then
+            this is automatically computed from ``wlgrid``.
+        """
         super().__init__()
 
         sort_grid = wlgrid.argsort()
@@ -525,9 +536,7 @@ class FluxBinnerWL(Binner):
 
         error: :obj:`array` or None
             Binned error if given else ``None``
-
         """
-
         # process inputs
         sorted_input = wngrid.argsort()
 
@@ -541,7 +550,7 @@ class FluxBinnerWL(Binner):
             old_spect_min = old_spect_wn - grid_width / 2
             old_spect_max = old_spect_wn + grid_width / 2
         # them convert them to wavelengths
-        old_spect_wl_min = 1e4 / old_spect_max[::-1] # must be flipped to remain sorted
+        old_spect_wl_min = 1e4 / old_spect_max[::-1]  # must be flipped to remain sorted
         old_spect_wl_max = 1e4 / old_spect_min[::-1]
 
         old_spect_flux = spectrum[..., sorted_input[::-1]]
@@ -550,10 +559,9 @@ class FluxBinnerWL(Binner):
             error = error[..., sorted_input[::-1]]
         old_spect_err = error
 
-
         # we compute the edges of the bins
-        new_spec_wl_min = self._wlgrid - self._wlgrid_width/2
-        new_spec_wl_max = self._wlgrid + self._wlgrid_width/2
+        new_spec_wl_min = self._wlgrid - self._wlgrid_width / 2
+        new_spec_wl_max = self._wlgrid + self._wlgrid_width / 2
 
         # prepare outputs
         bin_spectrum = np.zeros(spectrum[..., 0].shape + self._wlgrid.shape)
@@ -563,8 +571,9 @@ class FluxBinnerWL(Binner):
         else:
             bin_error = None
 
-
-        for idx, (wl_min, wl_max) in enumerate(zip(new_spec_wl_min, new_spec_wl_max)):
+        for idx, (wl_min, wl_max) in enumerate(
+            zip(new_spec_wl_min, new_spec_wl_max, strict=True)
+        ):
             sum_spectrum = 0
             sum_noise = 0
             sum_weight = 0
@@ -584,9 +593,9 @@ class FluxBinnerWL(Binner):
             spect_min = old_spect_wl_min[save_start : save_stop + 1]
             spect_max = old_spect_wl_max[save_start : save_stop + 1]
 
-            weight = (
-                np.minimum(wl_max, spect_max) - np.maximum(spect_min, wl_min)
-            ) / (wl_max - wl_min)
+            weight = (np.minimum(wl_max, spect_max) - np.maximum(spect_min, wl_min)) / (
+                wl_max - wl_min
+            )
 
             sum_weight = np.sum(weight)
 
@@ -617,9 +626,15 @@ class FluxBinnerWL(Binner):
         model_output: ModelOutputType,
         output_size: t.Optional[OutputSize] = OutputSize.heavy,
     ) -> BinnedSpectrumType:
+        """Generate spectrum output."""
         output = super().generate_spectrum_output(model_output, output_size=output_size)
-        output["binned_wngrid"] = (1e4 / (self._wlgrid + self._wlgrid_width/2) + 1e4 / (self._wlgrid - self._wlgrid_width/2))/2
+        output["binned_wngrid"] = (
+            1e4 / (self._wlgrid + self._wlgrid_width / 2)
+            + 1e4 / (self._wlgrid - self._wlgrid_width / 2)
+        ) / 2
         output["binned_wlgrid"] = self._wlgrid
-        output["binned_wnwidth"] = 1e4 / (self._wlgrid - self._wlgrid_width/2) - 1e4 / (self._wlgrid + self._wlgrid_width/2)
+        output["binned_wnwidth"] = 1e4 / (
+            self._wlgrid - self._wlgrid_width / 2
+        ) - 1e4 / (self._wlgrid + self._wlgrid_width / 2)
         output["binned_wlwidth"] = self._wlgrid_width
         return output

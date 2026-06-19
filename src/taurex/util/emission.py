@@ -36,7 +36,7 @@ try:
     @numba.njit(fastmath=True, parallel=False)
     def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum using numba.
-        
+
         Parameters
         ----------
         wn : npt.NDArray
@@ -47,7 +47,8 @@ try:
         Returns
         -------
         npt.NDArray
-            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+            Black body spectrum, as a density distribution over wavelength
+            (even though the input is wavenumbers)
         """
         wl = _convert_lamb(wn)
         return _black_body_vec(wl, temp)
@@ -55,7 +56,7 @@ try:
     @numba.njit(fastmath=True, parallel=False)
     def black_body_numba_II(wn, temp):  # noqa: N802
         """Compute black body spectrum (alt algo) using numba.
-        
+
         Parameters
         ----------
         wn : npt.NDArray
@@ -66,7 +67,8 @@ try:
         Returns
         -------
         npt.NDArray
-            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+            Black body spectrum, as a density distribution over wavelength
+            (even though the input is wavenumbers)
         """
         n = wn.shape[0]
         out = np.zeros_like(wn)
@@ -87,7 +89,7 @@ except ImportError:
 
     def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
         """Compute black body spectrum using numpy (numba not available).
-        
+
         Parameters
         ----------
         wn : npt.NDArray
@@ -98,13 +100,14 @@ except ImportError:
         Returns
         -------
         npt.NDArray
-            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+            Black body spectrum, as a density distribution over wavelength
+            (even though the input is wavenumbers)
         """
         return black_body_numpy(wn, temp)
 
     def black_body_numba_II(wn: npt.NDArray[np.float64], temp: float):  # noqa: N802
         """Compute black body spectrum using numpy (numba not available).
-        
+
         Parameters
         ----------
         wn : npt.NDArray
@@ -115,14 +118,15 @@ except ImportError:
         Returns
         -------
         npt.NDArray
-            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+            Black body spectrum, as a density distribution over wavelength
+            (even though the input is wavenumbers)
         """
         return black_body_numpy(wn, temp)
 
 
 def black_body_numexpr(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     """Compute black body spectrum using numexpr.
-        
+
     Parameters
     ----------
     wn : npt.NDArray
@@ -133,7 +137,8 @@ def black_body_numexpr(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     Returns
     -------
     npt.NDArray
-        Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        Black body spectrum, as a density distribution over wavelength
+        (even though the input is wavenumbers)
     """
     import numexpr as ne
 
@@ -159,7 +164,8 @@ def black_body_numpy(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
     Returns
     -------
     npt.NDArray
-        Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        Black body spectrum, as a density distribution over wavelength
+        (even though the input is wavenumbers)
 
     """
     h = 6.62606957e-34

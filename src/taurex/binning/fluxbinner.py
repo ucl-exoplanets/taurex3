@@ -268,7 +268,7 @@ class FluxBinnerGeneric(Binner):
             self._bin_widths = compute_bin_edges(self._bin_centers)[-1]
         elif hasattr(self._bin_widths, "__len__"):
             if len(self._bin_widths) != len(self._bin_centers):
-                raise ValueError(f"w{"nl"[self._in_wl]}grid_width should be a scalar or np.array with the same shape as w{"nl"[self._in_wl]}grid")
+                raise ValueError(f"w{'nl'[self._in_wl]}grid_width should be a scalar or np.array with the same shape as w{'nl'[self._in_wl]}grid")
             self._bin_widths = self._bin_widths[sort_grid]
         else:
             self._bin_widths = np.ones_like(self._bin_centers) * self._bin_widths

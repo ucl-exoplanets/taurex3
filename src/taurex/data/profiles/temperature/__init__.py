@@ -7,6 +7,7 @@ from .npoint import NPoint
 from .rodgers import Rodgers2000
 from .tprofile import TemperatureProfile
 
+
 __all__ = [
     "Isothermal",
     "Guillot2010",

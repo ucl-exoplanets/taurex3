@@ -1,4 +1,5 @@
 """General utility functions."""
+
 import re
 import typing as t
 
@@ -7,7 +8,9 @@ import numpy.typing as npt
 from astropy import units as u
 
 from taurex.output.output import OutputGroup
-from taurex.types import AnyValType, ScalarType
+from taurex.types import AnyValType
+from taurex.types import ScalarType
+
 
 mass = {
     "H": 1.00794,
@@ -146,22 +149,45 @@ def calculate_weight(chem: str) -> float:
     return compoundweight
 
 
-# def split_molecule_elements(chem):
-#     s = re.findall('([A-Z][a-z]?)([0-9]*)', chem)
-#     return s
-
-
 def tokenize_molecule(molecule: str) -> list[str]:
-    """Tokenize a molecule string into its elements and numbers."""
-    import re
+    """Tokenize a molecule string into its elements and numbers.
 
+    Parameters
+    ----------
+    molecule : str
+        Molecule string to tokenize.
+
+    Returns
+    -------
+    list[str]
+        List of tokens.
+
+    """
     return re.findall(r"[A-Z][a-z]?|\d+|.", molecule)
 
 
 def merge_elements(
-    elem1: ElementType, elem2: ElementType, factor: t.Optional[int] = 1
+    elem1: ElementType,
+    elem2: ElementType,
+    factor: t.Optional[int] = 1,
 ) -> ElementType:
-    """Merge two element dictionaries."""
+    """Merge two element dictionaries.
+
+    Parameters
+    ----------
+    elem1 : ElementType
+        First element dictionary.
+    elem2 : ElementType
+        Second element dictionary.
+    factor : t.Optional[int], optional
+        Factor to multiply second dictionary by, by default 1.
+
+    Returns
+    -------
+    ElementType
+        Merged element dictionary.
+
+    """
     return {
         elem: elem1.get(elem, 0) + elem2.get(elem, 0) * factor
         for elem in set(elem1) | set(elem2)
@@ -169,7 +195,8 @@ def merge_elements(
 
 
 def split_molecule_elements(  # noqa: C901
-    molecule: t.Optional[str] = None, tokens: t.Optional[t.List[str]] = None
+    molecule: t.Optional[str] = None,
+    tokens: t.Optional[t.List[str]] = None,
 ) -> ElementType:
     """Split a molecule string into its elements and numbers.
 
@@ -280,7 +307,7 @@ _mol_latex = {
 
 
 def get_molecular_weight(gasname: str) -> float:
-    """For a given molecule return the molecular weight in kg
+    """For a given molecule return the molecular weight in kg.
 
     Parameters
     ----------
@@ -300,10 +327,10 @@ def get_molecular_weight(gasname: str) -> float:
     return mu * AMU
 
 
-# TODO: Generalize this to any molecule.
 def molecule_texlabel(gasname: str) -> str:
-    """For a given molecule return its latex form
+    """For a given molecule return its latex form.
 
+    Convieniece function for getting latex of a molecule.
 
     Parameters
     ----------
@@ -313,7 +340,8 @@ def molecule_texlabel(gasname: str) -> str:
     Returns
     -------
     str :
-        Latex form of the molecule or just the passed name if not found
+        Latex form of the molecule or just the passed name if
+        not found
 
 
     """
@@ -326,7 +354,9 @@ def molecule_texlabel(gasname: str) -> str:
 
 
 def bindown(
-    original_bin: npt.NDArray, original_data: npt.NDArray, new_bin: npt.NDArray
+    original_bin: npt.NDArray,
+    original_data: npt.NDArray,
+    new_bin: npt.NDArray,
 ) -> npt.NDArray:
     """This method quickly bins down by taking the mean.
 
@@ -342,7 +372,8 @@ def bindown(
         The associated data that will be averaged along the new bins
 
     new_bin: :obj:`numpy.array`
-        The new binnings we want to use (must have less points than the original)
+        The new binnings we want to use (must have less points than
+        the original)
 
     Returns
     -------
@@ -357,7 +388,8 @@ def bindown(
     # if last_point is None:
     #    last_point = new_bin[-1]*2
     # calc_bin = np.append(new_bin,last_point)
-    # return(np.histogram(original_bin, calc_bin, weights=original_data)[0] /
+    # return(np.histogram(original_bin, calc_bin,
+    #                      weights=original_data)[0] /
     #          np.histogram(original_bin,calc_bin)[0])
 
     filter_lhs = np.zeros(new_bin.shape[0] + 1)
@@ -412,19 +444,20 @@ def quantile_corner(
 ) -> npt.NDArray:
     """Compute quantiles from an array with weighting.
 
-    * Taken from corner.py
+    **Taken from corner.py**
+
     __author__ = "Dan Foreman-Mackey (danfm@nyu.edu)"
     __copyright__ = "Copyright 2013-2015 Daniel Foreman-Mackey"
 
     Like numpy.percentile, but:
 
-    * Values of q are quantiles [0., 1.] rather than percentiles [0., 100.]
+    * Values of q are quantiles [0., 1.] rather than percentiles
+        [0., 100.]
     * scalar q not supported (q must be iterable)
     * optional weights on x
 
     Parameters
     ----------
-
     x : :obj:`array`
         Input array or object that can be converted to an array.
 
@@ -475,8 +508,10 @@ def loadtxt2d(intext: str) -> npt.NDArray:
         return np.loadtxt(intext)
 
 
-def read_error_line(line: str) -> t.Tuple[str, float, float]:
-    """Reads line from multinest"""
+def read_error_line(
+    line: str,
+) -> t.Tuple[str, float, float]:
+    """Reads line from multinest."""
     print("_read_error_line -> line>", line)
     name, values = line.split("   ", 1)
     print("_read_error_line -> name>", name)
@@ -495,9 +530,27 @@ def read_error_into_dict(line: str, d: t.Dict[str, float]) -> None:
 
 
 def read_table(
-    txt: str, d: t.Optional[t.Dict[str, float]] = None, title: t.Optional[str] = None
+    txt: str,
+    d: t.Optional[t.Dict[str, float]] = None,
+    title: t.Optional[str] = None,
 ):
-    """Reads a table into a dictionary from multinest outputs."""
+    """Reads a table into a dictionary from multinest outputs.
+
+    Parameters
+    ----------
+    txt : str
+        Table text.
+    d : t.Optional[t.Dict[str, float]], optional
+        Dictionary to update, by default None.
+    title : t.Optional[str], optional
+        Title of the table, by default None.
+
+    Returns
+    -------
+    array
+        Data array.
+
+    """
     from io import StringIO
 
     import numpy as np
@@ -516,13 +569,33 @@ def read_table(
 
 
 def decode_string_array(f):
-    """Helper to decode strings from hdf5."""
+    """Helper to decode strings from hdf5.
+
+    Parameters
+    ----------
+    f : array-like
+        Array of encoded strings.
+
+    Returns
+    -------
+    list
+        List of decoded strings.
+
+    """
     sl = list(f)
     return [s[0].decode("utf-8") for s in sl]
 
 
 OutputItem = t.Union[
-    float, int, np.int64, np.float64, np.ndarray, str, t.List, t.Tuple, dict
+    float,
+    int,
+    np.int64,
+    np.float64,
+    np.ndarray,
+    str,
+    t.List,
+    t.Tuple,
+    dict,
 ]
 
 
@@ -612,7 +685,9 @@ def store_thing(output: OutputGroup, key: str, item: OutputItem) -> None:  # noq
 
 
 def weighted_avg_and_std(
-    values: npt.ArrayLike, weights: npt.ArrayLike, axis: t.Optional[int] = None
+    values: npt.ArrayLike,
+    weights: npt.ArrayLike,
+    axis: t.Optional[int] = None,
 ) -> t.Tuple[AnyValType, AnyValType]:
     """Computes weight average and standard deviation.
 
@@ -668,7 +743,9 @@ def random_int_iter(total: int, fraction: t.Optional[float] = 1.0) -> t.Iterator
     yield from samples
 
 
-def compute_bin_edges(spectral_grid: npt.NDArray) -> t.Tuple[npt.NDArray, npt.NDArray]:
+def compute_bin_edges(
+    spectral_grid: npt.NDArray,
+) -> t.Tuple[npt.NDArray, npt.NDArray]:
     """Computes bin edges from a spectral grid.
 
     Parameters
@@ -728,7 +805,7 @@ def clip_native_to_wngrid(
 
 
 def wnwidth_to_wlwidth(wngrid: npt.NDArray, wnwidth: npt.NDArray) -> npt.NDArray:
-    """Converts a wavenumber width to wavelength width and vice versa.
+    r"""Converts a wavenumber width to wavelength width and vice versa.
 
     Given a spectral grid and its associated spectral bin widths, this
     function will convert the wavenumber widths to wavelength widths and
@@ -737,7 +814,7 @@ def wnwidth_to_wlwidth(wngrid: npt.NDArray, wnwidth: npt.NDArray) -> npt.NDArray
     The formula used is:
 
     .. math::
-        \\Delta \\lambda = \\frac{10000 \\Delta \\nu}{\\nu^2}
+        \Delta \lambda = \frac{10000 \Delta \nu}{\nu^2}
 
 
 
@@ -759,6 +836,7 @@ def wnwidth_to_wlwidth(wngrid: npt.NDArray, wnwidth: npt.NDArray) -> npt.NDArray
 
 
 def class_from_keyword(keyword, class_filter=None):
+    """Get class from keyword."""
     from ..parameter.classfactory import ClassFactory
 
     cf = ClassFactory()
@@ -834,11 +912,14 @@ def class_for_name(class_name: str):
 
 
 def create_grid_res(
-    resolution: ScalarType, spectral_min: ScalarType, spectral_max: ScalarType
+    resolution: ScalarType,
+    spectral_min: ScalarType,
+    spectral_max: ScalarType,
 ) -> npt.NDArray:
-    """Creates a grid with a given resolution.
+    r"""Creates a grid with a given resolution.
 
-    Resolution is defined as :math:`R = \\frac{\\lambda}{\\Delta \\lambda}`
+    Resolution is defined as
+    :math:`R = \frac{\lambda}{\Delta \lambda}`
 
     Parameters
     ----------
@@ -907,6 +988,19 @@ def conversion_factor(from_unit: str, to_unit: str) -> float:
 
 
 def compute_dz(altitude: npt.NDArray) -> npt.NDArray:
+    """Compute dz from altitude.
+
+    Parameters
+    ----------
+    altitude : npt.NDArray
+        Altitude array.
+
+    Returns
+    -------
+    npt.NDArray
+        dz array.
+
+    """
     dz = np.zeros_like(altitude)
     dz[:-1] = np.diff(altitude)
     dz[-1] = altitude[-1] - altitude[-2]
@@ -945,7 +1039,6 @@ def find_closest_pair(arr, value) -> (int, int):
     right: int
 
     """
-
     right = arr.searchsorted(value)
     right = max(min(arr.shape[0] - 1, right), 1)
 

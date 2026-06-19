@@ -3,7 +3,8 @@
 
 def test_fitparam_decorator():
     """Test fitparam decorator."""
-    from taurex.core import Fittable, fitparam
+    from taurex.core import Fittable
+    from taurex.core import fitparam
 
     class MyClass(Fittable):
         def __init__(self):

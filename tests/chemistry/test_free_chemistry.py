@@ -1,17 +1,25 @@
-import pytest
-from hypothesis import given, settings, note
-from hypothesis.strategies import floats, lists
-from ..strategies import molecule_vmr, TPs
-from taurex.chemistry import TaurexChemistry
-from taurex.chemistry import ConstantGas
-from taurex.exceptions import InvalidModelException
+"""Tests for free chemistry."""
+
 import numpy as np
+import pytest
+from hypothesis import given
+from hypothesis import note
+from hypothesis import settings
+from hypothesis.strategies import floats
+from hypothesis.strategies import lists
+
+from taurex.chemistry import ConstantGas
+from taurex.chemistry import TaurexChemistry
+from taurex.exceptions import InvalidModelException
+
+from ..strategies import TPs
+from ..strategies import molecule_vmr
 
 
 @given(ratio=floats(min_value=0.0, max_value=0.9), tp=TPs())
 @settings(deadline=None)
 def test_fill_gas_pair_ratio(ratio, tp):
-
+    """Test fill gas ratio."""
     tc = TaurexChemistry(ratio=ratio)
 
     assert "H2" in tc.gases
@@ -34,11 +42,12 @@ def test_fill_gas_pair_ratio(ratio, tp):
 
 
 @given(
-    mole_ratios=lists(molecule_vmr(min_range=0.0, max_range=1.0), min_size=1), tp=TPs()
+    mole_ratios=lists(molecule_vmr(min_range=0.0, max_range=1.0), min_size=1),
+    tp=TPs(),
 )
 # @settings(deadline=None)
 def test_multi_fill_gas(mole_ratios, tp):
-
+    """Test multi fill gas."""
     fill_gases = [m[0][0] for m in mole_ratios]
     ratios = [m[1] for m in mole_ratios[1:]]
 
@@ -48,7 +57,7 @@ def test_multi_fill_gas(mole_ratios, tp):
 
     if check_duplicates:
         with pytest.raises(ValueError):
-            tc = TaurexChemistry(fill_gases=fill_gases, ratio=ratios)
+            Tc = TaurexChemistry(fill_gases=fill_gases, ratio=ratios)  # noqa: F841
         return
     else:
         tc = TaurexChemistry(fill_gases=fill_gases, ratio=ratios)
@@ -58,7 +67,7 @@ def test_multi_fill_gas(mole_ratios, tp):
 
     main_gas = fill_gases[0]
     main_gas_mix = tc.mixProfile[tc.gases.index(fill_gases[0])]
-    for f, r in zip(fill_gases[1:], ratios):
+    for f, r in zip(fill_gases[1:], ratios, strict=True):
         assert tc.fitting_parameters()[f"{f}_{main_gas}"][2]() == r
         ind = tc.gases.index(f)
         assert tc.mixProfile[ind] / main_gas_mix == pytest.approx(r)
@@ -70,7 +79,7 @@ def test_multi_fill_gas(mole_ratios, tp):
 @given(mols=lists(molecule_vmr(), min_size=1), tp=TPs())
 # @settings(deadline=None)
 def test_constant_profile(mols, tp):
-
+    """Test constant profile."""
     molecule_names = [m[0][0] for m in mols]
     vmr = [m[1] for m in mols]
 
@@ -79,7 +88,7 @@ def test_constant_profile(mols, tp):
     successful = []
     unsucessful = []
 
-    for mol, mix in zip(molecule_names, vmr):
+    for mol, mix in zip(molecule_names, vmr, strict=True):
 
         if mol in tc.gases or mol in (
             "H2",
@@ -87,12 +96,15 @@ def test_constant_profile(mols, tp):
         ):
             with pytest.raises(ValueError):
                 tc.addGas(ConstantGas(mol, mix))
-                unsucessful.append(mol)
         else:
             tc.addGas(ConstantGas(mol, mix))
             successful.append((mol, mix))
 
     T, P, nlayers = tp
+
+    for mol, mix in zip(molecule_names, vmr, strict=True):
+        if (mol, mix) not in successful:
+            unsucessful.append((mol, mix))
 
     # Now check the fitting params are included
     params = tc.fitting_parameters()
@@ -124,11 +136,14 @@ def test_constant_profile(mols, tp):
 )
 @settings(deadline=None)
 def test_derived_params(H2_He_ratio, H2O_mix, CH4_mix, tp):
-
+    """Test derived parameters."""
     expected_CO_ratio = CH4_mix / H2O_mix
     expected_H_He_ratio = H2_He_ratio / 2
 
-    tc = TaurexChemistry(ratio=H2_He_ratio, derived_ratios=["He/H", "C/O", "P/O"])
+    tc = TaurexChemistry(
+        ratio=H2_He_ratio,
+        derived_ratios=["He/H", "C/O", "P/O"],
+    )
 
     h2o = ConstantGas("O2", mix_ratio=H2O_mix)
     ch4 = ConstantGas("C2", mix_ratio=CH4_mix)
@@ -157,7 +172,7 @@ def test_derived_params(H2_He_ratio, H2O_mix, CH4_mix, tp):
         1 / expected_CO_ratio, rel=1e-2
     )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="No gas has element P"):
         tc.get_element_ratio("P/O")
 
     deriv = tc.derived_parameters()

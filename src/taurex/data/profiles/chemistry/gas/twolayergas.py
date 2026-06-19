@@ -6,7 +6,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.output import OutputGroup
-from taurex.util import molecule_texlabel, movingaverage
+from taurex.util import molecule_texlabel
+from taurex.util import movingaverage
 
 from .gas import Gas
 
@@ -31,9 +32,9 @@ class TwoLayerGas(Gas):
         """Initialize a two layer gas profile.
 
         Parameters
-        -----------
+        ----------
         molecule_name : str
-        Name of molecule
+            Name of molecule
 
         mix_ratio_surface : float
             Mixing ratio of the molecule on the planet surface
@@ -46,7 +47,6 @@ class TwoLayerGas(Gas):
 
         mix_ratio_smoothing : float , optional
             smoothing window
-
         """
         super().__init__(self.__class__.__name__, molecule_name=molecule_name)
 
@@ -107,12 +107,12 @@ class TwoLayerGas(Gas):
     @mixRatioPressure.setter
     def mixRatioPressure(self, value: float) -> None:  # noqa: N802
         """Set pressure at which the abundance changes."""
-        self._mix_pressure = value
+        self._mix_ratio_pressure = value
 
     @mixRatioSmoothing.setter
     def mixRatioSmoothing(self, value: float) -> None:  # noqa: N802
         """Set smoothing window."""
-        self._mix_smoothing = value
+        self._mix_ratio_smoothing = value
 
     def add_surface_param(self) -> None:
         """Generates surface fitting parameters.
@@ -124,6 +124,9 @@ class TwoLayerGas(Gas):
 
         param_surface = f"{param_name}_surface"
         param_surf_tex = f"{param_tex}_surface"
+
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
 
         def read_surf(self):
             return self._mix_surface
@@ -138,9 +141,6 @@ class TwoLayerGas(Gas):
         fget_surf = read_surf
         fset_surf = write_surf
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
             param_surface,
             param_surf_tex,
@@ -162,6 +162,9 @@ class TwoLayerGas(Gas):
         param_top = f"{param_name}_top"
         param_top_tex = f"{param_tex}_top"
 
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
+
         def read_top(self):
             return self._mix_top
 
@@ -173,11 +176,14 @@ class TwoLayerGas(Gas):
         fget_top = read_top
         fset_top = write_top
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
-            param_top, param_top_tex, fget_top, fset_top, "log", default_fit, bounds
+            param_top,
+            param_top_tex,
+            fget_top,
+            fset_top,
+            "log",
+            default_fit,
+            bounds,
         )
 
     def add_pressure_param(self) -> None:
@@ -191,6 +197,9 @@ class TwoLayerGas(Gas):
         param_p = f"{mol_name}_P"
         param_p_tex = f"{mol_tex}_P"
 
+        bounds = [1.0e-12, 0.1]
+        default_fit = False
+
         def read_p(self: "TwoLayerGas"):
             return self._mix_ratio_pressure
 
@@ -202,9 +211,6 @@ class TwoLayerGas(Gas):
         fget_p = read_p
         fset_p = write_p
 
-        bounds = [1.0e-12, 0.1]
-
-        default_fit = False
         self.add_fittable_param(
             param_p, param_p_tex, fget_p, fset_p, "log", default_fit, bounds
         )
@@ -219,7 +225,7 @@ class TwoLayerGas(Gas):
         """Initialize the profile.
 
         Parameters
-        -----------
+        ----------
         nlayers : int
             number of layers
         temperature_profile : np.ndarray
@@ -273,7 +279,18 @@ class TwoLayerGas(Gas):
         self._mix_profile[border:-border] = c_smooth[::-1]
 
     def write(self, output: OutputGroup):
-        """Write gas profile to output."""
+        """Write gas profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         gas_entry = super().write(output)
         gas_entry.write_scalar("mix_ratio_top", self.mixRatioTop)
         gas_entry.write_scalar("mix_ratio_surface", self.mixRatioSurface)
@@ -284,6 +301,7 @@ class TwoLayerGas(Gas):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, str]:
+        """Return input keywords for this gas."""
         return (
             "twolayer",
             "2layer",

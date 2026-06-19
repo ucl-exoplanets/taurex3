@@ -18,8 +18,10 @@ try:
     from numba import float64
 
     @numba.vectorize([float64(float64)], fastmath=True)
-    def _convert_lamb(lamb: npt.NDArray[np.float64]) -> npt:
-        """Convert wavenumber in :math:`\\mu m` to :math:`m`."""
+    def _convert_lamb(
+        lamb: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]:
+        r"""Convert wavenumber in :math:`\mu m` to :math:`m`."""
         return 10000 * 1e-6 / lamb
 
     @numba.vectorize([float64(float64, float64)], fastmath=True)
@@ -33,13 +35,39 @@ try:
 
     @numba.njit(fastmath=True, parallel=False)
     def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
-        """Compute black body spectrum using numba."""
+        """Compute black body spectrum using numba.
+        
+        Parameters
+        ----------
+        wn : npt.NDArray
+            Wavenumbers in cm^-1
+        temp : npt.NDArray
+            Temperature in Kelvin
+
+        Returns
+        -------
+        npt.NDArray
+            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        """
         wl = _convert_lamb(wn)
         return _black_body_vec(wl, temp)
 
     @numba.njit(fastmath=True, parallel=False)
     def black_body_numba_II(wn, temp):  # noqa: N802
-        """Compute black body spectrum (alt algo) using numba."""
+        """Compute black body spectrum (alt algo) using numba.
+        
+        Parameters
+        ----------
+        wn : npt.NDArray
+            Wavenumbers in cm^-1
+        temp : npt.NDArray
+            Temperature in Kelvin
+
+        Returns
+        -------
+        npt.NDArray
+            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        """
         n = wn.shape[0]
         out = np.zeros_like(wn)
         conversion = 10000 * 1e-6
@@ -58,22 +86,62 @@ except ImportError:
     print("Numba not installed, using numpy instead")
 
     def black_body_numba(wn: npt.NDArray[np.float64], temp: float):
-        """Compute black body spectrum using numpy (numba not available)."""
+        """Compute black body spectrum using numpy (numba not available).
+        
+        Parameters
+        ----------
+        wn : npt.NDArray
+            Wavenumbers in cm^-1
+        temp : npt.NDArray
+            Temperature in Kelvin
+
+        Returns
+        -------
+        npt.NDArray
+            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        """
         return black_body_numpy(wn, temp)
 
     def black_body_numba_II(wn: npt.NDArray[np.float64], temp: float):  # noqa: N802
-        """Compute black body spectrum using numpy (numba not available)."""
+        """Compute black body spectrum using numpy (numba not available).
+        
+        Parameters
+        ----------
+        wn : npt.NDArray
+            Wavenumbers in cm^-1
+        temp : npt.NDArray
+            Temperature in Kelvin
+
+        Returns
+        -------
+        npt.NDArray
+            Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+        """
         return black_body_numpy(wn, temp)
 
 
 def black_body_numexpr(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
-    """Compute black body spectrum using numexpr."""
+    """Compute black body spectrum using numexpr.
+        
+    Parameters
+    ----------
+    wn : npt.NDArray
+        Wavenumbers in cm^-1
+    temp : npt.NDArray
+        Temperature in Kelvin
+
+    Returns
+    -------
+    npt.NDArray
+        Black body spectrum, as a density distribution over wavelength (even though the input is wavenumbers)
+    """
     import numexpr as ne
 
     wl = ne.evaluate("10000*1e-6/wn")  # noqa: F841
 
     return ne.evaluate(
-        "(PI* (2.0*PLANCK*SPDLIGT**2)/(wl)**5) * (1.0/(exp((PLANCK * SPDLIGT)"
+        "(PI* (2.0*PLANCK*SPDLIGT**2)/(wl)**5) * "
+        "(1.0/(exp((PLANCK * SPDLIGT)"
         " / (wl * KBOLTZ * temp))-1))*1e-6"
     )
 
@@ -128,7 +196,10 @@ def black_body_numpy(wn: npt.NDArray, temp: npt.NDArray) -> npt.NDArray:
 
 
 def integrate_emission_layer(
-    dtau: npt.NDArray, layer_tau: npt.NDArray, mu: npt.NDArray, bb: npt.NDArray
+    dtau: npt.NDArray,
+    layer_tau: npt.NDArray,
+    mu: npt.NDArray,
+    bb: npt.NDArray,
 ) -> t.Tuple[npt.NDArray, npt.NDArray]:
     """Integrate emission layer.
 
@@ -140,7 +211,7 @@ def integrate_emission_layer(
         Optical depth of layer
     mu : npt.NDArray
         Cosine of zenith angle
-    BB : npt.NDArray
+    bb : npt.NDArray
         Black body spectrum
 
     Returns
@@ -149,11 +220,13 @@ def integrate_emission_layer(
         Integrated emission layer, optical depth of layer
 
     """
-
     _mu = 1 / mu[:, None]
     _tau = np.exp(-layer_tau) - np.exp(-dtau)
 
-    return bb * (np.exp(-layer_tau * _mu) - np.exp(-dtau * _mu)), _tau
+    return (
+        bb * (np.exp(-layer_tau * _mu) - np.exp(-dtau * _mu)),
+        _tau,
+    )
 
 
 black_body = black_body_numba

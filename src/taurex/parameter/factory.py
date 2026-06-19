@@ -1,3 +1,5 @@
+"""Module for creating objects from configuration dictionaries."""
+
 import typing as t
 from functools import partial
 
@@ -15,7 +17,10 @@ from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 from taurex.types import PathLike
 
-from .classfactory import ClassFactory, DiscoverMethod, InputKeywordMethod
+from .classfactory import ClassFactory
+from .classfactory import DiscoverMethod
+from .classfactory import InputKeywordMethod
+
 
 log = setup_log(__name__)
 
@@ -152,7 +157,8 @@ def determine_klass(
     alt_type: t.Optional[t.Union[str, t.Sequence[str]]] = None,
 ) -> t.Tuple[ConfigType, t.Type[InputT], bool]:
     """Determine class from input."""
-    from taurex.mixin.core import build_new_mixed_class, find_mapped_mixin
+    from taurex.mixin.core import build_new_mixed_class
+    from taurex.mixin.core import find_mapped_mixin
 
     keyword_types = ["type", "profile_type"]
     if alt_type is not None:
@@ -246,6 +252,7 @@ def create_generic(
 
 
 def create_prior(prior: str) -> Prior:
+    """Create prior from input string."""
     from taurex.util.fitting import parse_priors
 
     prior_name, args = parse_priors(prior)

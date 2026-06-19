@@ -1,4 +1,4 @@
-"""Test math"""
+"""Test math."""
 
 import hypothesis
 import hypothesis.extra.numpy as hnum
@@ -15,7 +15,7 @@ from hypothesis.strategies import floats
     ],
 )
 def test_lin(test_input, expected):
-    """Test linear interpolation"""
+    """Test linear interpolation."""
     from taurex.util.math import interp_lin_only
 
     x11, x12, press, p_min, p_max = test_input
@@ -34,8 +34,9 @@ def test_lin(test_input, expected):
 )
 @hypothesis.settings(deadline=None)  # This requires a compilation stage initially
 def test_bilin(temp, press, x11, x12, x21, x22):
-    """Test bilinear interpolation"""
-    from taurex.util.math import intepr_bilin, interp_lin_only
+    """Test bilinear interpolation."""
+    from taurex.util.math import intepr_bilin
+    from taurex.util.math import interp_lin_only
 
     p_min, p_max = 0.0, 1.0
     t_min, t_max = 0.0, 1.0
@@ -66,6 +67,7 @@ def test_bilin(temp, press, x11, x12, x21, x22):
 )
 @hypothesis.example(np.array([[0.0, 0.0]]))
 def test_online_variance(s):
+    """Test online variance."""
     from taurex.util.math import OnlineVariance
 
     num_values = s.shape[0]

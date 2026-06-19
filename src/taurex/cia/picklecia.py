@@ -1,4 +1,5 @@
 """Handling of .pickle/.db CIA files."""
+
 import pickle  # noqa: S403
 import typing as t
 from pathlib import Path
@@ -12,8 +13,8 @@ from .cia import CIA
 
 
 class PickleCIA(CIA):
-    """
-    Class for using pickled (``.db``) collisionally induced absorptions
+    """Class for using pickled (``.db``) collisionally induced absorptions.
+
     Very simple since the format is simple
 
 
@@ -29,7 +30,22 @@ class PickleCIA(CIA):
 
     """
 
-    def __init__(self, filename: str, pair_name: t.Optional[np.float64] = None):
+    def __init__(
+        self,
+        filename: str,
+        pair_name: t.Optional[t.Union[str, None]] = None,
+    ):
+        """Initialize PickleCIA.
+
+        Parameters
+        ----------
+        filename : str
+            Path to pickle
+        pair_name : str , optional
+            Whilst the name of the pair is determined by the pickle filename
+            since these can be different you can optionally force the name
+            through this parameter
+        """
         if pair_name is None:
             pair_name = Path(filename).stem
 
@@ -49,7 +65,6 @@ class PickleCIA(CIA):
             Path to pickle cia file
 
         """
-
         # Load the pickle file
         self.info("Loading cia cross section from %s", filename)
         with open(filename, "rb") as f:
@@ -61,7 +76,7 @@ class PickleCIA(CIA):
 
     @property
     def wavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
+        """Native wavenumber grid.
 
         Returns
         -------
@@ -73,7 +88,7 @@ class PickleCIA(CIA):
 
     @property
     def temperatureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
+        """Native temperature grid in Kelvin.
 
         Returns
         -------
@@ -81,12 +96,10 @@ class PickleCIA(CIA):
             Native temperature grid in Kelvin
 
         """
-
         return self._temperature_grid
 
     def find_closest_temperature_index(self, temperature: float) -> t.Tuple[int, int]:
-        """
-        Finds the nearest indices for a particular temperature
+        """Finds the nearest indices for a particular temperature.
 
         Parameters
         ----------
@@ -110,8 +123,9 @@ class PickleCIA(CIA):
     def interp_linear_grid(
         self, temperature: float, t_idx_min: int, t_idx_max: int
     ) -> float:
-        """
-        For a given temperature and indicies. Interpolate the cross-sections
+        """For a given temperature and indicies.
+
+        Interpolate the cross-sections
         linearly from temperature grid to temperature ``T``
 
         Parameters
@@ -119,10 +133,10 @@ class PickleCIA(CIA):
         temperature : float
             Temeprature in Kelvin
 
-        t_min : int
+        t_idx_min : int
             index on temprature grid to the left of ``temperature``
 
-        t_max : int
+        t_idx_max : int
             index on temprature grid to the right of ``temperature``
 
         Returns
@@ -144,9 +158,9 @@ class PickleCIA(CIA):
         return interp_lin_only(fx0, fx1, temperature, temp_min, temp_max)
 
     def compute_cia(self, temperature: float) -> npt.NDArray[np.float64]:
-        """
-        Computes the collisionally induced absorption cross-section
-        using our native temperature and cross-section grids
+        """Computes the collisionally induced absorption cross-section.
+
+        Uses our native temperature and cross-section grids
 
         Parameters
         ----------

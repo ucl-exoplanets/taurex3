@@ -1,26 +1,30 @@
 """Core classes for Taurex."""
-from taurex.data.citation import Citable, to_bibtex, unique_citations_only
-from taurex.data.fittable import (
-    DerivedType,
-    Fittable,
-    FittingType,
-    derivedparam,
-    fitparam,
-)
+
+from taurex.data.citation import Citable
+from taurex.data.citation import to_bibtex
+from taurex.data.citation import unique_citations_only
+from taurex.data.fittable import DerivedType
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import FittingType
+from taurex.data.fittable import derivedparam
+from taurex.data.fittable import fitparam
 from taurex.output.output import Output
+
 
 """Just contains a singleton class. Pretty useful"""
 
 
 class Singleton:
-    """
-    A singleton for your usage. When inheriting do not implement __init__ instead
+    """A singleton for your usage.
+
+    When inheriting do not implement __init__ instead
     override :func:`init`
 
 
     """
 
     def __new__(cls, *args, **kwds):
+        """Create a singleton class."""
         it = cls.__dict__.get("__it__")
         if it is not None:
             return it
@@ -29,7 +33,7 @@ class Singleton:
         return it
 
     def init(self, *args, **kwds):
-        """Override to act as an init"""
+        """Override to act as an init."""
         pass
 
 

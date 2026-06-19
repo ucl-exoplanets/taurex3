@@ -1,4 +1,4 @@
-"""Handles loading of classes from plugins and built-in classes"""
+"""Handles loading of classes from plugins and built-in classes."""
 
 # flake8: noqa:N802
 
@@ -13,6 +13,7 @@ from taurex.core import Singleton
 from taurex.log import Logger
 from taurex.mixin import Mixin
 from taurex.types import PathLike
+
 
 try:
     EPType = importlib.metadata.EntryPoints
@@ -30,20 +31,20 @@ def entry_points(*, group: str) -> EPType:  # type: ignore[name-defined]
 
 
 class InputKeywordMethod(t.Protocol):
-    """Protocol for classes that have input_keywords()"""
+    """Protocol for classes that have input_keywords()."""
 
     @classmethod
     def input_keywords(cls) -> t.Sequence[str]:
-        """Returns a list of input keywords"""
+        """Returns a list of input keywords."""
         ...
 
 
 class DiscoverMethod(t.Protocol):
-    """Protocol for classes that have discover() methods"""
+    """Protocol for classes that have discover() methods."""
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Any]]:
-        """Returns a list of input keywords"""
+        """Returns a list of input keywords."""
         ...
 
 
@@ -54,9 +55,10 @@ MixinT = t.TypeVar("MixinT", bound=Mixin)
 
 
 class ClassFactory(Singleton):
-    """A singleton factory the discovers new classes from plugins."""
+    """A singleton factory that discovers new classes from plugins."""
 
     def init(self) -> None:
+        """Initialize the class factory."""
         self.log = Logger("ClassFactory")
 
         self.extension_paths = []
@@ -67,6 +69,7 @@ class ClassFactory(Singleton):
         paths: t.Optional[t.List[PathLike]] = None,
         reload: t.Optional[bool] = True,
     ) -> None:
+        """Set extension paths."""
         self.extension_paths = [pathlib.Path(p) for p in paths] if paths else []
         if reload:
             self.reload_plugins()
@@ -98,19 +101,17 @@ class ClassFactory(Singleton):
 
     def setup_batteries_included(self) -> None:
         """Collect all the classes that are built into TauREx 3."""
-        from taurex import (
-            chemistry,
-            contributions,
-            instruments,
-            model,
-            opacity,
-            optimizer,
-            planet,
-            pressure,
-            spectrum,
-            stellar,
-            temperature,
-        )
+        from taurex import chemistry
+        from taurex import contributions
+        from taurex import instruments
+        from taurex import model
+        from taurex import opacity
+        from taurex import optimizer
+        from taurex import planet
+        from taurex import pressure
+        from taurex import spectrum
+        from taurex import stellar
+        from taurex import temperature
         from taurex.core import priors
         from taurex.opacity import ktables
 
@@ -164,7 +165,6 @@ class ClassFactory(Singleton):
 
     def discover_plugins(self) -> t.Tuple[t.Dict[str, ModuleType], t.Dict[str, str]]:
         """Discover all the plugins that are available from entry points."""
-
         plugins = {}
         failed_plugins = {}
 
@@ -289,7 +289,9 @@ class ClassFactory(Singleton):
         return self._collect_classes(module, Instrument)
 
     def _collect_model(self, module: ModuleType):
-        from taurex.model import ForwardModel, OneDForwardModel, SimpleForwardModel
+        from taurex.model import ForwardModel
+        from taurex.model import OneDForwardModel
+        from taurex.model import SimpleForwardModel
 
         return self._collect_classes(module, ForwardModel)
 
@@ -383,7 +385,8 @@ class ClassFactory(Singleton):
     @property
     def class_dict(self) -> t.Dict[t.Type[t.Any], t.Set[t.Type[t.Any]]]:
         """Returns a dictionary of all classes that are available in TauREx 3."""
-        from taurex.chemistry import Chemistry, Gas
+        from taurex.chemistry import Chemistry
+        from taurex.chemistry import Gas
         from taurex.contributions import Contribution
         from taurex.core.priors import Prior
         from taurex.instruments import Instrument
@@ -416,7 +419,6 @@ class ClassFactory(Singleton):
 
     def list_from_base(self, klass_type: t.Type[t.Any]) -> t.List[t.Type[t.Any]]:
         """Returns a list of classes that are a subclass of klass_type."""
-
         return self.class_dict[klass_type]
 
     @property

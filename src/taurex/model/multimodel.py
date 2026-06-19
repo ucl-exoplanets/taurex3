@@ -27,6 +27,7 @@ from .emission import contribute_ktau_emission
 from .model import ForwardModel
 from .transmission import TransmissionModel
 
+
 if t.TYPE_CHECKING:
     from taurex.contributions import Contribution
     from taurex.output import OutputGroup
@@ -51,6 +52,7 @@ class MultiChemistry:
         mu: t.Sequence[npt.NDArray[np.float64]],
         active_species: t.Optional[t.Sequence[str]] = None,
     ) -> None:
+        """Initialize MultiChemistry."""
         self._active_profiles = list(actives)
         self._inactive_profiles = list(inactives)
         self._mus = list(mu)
@@ -58,17 +60,24 @@ class MultiChemistry:
 
     @property
     def activeGases(self) -> t.List[str]:  # noqa: N802
+        """Active gases."""
         return self._active_species
 
     @property
-    def activeGasMixProfile(self) -> t.Dict[str, npt.NDArray[np.float64]]:  # noqa: N802
+    def activeGasMixProfile(  # noqa: N802
+        self,
+    ) -> t.Dict[str, npt.NDArray[np.float64]]:
+        """Active gas mix profile."""
         return {
             f"region{index}": profile
             for index, profile in enumerate(self._active_profiles)
         }
 
     @property
-    def inactiveGasMixProfile(self) -> t.Dict[str, npt.NDArray[np.float64]]:  # noqa: N802
+    def inactiveGasMixProfile(  # noqa: N802
+        self,
+    ) -> t.Dict[str, npt.NDArray[np.float64]]:
+        """Inactive gas mix profile."""
         return {
             f"region{index}": profile
             for index, profile in enumerate(self._inactive_profiles)
@@ -76,14 +85,17 @@ class MultiChemistry:
 
     @property
     def muProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Mean molecular weight profile."""
         return np.mean(np.array(self._mus), axis=0)
 
     @derivedparam(param_name="mu", param_latex="$\\mu$", compute=True)
     def mu(self) -> float:
+        """Mean molecular weight."""
         return self.muProfile[0] / AMU
 
     @property
     def hasCondensates(self) -> bool:  # noqa: N802
+        """Check if there are condensates."""
         return False
 
 
@@ -93,10 +105,18 @@ class MultiTransitModel(ForwardModel):
     BIBTEX_ENTRIES = [
         r"""
 @ARTICLE{2025A&A...699A.219C,
-       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and {Venot}, O.},
-        title = "{Cloud and haze parameterization in atmospheric retrievals: Insights from Titan's Cassini data and JWST observations of hot Jupiters}",
+       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and
+                 {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and
+                 {Venot}, O.},
+        title = "{Cloud and haze parameterization in atmospheric retrievals:
+                  Insights from Titan's Cassini data and JWST observations of
+                  hot Jupiters}",
       journal = {\aap},
-     keywords = {techniques: spectroscopic, planets and satellites: atmospheres, infrared: planetary systems, Earth and Planetary Astrophysics, Instrumentation and Methods for Astrophysics},
+     keywords = {techniques: spectroscopic,
+                 planets and satellites: atmospheres,
+                 infrared: planetary systems,
+                 Earth and Planetary Astrophysics,
+                 Instrumentation and Methods for Astrophysics},
          year = 2025,
         month = jul,
        volume = {699},
@@ -114,7 +134,9 @@ archivePrefix = {arXiv},
 
     def __init__(
         self,
-        temperature_profiles: t.Optional[t.Sequence[t.Optional[TemperatureProfile]]] = None,
+        temperature_profiles: t.Optional[
+            t.Sequence[t.Optional[TemperatureProfile]]
+        ] = None,
         chemistry: t.Optional[t.Sequence[t.Optional[Chemistry]]] = None,
         pressure_min: t.Optional[t.Union[float, t.Sequence[float]]] = None,
         pressure_max: t.Optional[t.Union[float, t.Sequence[float]]] = None,
@@ -123,10 +145,13 @@ archivePrefix = {arXiv},
         planet: t.Optional[Planet] = None,
         star: t.Optional[Star] = None,
         observation: t.Optional[BaseSpectrum] = None,
-        contributions: t.Optional[t.Sequence[t.Optional[t.Sequence[Contribution]]]] = None,
+        contributions: t.Optional[
+            t.Sequence[t.Optional[t.Sequence[Contribution]]]
+        ] = None,
         fractions: t.Optional[t.Sequence[float]] = None,
         use_cuda: bool = False,
     ) -> None:
+        """Initialize MultiTransitModel."""
         super().__init__(self.__class__.__name__)
 
         region_count = self._determine_region_count(
@@ -160,7 +185,9 @@ archivePrefix = {arXiv},
             pressure_max, region_count, 1e6
         )
         self._nlayers = self._normalize_scalar_or_sequence(nlayers, region_count, 100)
-        self._contribution_sets = self._normalize_contributions(contributions, region_count)
+        self._contribution_sets = self._normalize_contributions(
+            contributions, region_count
+        )
 
         self.activeGases: t.List[str] = []
         self._active_chems: t.List[npt.NDArray[np.float64]] = []
@@ -178,6 +205,7 @@ archivePrefix = {arXiv},
 
     @staticmethod
     def _determine_region_count(*groups: t.Any) -> int:
+        """Determine region count."""
         lengths = [len(group) for group in groups if group is not None]
         if not lengths:
             return 1
@@ -189,13 +217,18 @@ archivePrefix = {arXiv},
 
     @staticmethod
     def _normalize_sequence(
-        value: t.Optional[t.Sequence[t.Any]], count: int, default: t.Any
+        value: t.Optional[t.Sequence[t.Any]],
+        count: int,
+        default: t.Any,
     ) -> t.List[t.Any]:
+        """Normalize sequence."""
         if value is None:
             return [default] * count
         normalized = list(value)
         if len(normalized) != count:
-            raise ValueError("Multimodel input lengths must match the number of regions")
+            raise ValueError(
+                "Multimodel input lengths must match " "the number of regions"
+            )
         return normalized
 
     @staticmethod
@@ -204,13 +237,16 @@ archivePrefix = {arXiv},
         count: int,
         default: t.Union[int, float],
     ) -> t.List[t.Union[int, float]]:
+        """Normalize scalar or sequence."""
         if value is None:
             return [default] * count
         if isinstance(value, (int, float)):
             return [value] * count
         normalized = list(value)
         if len(normalized) != count:
-            raise ValueError("Multimodel scalar inputs must match the number of regions")
+            raise ValueError(
+                "Multimodel scalar inputs must match " "the number of regions"
+            )
         return normalized
 
     @staticmethod
@@ -218,6 +254,7 @@ archivePrefix = {arXiv},
         contributions: t.Optional[t.Sequence[t.Optional[t.Sequence[Contribution]]]],
         count: int,
     ) -> t.List[t.List[Contribution]]:
+        """Normalize contributions."""
         if contributions is None:
             return [[] for _ in range(count)]
         if len(contributions) != count:
@@ -228,6 +265,7 @@ archivePrefix = {arXiv},
     def _normalize_fractions(
         fractions: t.Optional[t.Sequence[float]], count: int
     ) -> t.Tuple[t.List[float], bool]:
+        """Normalize fractions."""
         if count < 1:
             raise ValueError("Multimodel must have at least one region")
         if fractions is None:
@@ -239,11 +277,13 @@ archivePrefix = {arXiv},
         if len(normalized) == count - 1 and count > 1:
             return normalized + [1.0 - sum(normalized)], True
         raise ValueError(
-            "fractions must contain either N values or N-1 values for auto-normalization"
+            "fractions must contain either N values or "
+            "N-1 values for auto-normalization"
         )
 
     @property
     def chemistry(self) -> MultiChemistry:
+        """Chemistry."""
         return MultiChemistry(
             self._active_chems,
             self._inactive_chems,
@@ -252,6 +292,7 @@ archivePrefix = {arXiv},
         )
 
     def initialize_profiles(self) -> None:
+        """Initialize profiles."""
         self.activeGases = []
         self._active_chems = []
         self._inactive_chems = []
@@ -270,11 +311,23 @@ archivePrefix = {arXiv},
             self._pressures.append(model.pressureProfile.copy())
 
     @staticmethod
-    def change_fit_values(value: t.Tuple[t.Any, ...], prefix: str) -> t.Tuple[t.Any, ...]:
+    def change_fit_values(
+        value: t.Tuple[t.Any, ...], prefix: str
+    ) -> t.Tuple[t.Any, ...]:
+        """Change fit values."""
         name, latex, fget, fset, mode, to_fit, bounds = value
-        return f"{prefix}_{name}", f"{prefix}_{latex}", fget, fset, mode, to_fit, bounds
+        return (
+            f"{prefix}_{name}",
+            f"{prefix}_{latex}",
+            fget,
+            fset,
+            mode,
+            to_fit,
+            bounds,
+        )
 
     def create_models(self) -> t.List[ForwardModel]:
+        """Create sub models."""
         sub_models: t.List[ForwardModel] = []
         for index in range(len(self._fractions)):
             pressure = self._pressure_profiles[index]
@@ -300,6 +353,7 @@ archivePrefix = {arXiv},
         pressure_profile: PressureProfile,
         contributions: t.Sequence[Contribution],
     ) -> ForwardModel:
+        """Create single model."""
         model_class = self.select_model()
         model = model_class(
             planet=self._planet,
@@ -316,9 +370,11 @@ archivePrefix = {arXiv},
         return model
 
     def generate_auto_factors(self) -> None:
+        """Generate auto factors."""
         fraction_bounds = (0.0, 1.0)
         fit_count = len(self._fractions) - 1 if self.autofrac else len(self._fractions)
         for index in range(fit_count):
+
             def read_fraction(self, index=index):
                 return self._fractions[index]
 
@@ -336,47 +392,66 @@ archivePrefix = {arXiv},
             )
 
     def select_model(self) -> t.Type[ForwardModel]:
+        """Select model."""
         model_class: t.Type[ForwardModel] = TransmissionModel
         if self._use_cuda:
             try:
                 from taurex_cuda import TransmissionCudaModel
 
                 model_class = TransmissionCudaModel
-            except (ModuleNotFoundError, ImportError):
+            except ImportError:
                 self.warning("Cuda plugin not found or not working")
         return model_class
 
     @property
     def nLayers(self) -> int:  # noqa: N802
+        """Number of layers."""
         return self._sub_models[0].nLayers
 
     @property
     def densityProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Density profile."""
         return np.stack([model.densityProfile for model in self._sub_models])
 
     @property
     def altitudeProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Altitude profile."""
         return np.stack([model.altitudeProfile for model in self._sub_models])
 
     @property
     def temperatureProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Temperature profile."""
         return np.array(self._temperatures)
 
     @property
     def pressureProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Pressure profile."""
         return np.array(self._pressures)
 
     @property
     def scaleheight_profile(self) -> npt.NDArray[np.float64]:
+        """Scaleheight profile."""
         return np.stack([model.scaleheight_profile for model in self._sub_models])
 
     @property
     def gravity_profile(self) -> npt.NDArray[np.float64]:
+        """Gravity profile."""
         return np.stack([model.gravity_profile for model in self._sub_models])
+
+    @property
+    def muProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Mean molecular weight profile."""
+        return np.mean(np.array(self._mus), axis=0)
+
+    @derivedparam(param_name="mu", param_latex="$\\mu$", compute=True)
+    def mu(self) -> float:
+        """Mean molecular weight."""
+        return self.muProfile[0] / AMU
 
     def determine_coupled_fitting(
         self, profiles: t.Sequence[t.Any]
     ) -> t.List[t.Dict[str, t.Tuple[t.Any, ...]]]:
+        """Determine coupled fitting."""
         coupling = [[profile is target for profile in profiles] for target in profiles]
         fit_params = [{} for _ in range(len(profiles) + 1)]
 
@@ -396,6 +471,7 @@ archivePrefix = {arXiv},
     def determine_coupled_contributions(
         self, contributions: t.Sequence[t.Sequence[Contribution]]
     ) -> t.List[t.Dict[str, t.Tuple[t.Any, ...]]]:
+        """Determine coupled contributions."""
         seen: t.List[Contribution] = []
         fit_params = [{} for _ in range(len(contributions) + 1)]
 
@@ -414,21 +490,15 @@ archivePrefix = {arXiv},
                     fit_params[index].update(contribution.fitting_parameters())
         return fit_params
 
-    @property
-    def muProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        return np.mean(np.array(self._mus), axis=0)
-
-    @derivedparam(param_name="mu", param_latex="$\\mu$", compute=True)
-    def mu(self) -> float:
-        return self.muProfile[0] / AMU
-
     def collect_base_derived_params(self) -> None:
+        """Collect base derived params."""
         self._derived_parameters = {}
         self._derived_parameters.update(self.derived_parameters())
         self._derived_parameters.update(self._planet.derived_parameters())
         self._derived_parameters.update(self._star.derived_parameters())
 
     def collect_base_fitting_params(self) -> None:
+        """Collect base fitting params."""
         self._fitting_parameters = {}
         self._fitting_parameters.update(self.fitting_parameters())
         self._fitting_parameters.update(self._planet.fitting_parameters())
@@ -446,8 +516,8 @@ archivePrefix = {arXiv},
                         self._fitting_parameters[key] = value
                     else:
                         prefix = f"m{index + 1}"
-                        self._fitting_parameters[f"{prefix}_{key}"] = self.change_fit_values(
-                            value, prefix
+                        self._fitting_parameters[f"{prefix}_{key}"] = (
+                            self.change_fit_values(value, prefix)
                         )
 
         contribution_fits = self.determine_coupled_contributions(self.contrClasses)
@@ -458,11 +528,12 @@ archivePrefix = {arXiv},
                     self._fitting_parameters[key] = value
                 else:
                     prefix = f"m{index + 1}"
-                    self._fitting_parameters[f"{prefix}_{key}"] = self.change_fit_values(
-                        value, prefix
+                    self._fitting_parameters[f"{prefix}_{key}"] = (
+                        self.change_fit_values(value, prefix)
                     )
 
     def build(self) -> None:
+        """Build model."""
         for model in self._sub_models:
             model.build()
         self.initialize_profiles()
@@ -472,9 +543,11 @@ archivePrefix = {arXiv},
 
     @property
     def nativeWavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Native wavenumber grid."""
         return self._sub_models[0].nativeWavenumberGrid
 
     def check_exceptions(self) -> None:
+        """Check exceptions."""
         if np.sum(self._fractions) > 1.0 + 1e-12:
             raise InvalidMultiModelException("Sum of fractions cannot exceed 1")
         if np.any(np.array(self._fractions) < 0.0):
@@ -490,6 +563,7 @@ archivePrefix = {arXiv},
         t.Optional[npt.NDArray[np.float64]],
         t.Optional[t.Any],
     ]:
+        """Run model."""
         native_grid = self.nativeWavenumberGrid
         if wngrid is not None and cutoff_grid:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)
@@ -515,20 +589,30 @@ archivePrefix = {arXiv},
         final_flux = self.compute_final_flux(native_fluxes)
         final_tau = None
         if native_taus:
-            final_tau = np.average(np.array(native_taus), axis=0, weights=self._fractions)
+            final_tau = np.average(
+                np.array(native_taus), axis=0, weights=self._fractions
+            )
         return native_grid, final_flux, final_tau, None
 
     def compute_final_flux(
         self, native_fluxes: t.Sequence[npt.NDArray[np.float64]]
     ) -> npt.NDArray[np.float64]:
-        return np.sum(np.array(native_fluxes) * np.array(self._fractions)[:, None], axis=0)
+        """Compute final flux."""
+        return np.sum(
+            np.array(native_fluxes) * np.array(self._fractions)[:, None],
+            axis=0,
+        )
 
     def compute_error(
         self,
         samples: t.Callable[[], t.Iterable[float]],
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
-    ) -> t.Tuple[t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]]:
+    ) -> t.Tuple[
+        t.Dict[str, npt.NDArray[np.float64]],
+        t.Dict[str, npt.NDArray[np.float64]],
+    ]:
+        """Compute error."""
         from taurex.util.math import OnlineVariance
 
         tp_profiles = OnlineVariance()
@@ -543,10 +627,12 @@ archivePrefix = {arXiv},
             chemistry = self.chemistry
             for index in range(len(self._sub_models)):
                 active_variances[index].update(
-                    chemistry.activeGasMixProfile[f"region{index}"], weight=weight
+                    chemistry.activeGasMixProfile[f"region{index}"],
+                    weight=weight,
                 )
                 inactive_variances[index].update(
-                    chemistry.inactiveGasMixProfile[f"region{index}"], weight=weight
+                    chemistry.inactiveGasMixProfile[f"region{index}"],
+                    weight=weight,
                 )
             native_spectrum.update(result[1], weight=weight)
             if binned_spectrum is not None:
@@ -573,6 +659,7 @@ archivePrefix = {arXiv},
         return profile_dict, spectrum_dict
 
     def write(self, output: OutputGroup) -> OutputGroup:
+        """Write model to output."""
         self.model(self.nativeWavenumberGrid)
         model = super().write(output)
         self._planet.write(model)
@@ -586,24 +673,29 @@ archivePrefix = {arXiv},
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for MultiTransitModel."""
         return ("multitransit", "multi_transit_internal")
 
 
 class MultiEclipseModel(MultiTransitModel):
     """Weighted combination of multiple emission submodels."""
 
-    def __init__(self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any) -> None:
+    def __init__(
+        self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any
+    ) -> None:
+        """Initialize MultiEclipseModel."""
         self._radius_scaling = radius_scaling
         super().__init__(*args, **kwargs)
 
     def select_model(self) -> t.Type[ForwardModel]:
+        """Select model."""
         model_class: t.Type[ForwardModel] = EmissionModel
         if self._use_cuda:
             try:
                 from taurex_cuda import EmissionCudaModel
 
                 model_class = EmissionCudaModel
-            except (ModuleNotFoundError, ImportError):
+            except ImportError:
                 self.warning("Cuda plugin not found or not working")
         if self._radius_scaling:
             model_class = EmissionModelRadiusScale
@@ -611,13 +703,14 @@ class MultiEclipseModel(MultiTransitModel):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for MultiEclipseModel."""
         return ("multieclipse", "multi_eclipse_internal")
 
 
 class EmissionModelRadiusScale(EmissionModel):
     """Emission model variant that scales each layer by its radius."""
 
-    def evaluate_emission_ktables(
+    def evaluate_emission_ktables(  # noqa: C901
         self, wngrid: npt.NDArray[np.float64], return_contrib: bool
     ) -> t.Tuple[
         npt.NDArray[np.float64],
@@ -625,6 +718,7 @@ class EmissionModelRadiusScale(EmissionModel):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
+        """Evaluate emission using k-tables."""
         from taurex.contributions import AbsorptionContribution
         from taurex.util import compute_dz
 
@@ -647,7 +741,9 @@ class EmissionModelRadiusScale(EmissionModel):
             for contribution in self.contribution_list
             if not isinstance(contribution, mol_type)
         ]
-        contribution_types = [type(contribution) for contribution in self.contribution_list]
+        contribution_types = [
+            type(contribution) for contribution in self.contribution_list
+        ]
         molecular = None
         if mol_type in contribution_types:
             molecular = self.contribution_list[contribution_types.index(mol_type)]
@@ -657,7 +753,14 @@ class EmissionModelRadiusScale(EmissionModel):
 
         for contribution in non_molecular:
             contribution.contribute(
-                self, 0, total_layers, 0, 0, density, surface_tau, path_length=dz
+                self,
+                0,
+                total_layers,
+                0,
+                0,
+                density,
+                surface_tau,
+                path_length=dz,
             )
 
         surface_tau = surface_tau * _mu
@@ -665,7 +768,14 @@ class EmissionModelRadiusScale(EmissionModel):
             for index, mu in enumerate(_mu):
                 tmp_tau[...] = 0.0
                 molecular.contribute(
-                    self, 0, total_layers, 0, 0, density, tmp_tau, path_length=dz * mu
+                    self,
+                    0,
+                    total_layers,
+                    0,
+                    0,
+                    density,
+                    tmp_tau,
+                    path_length=dz * mu,
                 )
                 surface_tau[index] += tmp_tau[0]
 
@@ -686,7 +796,14 @@ class EmissionModelRadiusScale(EmissionModel):
                     path_length=dz,
                 )
                 contribution.contribute(
-                    self, layer, layer + 1, 0, 0, density, dtau, path_length=dz
+                    self,
+                    layer,
+                    layer + 1,
+                    0,
+                    0,
+                    density,
+                    dtau,
+                    path_length=dz,
                 )
 
             k_dtau = None
@@ -732,15 +849,29 @@ class EmissionModelRadiusScale(EmissionModel):
 
             dtau_calc = np.exp(-dtau * _mu)
             layer_tau_calc = np.exp(-layer_tau * _mu)
-            if molecular is not None and weights is not None and k_dtau is not None and k_layer is not None:
+            if (
+                molecular is not None
+                and weights is not None
+                and k_dtau is not None
+                and k_layer is not None
+            ):
                 dtau_calc *= np.sum(np.exp(-k_dtau * _mu[:, None]) * weights, axis=-1)
-                layer_tau_calc *= np.sum(np.exp(-k_layer * _mu[:, None]) * weights, axis=-1)
+                layer_tau_calc *= np.sum(
+                    np.exp(-k_layer * _mu[:, None]) * weights, axis=-1
+                )
 
             intensity += planck * (layer_tau_calc - dtau_calc)
 
             dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
-            if molecular is not None and weights is not None and k_dtau is not None and k_layer is not None:
+            layer_tau_calc = (
+                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            )
+            if (
+                molecular is not None
+                and weights is not None
+                and k_dtau is not None
+                and k_layer is not None
+            ):
                 if k_dtau.min() < self._clamp:
                     dtau_calc *= np.sum(np.exp(-k_dtau) * weights, axis=-1)
                 if k_layer.min() < self._clamp:
@@ -759,6 +890,7 @@ class EmissionModelRadiusScale(EmissionModel):
         npt.NDArray[np.float64],
         npt.NDArray[np.float64],
     ]:
+        """Evaluate emission."""
         if self.usingKTables:
             return self.evaluate_emission_ktables(wngrid, return_contrib)
 
@@ -776,7 +908,14 @@ class EmissionModelRadiusScale(EmissionModel):
 
         for contribution in self.contribution_list:
             contribution.contribute(
-                self, 0, total_layers, 0, 0, density, surface_tau, path_length=dz
+                self,
+                0,
+                total_layers,
+                0,
+                0,
+                density,
+                surface_tau,
+                path_length=dz,
             )
 
         planck = black_body(wngrid, temperature[0]) / PI
@@ -799,12 +938,21 @@ class EmissionModelRadiusScale(EmissionModel):
                     path_length=dz,
                 )
                 contribution.contribute(
-                    self, layer, layer + 1, 0, 0, density, dtau, path_length=dz
+                    self,
+                    layer,
+                    layer + 1,
+                    0,
+                    0,
+                    density,
+                    dtau,
+                    path_length=dz,
                 )
 
             dtau += layer_tau
             dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            layer_tau_calc = (
+                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
+            )
             _tau = layer_tau_calc - dtau_calc
             tau[layer] += _tau if isinstance(_tau, float) else _tau[0]
 
@@ -820,24 +968,29 @@ class EmissionModelRadiusScale(EmissionModel):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for EmissionModelRadiusScale."""
         return ("emission_radscale", "eclipse_radscale")
 
 
 class MultiDirectImModel(MultiTransitModel):
     """Weighted combination of multiple direct-imaging submodels."""
 
-    def __init__(self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any) -> None:
+    def __init__(
+        self, *args: t.Any, radius_scaling: bool = False, **kwargs: t.Any
+    ) -> None:
+        """Initialize MultiDirectImModel."""
         self._radius_scaling = radius_scaling
         super().__init__(*args, **kwargs)
 
     def select_model(self) -> t.Type[ForwardModel]:
+        """Select model."""
         model_class: t.Type[ForwardModel] = DirectImageModel
         if self._use_cuda:
             try:
                 from taurex_cuda import DirectImageCudaModel
 
                 model_class = DirectImageCudaModel
-            except (ModuleNotFoundError, ImportError):
+            except ImportError:
                 self.warning("Cuda plugin not found or not working")
         if self._radius_scaling:
             model_class = DirectImageRadiusScaleModel
@@ -845,19 +998,29 @@ class MultiDirectImModel(MultiTransitModel):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
-        return ("multidirectimage", "multi_directimage_internal")
+        """Input keywords for MultiDirectImModel."""
+        return (
+            "multidirectimage",
+            "multi_directimage_internal",
+        )
 
 
 class DirectImageRadiusScaleModel(EmissionModelRadiusScale):
     """Direct-image variant of the radius-scaled emission model."""
 
-    def compute_final_flux(self, f_total: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]:
+    def compute_final_flux(
+        self, f_total: npt.NDArray[np.float64]
+    ) -> npt.NDArray[np.float64]:
+        """Compute final flux."""
         return compute_direct_image_final_flux(
-            f_total, self._planet.fullRadius, self._star.distance * 3.08567758e16
+            f_total,
+            self._planet.fullRadius,
+            self._star.distance * 3.08567758e16,
         )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for DirectImageRadiusScaleModel."""
         return ("direct_radscale", "directimage_radscale")
 
 
@@ -867,10 +1030,18 @@ class BaseParameterTransitModel(ForwardModel):
     BIBTEX_ENTRIES = [
         r"""
 @ARTICLE{2025A&A...699A.219C,
-       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and {Venot}, O.},
-        title = "{Cloud and haze parameterization in atmospheric retrievals: Insights from Titan's Cassini data and JWST observations of hot Jupiters}",
+       author = {{Changeat}, Q. and {Bardet}, D. and {Chubb}, K. and
+                 {Dyrek}, A. and {Edwards}, B. and {Ohno}, K. and
+                 {Venot}, O.},
+        title = "{Cloud and haze parameterization in atmospheric retrievals:
+                  Insights from Titan's Cassini data and JWST observations of
+                  hot Jupiters}",
       journal = {\aap},
-     keywords = {techniques: spectroscopic, planets and satellites: atmospheres, infrared: planetary systems, Earth and Planetary Astrophysics, Instrumentation and Methods for Astrophysics},
+     keywords = {techniques: spectroscopic,
+                 planets and satellites: atmospheres,
+                 infrared: planetary systems,
+                 Earth and Planetary Astrophysics,
+                 Instrumentation and Methods for Astrophysics},
          year = 2025,
         month = jul,
        volume = {699},
@@ -901,6 +1072,7 @@ archivePrefix = {arXiv},
         parfiles: t.Optional[t.Sequence[str]] = None,
         use_cuda: bool = False,
     ) -> None:
+        """Initialize BaseParameterTransitModel."""
         super().__init__(name)
         self._planet = planet
         self._star = star
@@ -918,18 +1090,18 @@ archivePrefix = {arXiv},
         self._multimodel: t.Optional[MultiTransitModel] = None
 
     def defaultBinner(self) -> Binner:  # noqa: N802
+        """Default binner."""
         if self._multimodel is None:
             return super().defaultBinner()
         return self._multimodel.defaultBinner()
 
-    def read_parameters(
-        self, parfile: t.Optional[str]
-    ) -> t.Tuple[
+    def read_parameters(self, parfile: t.Optional[str]) -> t.Tuple[
         t.Optional[TemperatureProfile],
         t.Optional[Chemistry],
         PressureProfile,
         t.List[Contribution],
     ]:
+        """Read parameters from parfile."""
         from taurex.parameter import ParameterParser
         from taurex.parameter.factory import generate_contributions
 
@@ -956,6 +1128,7 @@ archivePrefix = {arXiv},
         return temperature, chemistry, pressure, contributions
 
     def setup_keywords(self) -> t.Dict[str, t.Any]:
+        """Setup keywords."""
         regions = [self.read_parameters(parfile) for parfile in self._parfiles]
         if not regions:
             regions = [
@@ -966,7 +1139,9 @@ archivePrefix = {arXiv},
                     list(self.contribution_list),
                 )
             ]
-        temperature_profiles, chemistry, pressure, contributions = zip(*regions)
+        temperature_profiles, chemistry, pressure, contributions = zip(
+            *regions, strict=True
+        )
         nlayers = [region_pressure.nLayers for region_pressure in pressure]
         return {
             "temperature_profiles": list(temperature_profiles),
@@ -983,14 +1158,17 @@ archivePrefix = {arXiv},
         }
 
     def initialize_profiles(self) -> None:
+        """Initialize profiles."""
         if self._multimodel is None:
             raise RuntimeError("Model must be built before initializing profiles")
         self._multimodel.initialize_profiles()
 
     def create_model(self) -> MultiTransitModel:
+        """Create model."""
         raise NotImplementedError
 
     def build(self) -> None:
+        """Build model."""
         self._multimodel = self.create_model()
         self._multimodel.build()
         self._fitting_parameters = dict(self._multimodel.fittingParameters)
@@ -998,30 +1176,37 @@ archivePrefix = {arXiv},
 
     @property
     def densityProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Density profile."""
         return self._multimodel.densityProfile
 
     @property
     def altitudeProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Altitude profile."""
         return self._multimodel.altitudeProfile
 
     @property
     def temperatureProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Temperature profile."""
         return self._multimodel.temperatureProfile
 
     @property
     def pressureProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Pressure profile."""
         return self._multimodel.pressureProfile
 
     @property
     def chemistry(self) -> MultiChemistry:
+        """Chemistry."""
         return self._multimodel.chemistry
 
     @property
     def scaleheight_profile(self) -> npt.NDArray[np.float64]:
+        """Scaleheight profile."""
         return self._multimodel.scaleheight_profile
 
     @property
     def gravity_profile(self) -> npt.NDArray[np.float64]:
+        """Gravity profile."""
         return self._multimodel.gravity_profile
 
     def model(
@@ -1034,6 +1219,7 @@ archivePrefix = {arXiv},
         t.Optional[npt.NDArray[np.float64]],
         t.Optional[t.Any],
     ]:
+        """Run model."""
         return self._multimodel.model(wngrid=wngrid, cutoff_grid=cutoff_grid)
 
     def compute_error(
@@ -1041,14 +1227,20 @@ archivePrefix = {arXiv},
         samples: t.Callable[[], t.Iterable[float]],
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
         binner: t.Optional[Binner] = None,
-    ) -> t.Tuple[t.Dict[str, npt.NDArray[np.float64]], t.Dict[str, npt.NDArray[np.float64]]]:
+    ) -> t.Tuple[
+        t.Dict[str, npt.NDArray[np.float64]],
+        t.Dict[str, npt.NDArray[np.float64]],
+    ]:
+        """Compute error."""
         return self._multimodel.compute_error(samples, wngrid=wngrid, binner=binner)
 
     def write(self, output: OutputGroup) -> OutputGroup:
+        """Write model to output."""
         return self._multimodel.write(output)
 
     @property
     def nativeWavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Native wavenumber grid."""
         return self._multimodel.nativeWavenumberGrid
 
 
@@ -1070,6 +1262,7 @@ class MultiParameterTransitModel(BaseParameterTransitModel):
         use_cuda: bool = False,
         fractions: t.Optional[t.Sequence[float]] = None,
     ) -> None:
+        """Initialize MultiParameterTransitModel."""
         super().__init__(
             "MultiTransitParameter",
             planet=planet,
@@ -1087,11 +1280,13 @@ class MultiParameterTransitModel(BaseParameterTransitModel):
         self._fractions = list(fractions or []) if fractions is not None else None
 
     def create_model(self) -> MultiTransitModel:
+        """Create model."""
         kwargs = self.setup_keywords()
         return MultiTransitModel(**kwargs, fractions=self._fractions)
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for MultiParameterTransitModel."""
         return ("multi_transit",)
 
 
@@ -1114,6 +1309,7 @@ class MultiParameterEclipseModel(BaseParameterTransitModel):
         fractions: t.Optional[t.Sequence[float]] = None,
         radius_scaling: bool = False,
     ) -> None:
+        """Initialize MultiParameterEclipseModel."""
         super().__init__(
             "MultiEclipseParameter",
             planet=planet,
@@ -1132,13 +1328,17 @@ class MultiParameterEclipseModel(BaseParameterTransitModel):
         self._radius_scaling = radius_scaling
 
     def create_model(self) -> MultiEclipseModel:
+        """Create model."""
         kwargs = self.setup_keywords()
         return MultiEclipseModel(
-            **kwargs, fractions=self._fractions, radius_scaling=self._radius_scaling
+            **kwargs,
+            fractions=self._fractions,
+            radius_scaling=self._radius_scaling,
         )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for MultiParameterEclipseModel."""
         return ("multi_eclipse",)
 
 
@@ -1161,6 +1361,7 @@ class MultiParameterDirectImModel(BaseParameterTransitModel):
         fractions: t.Optional[t.Sequence[float]] = None,
         radius_scaling: bool = False,
     ) -> None:
+        """Initialize MultiParameterDirectImModel."""
         super().__init__(
             "MultiDirectParameter",
             planet=planet,
@@ -1179,11 +1380,15 @@ class MultiParameterDirectImModel(BaseParameterTransitModel):
         self._radius_scaling = radius_scaling
 
     def create_model(self) -> MultiDirectImModel:
+        """Create model."""
         kwargs = self.setup_keywords()
         return MultiDirectImModel(
-            **kwargs, fractions=self._fractions, radius_scaling=self._radius_scaling
+            **kwargs,
+            fractions=self._fractions,
+            radius_scaling=self._radius_scaling,
         )
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for MultiParameterDirectImModel."""
         return ("multi_directimage",)

@@ -1,14 +1,19 @@
+"""Test util functions."""
+
 import hypothesis
 import numpy as np
 import pytest
 from hypothesis.extra.numpy import arrays
-from hypothesis.strategies import floats, integers, text
+from hypothesis.strategies import floats
+from hypothesis.strategies import integers
+from hypothesis.strategies import text
 
 from ..strategies import molecules
 
 
 @hypothesis.given(molecules(style="normal"))
 def test_molecular_weight_hyp_normal(mol):
+    """Test molecular weight calculation for normal style molecules."""
     from taurex.util import calculate_weight
 
     k, _, v = mol
@@ -17,6 +22,7 @@ def test_molecular_weight_hyp_normal(mol):
 
 @hypothesis.given(molecules(style="exomol"))
 def test_molecular_weight_hyp_exomol(mol):
+    """Test molecular weight calculation for exomol style molecules."""
     from taurex.util import calculate_weight
 
     k, e, v = mol
@@ -25,6 +31,7 @@ def test_molecular_weight_hyp_exomol(mol):
 
 
 def test_molecular_weight():
+    """Test molecular weight calculation for a known set of molecules."""
     from taurex.util import calculate_weight
 
     expected = {
@@ -67,6 +74,7 @@ def test_molecular_weight():
 
 @hypothesis.given(integers(10, 1000))
 def test_grid_res(res):
+    """Test grid resolution creation."""
     from taurex.util import create_grid_res
 
     wn = 10000 / create_grid_res(res, 10.0, 1000)[::-1, 0]
@@ -75,6 +83,7 @@ def test_grid_res(res):
 
 
 def test_molecule_sanitization_same():
+    """Test molecule sanitization doesn't change already correct names."""
     from taurex.util import sanitize_molecule_string
 
     names = [
@@ -116,7 +125,9 @@ def test_molecule_sanitization_same():
 
 @hypothesis.given(integers(10, 1000))
 def test_width_conversion(s):
-    from taurex.util import create_grid_res, wnwidth_to_wlwidth
+    """Test conversion between wavenumber and wavelength widths."""
+    from taurex.util import create_grid_res
+    from taurex.util import wnwidth_to_wlwidth
 
     res = create_grid_res(s, 0.1, 10)
 
@@ -133,6 +144,7 @@ def test_width_conversion(s):
 
 @hypothesis.given(molecules(style="exomol"))
 def test_molecule_sanitization(mol):
+    """Test molecule sanitization converts exomol names to standard format."""
     from taurex.util import sanitize_molecule_string
 
     expected, exomol, mass = mol
@@ -140,6 +152,7 @@ def test_molecule_sanitization(mol):
 
 
 def test_conversion_factor():
+    """Test unit conversion factors between various units."""
     from taurex.util import conversion_factor
 
     assert conversion_factor("Pa", "bar") == 1e-5
@@ -152,6 +165,7 @@ def test_conversion_factor():
 
 
 def test_wngrid_clip():
+    """Test clipping native grid to wavenumber grid."""
     from taurex.binning import FluxBinner
     from taurex.util import clip_native_to_wngrid
 
@@ -175,7 +189,9 @@ def test_wngrid_clip():
 
 @hypothesis.given(integers(10, 100))
 def test_bin_edges(res):
-    from taurex.util import compute_bin_edges, create_grid_res
+    """Test computation of bin edges from a grid."""
+    from taurex.util import compute_bin_edges
+    from taurex.util import create_grid_res
 
     grid = create_grid_res(res, 300, 10000)
     edges, widths = compute_bin_edges(grid[:, 0])
@@ -184,6 +200,7 @@ def test_bin_edges(res):
 
 
 def test_check_duplicates():
+    """Test detection of duplicate items in a list."""
     from taurex.util import has_duplicates
 
     arr = ["Hello", "Hello"]
@@ -205,6 +222,7 @@ def test_check_duplicates():
     value=floats(min_value=-20.0, max_value=50.0, allow_nan=False),
 )
 def test_closest_pair(arr, value):
+    """Test finding the closest pair of indices in a sorted array."""
     from taurex.util import find_closest_pair
 
     left, right = find_closest_pair(arr, value)
@@ -225,6 +243,7 @@ def test_closest_pair(arr, value):
 
 @hypothesis.given(string=text(min_size=1))
 def test_ensure_string(string):
+    """Test ensuring string is UTF-8 encoded correctly."""
     from taurex.util import ensure_string_utf8
 
     assert string == ensure_string_utf8(string)

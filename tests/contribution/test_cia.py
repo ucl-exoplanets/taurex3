@@ -1,8 +1,10 @@
 """Test cia contribution function."""
+
 import numpy as np
 import pytest
 
-from taurex.contributions.cia import contribute_cia_numba, contribute_cia_numpy
+from taurex.contributions.cia import contribute_cia_numba
+from taurex.contributions.cia import contribute_cia_numpy
 
 
 def test_contribute_numpy():

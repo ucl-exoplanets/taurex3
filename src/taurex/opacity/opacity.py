@@ -1,4 +1,5 @@
 """Base class for computing opacities."""
+
 import typing as t
 
 import numpy as np
@@ -50,14 +51,17 @@ class Opacity(Logger, Citable):
 
     @property
     def wavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Wavenumber grid."""
         raise NotImplementedError
 
     @property
     def temperatureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Temperature grid."""
         raise NotImplementedError
 
     @property
     def pressureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Pressure grid."""
         raise NotImplementedError
 
     def compute_opacity(
@@ -66,7 +70,23 @@ class Opacity(Logger, Citable):
         pressure: float,
         wngrid: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> npt.NDArray[np.float64]:
-        """Must return in units of cm2."""
+        """Must return in units of cm2.
+
+        Parameters
+        ----------
+        temperature : float
+            Temperature in K
+        pressure : float
+            Pressure in Pa
+        wngrid : :obj:`array`, optional
+            Wavenumber grid to restrict to.
+
+        Returns
+        -------
+        :obj:`array`
+            Opacity array
+
+        """
         raise NotImplementedError
 
     def opacity(
@@ -110,7 +130,11 @@ class Opacity(Logger, Citable):
         else:
             hold_method = GlobalCache()["opacity_hold"]
             if hold_method:
-                return np.interp(wngrid, self.wavenumberGrid[wngrid_filter], orig)
+                return np.interp(
+                    wngrid,
+                    self.wavenumberGrid[wngrid_filter],
+                    orig,
+                )
             else:
                 return np.interp(
                     wngrid,
@@ -122,7 +146,6 @@ class Opacity(Logger, Citable):
 
     def opacityCitation(self) -> t.List[str]:  # noqa: N802
         """Citation for the specific molecular opacity.
-
 
         Returns
         -------

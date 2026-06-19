@@ -1,10 +1,17 @@
+"""Test non-uniform priors."""
+
 import unittest
 
-from taurex.util.fitting import MalformedPriorInputError, parse_priors, validate_priors
+from taurex.util.fitting import MalformedPriorInputError
+from taurex.util.fitting import parse_priors
+from taurex.util.fitting import validate_priors
 
 
 class TestParsing(unittest.TestCase):
+    """Test parsing."""
+
     def test_validation(self):
+        """Test validation."""
         validate_priors("Uniform(hello=1,bye=5)")
 
         with self.assertRaises(MalformedPriorInputError):
@@ -17,6 +24,7 @@ class TestParsing(unittest.TestCase):
             validate_priors("Uniform(hello=1,bye=5")
 
     def test_parse(self):
+        """Test parse."""
         test_uniform = "Uniform(min=100,max=1532)"
         test_loguniform = "LogUniform(min=-4,max=10)"
         test_gaussian = "Gaussian(mean=200,std=30,_type='cool', bounds=(100, 789))"
@@ -57,7 +65,10 @@ class TestParsing(unittest.TestCase):
 
 
 class TestUniform(unittest.TestCase):
+    """Test uniform."""
+
     def test_uniform(self):
+        """Test uniform."""
         from taurex.core.priors import Uniform
 
         u = Uniform(bounds=(100, 500))
@@ -70,6 +81,7 @@ class TestUniform(unittest.TestCase):
         self.assertEqual(u.prior(100), 100.0)
 
     def test_loguniform(self):
+        """Test loguniform."""
         import math
 
         from taurex.core.priors import LogUniform

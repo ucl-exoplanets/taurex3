@@ -1,11 +1,13 @@
 """Module for loading in PHOENIX spectra."""
+
 import math
 import os
 import typing as t
+import warnings
 
 import numpy as np
 import numpy.typing as npt
-import warnings
+
 from taurex.cache import GlobalCache
 from taurex.constants import MSOL
 from taurex.output import OutputGroup
@@ -23,7 +25,6 @@ class PhoenixStar(BlackbodyStar):
 
     Parameters
     ----------
-
     phoenix_path: str, **required**
         Path to folder containing phoenix ``fits.gz`` files
 
@@ -65,6 +66,7 @@ class PhoenixStar(BlackbodyStar):
         phoenix_path: t.Optional[PathLike] = None,
         retro_version_file: t.Optional[PathLike] = None,
     ):
+        """Initialize Phoenix star."""
         super().__init__(
             temperature=temperature,
             radius=radius,
@@ -76,15 +78,15 @@ class PhoenixStar(BlackbodyStar):
         self._phoenix_path = phoenix_path
 
         warnings.warn(
-            "Phoenix Model will be deprecated soon. Use plugin phoenix4all instead.",
+            "Phoenix Model will be deprecated soon. " "Use plugin phoenix4all instead.",
             DeprecationWarning,
             stacklevel=2,
         )
 
-
         self.retro_version_file = retro_version_file
         # CAN BE OBTAINED FROM:
-        # ftp://phoenix.astro.physik.uni-goettingen.de/HiResFITS/PHOENIX-ACES-AGSS-COND-2011/
+        # ftp://phoenix.astro.physik.uni-goettingen.de/
+        #   HiResFITS/PHOENIX-ACES-AGSS-COND-2011/
 
         if self._phoenix_path is None or not os.path.isdir(self._phoenix_path):
             self._phoenix_path = GlobalCache()["phoenix_path"]
@@ -180,6 +182,7 @@ class PhoenixStar(BlackbodyStar):
 
     @temperature.setter
     def temperature(self, value: float) -> None:
+        """Set temperature."""
         self._temperature = value
         self.recompute_spectra()
 
@@ -196,6 +199,7 @@ class PhoenixStar(BlackbodyStar):
 
     @mass.setter
     def mass(self, value: float) -> None:
+        """Set mass."""
         self._mass = value * MSOL
         self.recompute_spectra()
 
@@ -205,6 +209,7 @@ class PhoenixStar(BlackbodyStar):
         return self._files[int(idx)]
 
     def get_avail_phoenix(self) -> None:
+        """Get available PHOENIX files."""
         import glob
 
         from scipy.interpolate import NearestNDInterpolator
@@ -243,7 +248,7 @@ class PhoenixStar(BlackbodyStar):
         )
 
     def initialize(self, wngrid: npt.NDArray[np.float64]):
-        """Initializes and interpolates the spectral emission density
+        """Initializes and interpolates the spectral emission density.
 
         SED is interpolated to the current stellar temperature and
         given wavenumber grid
@@ -254,7 +259,6 @@ class PhoenixStar(BlackbodyStar):
             Wavenumber grid to interpolate the SED to
 
         """
-        # If temperature outside of range, use blavkbody
         if self.use_blackbody:
             self.warning(
                 "Using black body as temperature is "
@@ -284,6 +288,7 @@ class PhoenixStar(BlackbodyStar):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for Phoenix star."""
         return ("phoenix",)
 
     BIBTEX_ENTRIES = [
@@ -292,8 +297,8 @@ class PhoenixStar(BlackbodyStar):
             author = {{Husser, T.-O.} and {Wende-von Berg, S.} and
             {Dreizler, S.} and {Homeier, D.} and {Reiners, A.} and
             {Barman, T.} and {Hauschildt, P. H.}},
-            title = {A new extensive library of PHOENIX stellar atmospheres and
-                synthetic spectra},
+            title = {A new extensive library of PHOENIX stellar
+                     atmospheres and synthetic spectra},
             DOI= "10.1051/0004-6361/201219058",
             url= "https://doi.org/10.1051/0004-6361/201219058",
             journal = {A\&A},

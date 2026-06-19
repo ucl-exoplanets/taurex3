@@ -1,4 +1,5 @@
 """Isothermal temperature profile."""
+
 import typing as t
 
 import numpy as np
@@ -14,11 +15,10 @@ class Isothermal(TemperatureProfile):
     """An isothermal temperature-pressure profile."""
 
     def __init__(self, T: t.Optional[float] = 1500) -> None:  # noqa: N803
-        """Initialize isothermal class
+        """Initialize isothermal class.
 
         Parameters
         ----------
-
         T : float
             Isothermal Temperature to set in Kelvin
         """
@@ -33,7 +33,7 @@ class Isothermal(TemperatureProfile):
         default_bounds=[300.0, 2000.0],
     )
     def isoTemperature(self) -> float:  # noqa: N802
-        """Isothermal temperature in Kelvin"""
+        """Isothermal temperature in Kelvin."""
         return self._iso_temp
 
     @isoTemperature.setter

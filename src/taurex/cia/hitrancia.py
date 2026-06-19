@@ -1,4 +1,5 @@
-"""Module contains classes that handle loading of HITRAN cia files"""
+"""Module contains classes that handle loading of HITRAN cia files."""
+
 import typing as t
 
 import numpy as np
@@ -11,13 +12,27 @@ from .cia import CIA
 
 
 class EndOfHitranCIAError(Exception):
-    """An exception that occurs atr the end of a HITRAN file"""
+    """An exception that occurs atr the end of a HITRAN file."""
 
     pass
 
 
 def hashwn(start_wn: float, end_wn: float) -> str:
-    """Simple wavenumber hash function."""
+    """Simple wavenumber hash function.
+
+    Parameters
+    ----------
+    start_wn : float
+        Start wavenumber
+    end_wn : float
+        End wavenumber
+
+    Returns
+    -------
+    str
+        Hash string
+
+    """
     return str(start_wn) + str(end_wn)
 
 
@@ -39,6 +54,16 @@ class HitranCiaGrid(Logger):
     """
 
     def __init__(self, wn_min: float, wn_max: float) -> None:
+        """Initialize HitranCiaGrid.
+
+        Parameters
+        ----------
+        wn_min : float
+            The minimum wavenumber for this grid
+        wn_max : float
+            The maximum wavenumber for this grid
+
+        """
         super().__init__(self.__class__.__name__)
         self.wn = None
         self.Tsigma = []
@@ -46,19 +71,16 @@ class HitranCiaGrid(Logger):
     def add_temperature(
         self, temperature: float, sigma: npt.NDArray[np.float64]
     ) -> None:
-        """
-        Adds a temeprature and crossection to this wavenumber grid
+        """Add a temeprature and crossection to this wavenumber grid.
 
         Parameters
         ----------
-        T : float
-            Temeprature in Kelvin
-
+        temperature : float
+            Temperature in Kelvin
         sigma : :obj:`array`
             cross-sections for this grid
 
         """
-
         self.Tsigma.append((temperature, sigma))
 
     @property
@@ -109,19 +131,20 @@ class HitranCiaGrid(Logger):
     def interp_linear_grid(
         self, temperature: float, t_idx_min: int, t_idx_max: int
     ) -> npt.NDArray[np.float64]:
-        """For a given temperature and indicies. Interpolate the cross-sections.
+        """For a given temperature and indicies.
 
-        Interpolates linearly from temperature grid to temperature ``temperature``
+        Interpolate the cross-sections
+        linearly from temperature grid to temperature ``temperature``
 
         Parameters
         ----------
         temperature : float
             Temeprature in Kelvin
 
-        t_min : int
+        t_idx_min : int
             index on temprature grid to the left of ``temperature``
 
-        t_max : int
+        t_idx_max : int
             index on temprature grid to the right of ``temperature``
 
         Returns
@@ -130,7 +153,6 @@ class HitranCiaGrid(Logger):
             Interpolated cross-section
 
         """
-
         temp_grid = np.array(self.temperature)
         t_max = temp_grid[t_idx_max]
         t_min = temp_grid[t_idx_min]
@@ -146,9 +168,9 @@ class HitranCiaGrid(Logger):
         self.Tsigma.sort(key=operator.itemgetter(0))
 
     def fill_temperature(self, temperatures: npt.ArrayLike) -> None:
-        """Here the 'master' temperature grid is passed into here and gaps filled.
+        """Fill gaps in our grid using the 'master' temperature grid.
 
-        Any gaps in our grid is filled with zero cross-sections to produce
+        Any gaps is filled with zero cross-sections to produce
         our final temperature-crosssection grid that matches with every other
         wavenumber grid. Temperatures that don't exist in the current grid but
         are withing the minimum and maximum for us are produced by linear
@@ -174,8 +196,7 @@ class HitranCiaGrid(Logger):
 
 
 class HitranCIA(CIA):
-    """A class that directly deals with HITRAN
-
+    """A class that directly deals with HITRAN.
 
     Takes HITRAN `cia <https://hitran.org/cia/>`_
     and turns them into generic CIA objects that nicely produces
@@ -206,6 +227,14 @@ class HitranCIA(CIA):
     """
 
     def __init__(self, filename: str) -> None:
+        """Initialize HitranCIA.
+
+        Parameters
+        ----------
+        filename : str
+            Path to HITRAN cia file
+
+        """
         super().__init__(self.__class__.__name__, "None")
 
         self._filename = filename
@@ -217,9 +246,7 @@ class HitranCIA(CIA):
         self.load_hitran_file(filename)
 
     def load_hitran_file(self, filename: str) -> None:
-        """
-        Handles loading of the HITRAN file by reading and figuring
-        out the wavenumber and temperature grids and matching them up
+        """Handle loading of the HITRAN file and matching grids.
 
         Parameters
         ----------
@@ -227,7 +254,6 @@ class HitranCIA(CIA):
             Path to HITRAN cia file
 
         """
-
         temp_list = []
 
         with open(filename) as f:
@@ -282,11 +308,7 @@ class HitranCIA(CIA):
         self.compute_final_grid()
 
     def fill_gaps(self, temperature: float) -> None:
-        """
-
-        Fills gaps in temperature grid for all wavenumber grid objects
-        we've created
-
+        """Fill gaps in temperature grid for all wavenumber grid objects.
 
         Parameters
         ----------
@@ -308,7 +330,6 @@ class HitranCIA(CIA):
         collisionaly induced cross-sections
 
         """
-
         _wngrid = []
         for w in self._wn_dict.values():
             _wngrid.append(w.wn)
@@ -350,19 +371,19 @@ class HitranCIA(CIA):
     def interp_linear_grid(
         self, temperature: float, t_idx_min: int, t_idx_max: int
     ) -> npt.NDArray[np.float64]:
-        """
-        For a given temperature and indicies. Interpolate the cross-sections
-        linearly from temperature grid to temperature ``T``
+        """For a given temperature and indicies. Interpolate the cross-sections.
+
+        Interpolate linearly from temperature grid to temperature ``T``
 
         Parameters
         ----------
         temperature : float
             Temeprature in Kelvin
 
-        t_min : int
+        t_idx_min : int
             index on temprature grid to the left of ``temperature``
 
-        t_max : int
+        t_idx_max : int
             index on temprature grid to the right of ``temperature``
 
         Returns
@@ -389,6 +410,7 @@ class HitranCIA(CIA):
         Parameters
         ----------
         f : file object
+            Some file like object to read from.
 
         Returns
         -------
@@ -409,7 +431,6 @@ class HitranCIA(CIA):
 
 
         """
-
         while True:
             line = f.readline()
             if line is None or line == "":
@@ -443,8 +464,7 @@ class HitranCIA(CIA):
 
     @property
     def wavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
-        Unified wavenumber grid
+        """Unified wavenumber grid.
 
         Returns
         -------
@@ -452,13 +472,11 @@ class HitranCIA(CIA):
             Native wavenumber grid
 
         """
-
         return self._wavenumber_grid
 
     @property
     def temperatureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """
-        Unified temperature grid
+        """Unified temperature grid.
 
         Returns
         -------
@@ -469,9 +487,9 @@ class HitranCIA(CIA):
         return self._temperature_grid
 
     def compute_cia(self, temperature: float) -> npt.NDArray[np.float64]:
-        """
-        Computes the collisionally induced absorption cross-section
-        using our final native temperature and cross-section grids
+        """Computes the collisionally induced absorption cross-section.
+
+        Uses our final native temperature and cross-section grids
 
         Parameters
         ----------
@@ -484,7 +502,6 @@ class HitranCIA(CIA):
             Temperature interpolated cross-section
 
         """
-
         indicies = self.find_closest_temperature_index(temperature)
 
         return self.interp_linear_grid(temperature, *indicies)

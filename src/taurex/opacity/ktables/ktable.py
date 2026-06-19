@@ -1,8 +1,10 @@
-"""Base class for ktables"""
+"""Base class for ktables."""
+
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
+
 
 if t.TYPE_CHECKING:
     from ..opacity import Opacity

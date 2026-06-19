@@ -1,4 +1,5 @@
 """Opacities loaded from pickle."""
+
 import pathlib
 import pickle  # noqa
 import typing as t
@@ -10,7 +11,8 @@ from taurex.mpi import allocate_as_shared
 from taurex.types import PathLike
 from taurex.util import sanitize_molecule_string
 
-from .interpolateopacity import InterpModeType, InterpolatingOpacity
+from .interpolateopacity import InterpModeType
+from .interpolateopacity import InterpolatingOpacity
 
 
 class PickleOpacity(InterpolatingOpacity):
@@ -144,6 +146,7 @@ class PickleOpacity(InterpolatingOpacity):
 
     @property
     def pressureGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
+        """Pressure grid."""
         return self._pressure_grid
 
     @property

@@ -6,13 +6,15 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.chemistry import Gas
-from taurex.core import FittingType, fitparam
+from taurex.core import FittingType
+from taurex.core import fitparam
 
-from . import ChemistryMixin, TemperatureMixin
+from . import ChemistryMixin
+from . import TemperatureMixin
 
 
 class MakeFreeMixin(ChemistryMixin):
-    """Provides a :func:`addGas` method to any chemistry
+    """Provides a :func:`addGas` method to any chemistry.
 
     This class will either inject or force a molecule
     to become a :class:`~taurex.data.profiles.chemistry.gas.gas.Gas`
@@ -51,7 +53,8 @@ class MakeFreeMixin(ChemistryMixin):
     And indeed see that they are included. We can also retrieve them:
 
     >>> new_ace.fitting_parameters().keys()
-    dict_keys(['TiO', 'VO', 'ace_metallicity', 'metallicity', 'ace_co', 'C_O_ratio'])
+    dict_keys(['TiO', 'VO', 'ace_metallicity',
+               'metallicity', 'ace_co', 'C_O_ratio'])
 
     Finally we can force an existing molecule like CH4 into becoming a Gas:
 
@@ -104,7 +107,6 @@ class MakeFreeMixin(ChemistryMixin):
             on next initialization call.
 
         """
-
         if gas.molecule in [x.molecule for x in self._mixin_new_gas_list]:
             self.error("Gas already exists %s", gas.molecule)
             raise ValueError("Gas already exists")
@@ -178,7 +180,7 @@ class MakeFreeMixin(ChemistryMixin):
 
     @property
     def inactiveGasMixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Inactive gas layer by layer mix profile
+        """Inactive gas layer by layer mix profile.
 
         Returns
         -------
@@ -205,7 +207,7 @@ class MakeFreeMixin(ChemistryMixin):
         """Initialize the chemistry.
 
         Parameters
-        -----------
+        ----------
         nlayers : int
             number of layers
         temperature_profile : np.ndarray
@@ -223,7 +225,10 @@ class MakeFreeMixin(ChemistryMixin):
 
         for g in self._mixin_new_gas_list:
             g.initialize_profile(
-                nlayers, temperature_profile, pressure_profile, altitude_profile
+                nlayers,
+                temperature_profile,
+                pressure_profile,
+                altitude_profile,
             )
         self._run = True
         self.norm_factor = 1.0
@@ -243,7 +248,6 @@ class MakeFreeMixin(ChemistryMixin):
 
     def compute_mu_profile(self, nlayers: int):
         """Computes molecular weight of atmosphere for each layer.
-
 
         Parameters
         ----------
@@ -277,7 +281,6 @@ class MakeFreeMixin(ChemistryMixin):
 
         Returns
         -------
-
         fit_param : :obj:`dict`
 
         """

@@ -7,7 +7,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.data.citation import Citable
-from taurex.data.fittable import Fittable, fitparam
+from taurex.data.fittable import Fittable
+from taurex.data.fittable import fitparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
@@ -30,11 +31,8 @@ class PressureProfile(Fittable, Logger, Writeable, Citable):
     def __init__(self, name: str, nlayers: int) -> None:
         """Initialize pressure profile.
 
-
-
         Parameters
         ----------
-
         name: str
             Name used in logging
 
@@ -59,7 +57,6 @@ class PressureProfile(Fittable, Logger, Writeable, Citable):
         -------
         int
         """
-
         return self._nlayers
 
     @property
@@ -69,7 +66,6 @@ class PressureProfile(Fittable, Logger, Writeable, Citable):
 
     def compute_pressure_profile(self) -> None:
         """Compute pressure profile in Pa.
-
 
         **Requires implementation**
 
@@ -86,7 +82,7 @@ class PressureProfile(Fittable, Logger, Writeable, Citable):
 
     @property
     def profile(self) -> npt.NDArray[np.float64]:
-        """Pressure at each atmospheric layer (Pascal)
+        """Pressure at each atmospheric layer (Pascal).
 
         Returns
         -------
@@ -96,16 +92,36 @@ class PressureProfile(Fittable, Logger, Writeable, Citable):
         raise NotImplementedError
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write pressure profile to output."""
+        """Write pressure profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         pressure = output.create_group("Pressure")
         pressure.write_string("pressure_type", self.__class__.__name__)
         pressure.write_scalar("nlayers", self._nlayers)
         pressure.write_array("profile", self.profile)
         return pressure
 
+    @classmethod
+    def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for pressure profile."""
+        raise NotImplementedError
+
 
 class SimplePressureProfile(PressureProfile):
-    """A basic pressure profile."""
+    """A basic pressure profile.
+
+    .. deprecated::
+        Use :class:`LogPressureProfile` instead in new code.
+    """
 
     WARN = True
 
@@ -152,20 +168,11 @@ class SimplePressureProfile(PressureProfile):
 
     def compute_pressure_profile(self) -> None:
         """Set up the pressure profile for the atmosphere model."""
-
-        # set pressure profile of layer boundaries
-        # press_exp = np.linspace(np.log(self._atm_min_pressure),
-        #                       np.log(self._atm_max_pressure),
-        #                       self.nLevels)
-        # self.pressure_profile_levels = np.exp(press_exp)[::-1]
         self.pressure_profile_levels = np.logspace(
             math.log10(self._atm_min_pressure),
             math.log10(self._atm_max_pressure),
             self.nLevels,
         )[::-1]
-        # get mid point pressure between levels (i.e. get layer pressure)
-        # computing geometric
-        # average between pressure at n and n+1 level
         self.pressure_profile = self.pressure_profile_levels[:-1] * np.sqrt(
             self.pressure_profile_levels[1:] / self.pressure_profile_levels[:-1]
         )
@@ -178,11 +185,19 @@ class SimplePressureProfile(PressureProfile):
         default_bounds=[0.1, 1.0],
     )
     def minAtmospherePressure(self) -> float:  # noqa: N802
-        """Minimum pressure of atmosphere (top layer) in Pascal"""
+        """Minimum pressure of atmosphere (top layer) in Pascal."""
         return self._atm_min_pressure
 
     @minAtmospherePressure.setter
     def minAtmospherePressure(self, value: float) -> None:  # noqa: N802
+        """Set the minimum pressure of atmosphere (top layer) in Pascal.
+
+        Parameters
+        ----------
+        value : float
+            Minimum pressure in Pascal.
+
+        """
         self._atm_min_pressure = value
 
     @fitparam(
@@ -198,16 +213,34 @@ class SimplePressureProfile(PressureProfile):
 
     @maxAtmospherePressure.setter
     def maxAtmospherePressure(self, value: float):  # noqa: N802
-        """Set the maximum pressure of the atmosphere (surface) in Pascal"""
+        """Set the maximum pressure of the atmosphere (surface) in Pascal.
+
+        Parameters
+        ----------
+        value : float
+            Maximum pressure in Pascal.
+
+        """
         self._atm_max_pressure = value
 
     @property
     def profile(self) -> npt.NDArray[np.float64]:
-        """Pressure at each atmospheric layer (Pascal)"""
+        """Pressure at each atmospheric layer (Pascal)."""
         return self.pressure_profile
 
     def write(self, output: OutputGroup) -> OutputGroup:
-        """Write pressure profile to output."""
+        """Write pressure profile to output.
+
+        Parameters
+        ----------
+        output : :class:`~taurex.output.output.OutputGroup`
+            Output group to write to.
+
+        Returns
+        -------
+        :class:`~taurex.output.output.OutputGroup`
+
+        """
         pressure = super().write(output)
 
         pressure.write_scalar("atm_max_pressure", self._atm_max_pressure)
@@ -217,6 +250,7 @@ class SimplePressureProfile(PressureProfile):
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
+        """Input keywords for this pressure profile."""
         return (
             "simple",
             "hydrostatic",

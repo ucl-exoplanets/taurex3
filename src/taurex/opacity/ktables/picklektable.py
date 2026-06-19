@@ -1,4 +1,5 @@
 """Ktables from pickle files."""
+
 import pathlib
 import pickle  # noqa: S403
 import typing as t
@@ -8,7 +9,8 @@ import numpy.typing as npt
 
 from taurex.types import PathLike
 
-from ..interpolateopacity import InterpModeType, InterpolatingOpacity
+from ..interpolateopacity import InterpModeType
+from ..interpolateopacity import InterpolatingOpacity
 from .ktable import KTable
 
 
@@ -24,6 +26,7 @@ class PickleKTable(KTable, InterpolatingOpacity):
 
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Tuple[pathlib.Path, InterpModeType]]]:
+        """Discover opacities from pickle files."""
         import pathlib
 
         from taurex.cache import GlobalCache

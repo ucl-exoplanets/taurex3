@@ -4,6 +4,7 @@
 /.nox/
 /.python-version
 /.pytype/
+.github/copilot-instructions.md
 /dist/
 /docs/_build/
 /src/*.egg-info/

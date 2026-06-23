@@ -8,6 +8,124 @@ from taurex.model import ForwardModel
 from taurex.spectrum import BaseSpectrum
 
 
+class NativeLineModel(ForwardModel):
+    """Line model that computes on its own fixed native grid.
+
+    Unlike LineModel, this ignores the ``wngrid`` parameter and always
+    returns the model on its own fine native grid. This simulates how
+    real forward models behave, making it suitable for testing binners
+    in the retrieval pipeline.
+    """
+
+    def __init__(self):
+        """Initialize NativeLineModel."""
+        super().__init__(self.__class__.__name__)
+        self._m = 0.5
+        self._c = 10.0
+        self._x = np.linspace(1, 100, 500)
+
+    @fitparam(param_name="c")
+    def c(self):
+        """Line parameter c."""
+        return self._c
+
+    @c.setter
+    def c(self, value):
+        self._c = value
+
+    @fitparam(param_name="m")
+    def m(self):
+        """Line parameter m."""
+        return self._m
+
+    @m.setter
+    def m(self, value):
+        self._m = value
+
+    def model(self, wngrid=None, cutoff_grid=True):
+        """Run the model on the native grid."""
+        return self._x, self._m * self._x + self._c, np.zeros_like(self._x), None
+
+    def build(self):
+        """Build the model."""
+        pass
+
+    def initialize_profiles(self):
+        """Initialize profiles."""
+        pass
+
+    @property
+    def chemistry(self):
+        """Chemistry property."""
+
+        class Dummy:
+            """Dummy chemistry."""
+
+            @property
+            def muProfile(self):
+                """Mu profile."""
+                return [1.0]
+
+        test = Dummy()
+        return test
+
+
+class BinnedLineObs(BaseSpectrum):
+    """Observation with a coarse grid and configurable binner.
+
+    Useful for testing that binners work correctly in the retrieval
+    pipeline. The observation grid is coarser than the model's native
+    grid, so the binner must actually do work to bin the model output
+    down to the observation grid.
+    """
+
+    def __init__(self, m, c, N, binner_cls=None):
+        """Initialize BinnedLineObs.
+
+        Parameters
+        ----------
+        m : float
+            True slope parameter
+        c : float
+            True intercept parameter
+        N : int
+            Number of coarse bins
+        binner_cls : class, optional
+            Binner class to use (default: FluxBinner)
+        """
+        super().__init__("BinnedLineObs")
+        if binner_cls is None:
+            from taurex.binning import FluxBinner
+
+            binner_cls = FluxBinner
+        self._binner_cls = binner_cls
+        self._m = m
+        self._c = c
+        self._x = np.linspace(1, 100, N)
+        self._y = self._m * self._x + self._c
+        self._yerr = 0.1 + 0.1 * np.random.rand(N)
+        self._y += self._yerr * np.random.randn(N)
+
+    def create_binner(self):
+        """Creates the appropriate binning object."""
+        return self._binner_cls(wngrid=self._x)
+
+    @property
+    def spectrum(self):
+        """Spectrum property."""
+        return self._y
+
+    @property
+    def wavenumberGrid(self):
+        """Wavenumber grid property."""
+        return self._x
+
+    @property
+    def errorBar(self):
+        """Error bar property."""
+        return self._yerr
+
+
 class LineModel(ForwardModel):
     """Line model for testing optimizers."""
 

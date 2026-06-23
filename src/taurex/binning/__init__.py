@@ -4,6 +4,7 @@ from .binner import BinDownType
 from .binner import BinnedSpectrumType
 from .binner import Binner
 from .fluxbinner import FluxBinner
+from .fluxbinner import FluxBinnerOld
 from .nativebinner import NativeBinner
 from .simplebinner import SimpleBinner
 

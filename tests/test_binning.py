@@ -59,7 +59,7 @@ def test_fluxbinner_linearity_wn():
 
 
 def test_fluxbinner_linearity_wl():
-    """Test that FluxBinner is linear in wavenumber space."""
+    """Test that FluxBinner is linear in wavelength space."""
     bins = np.array([2, 3, 4])
     bin_widths = np.array([0.1, 0.2, 0.3])
     binner = FluxBinner(wlgrid=bins, wlgrid_width=bin_widths)

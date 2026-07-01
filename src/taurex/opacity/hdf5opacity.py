@@ -45,13 +45,15 @@ class HDF5Opacity(InterpolatingOpacity):
         discovery = []
 
         interp = GlobalCache()["xsec_interpolation"] or "linear"
-        mem = GlobalCache()["xsec_in_memory"] or True
+        mem = GlobalCache()["xsec_in_memory"]
+        if mem is None:
+            mem = True
 
         for f in file_list:
             op = HDF5Opacity(f, interpolation_mode="linear", in_memory=False)
             mol_name = op.moleculeName
             discovery.append((mol_name, [f, interp, mem]))
-            # op._spec_dict.close()
+            op._spec_dict.close()
             del op
 
         return discovery
@@ -145,13 +147,24 @@ class HDF5Opacity(InterpolatingOpacity):
         )
 
         if self.in_memory and GlobalCache()["mpi_use_shared"]:
+            # Only the shared-memory root rank loads the full array from disk.
+            # Non-root ranks pass None to avoid allocating a private copy
+            # of the full dataset in local RAM.
+            from taurex.mpi import shared_rank
+
+            if shared_rank() == 0:
+                xsec_data = self._spec_dict["xsecarr"][()]
+            else:
+                xsec_data = None
+
             self._xsec_grid = allocate_as_shared(
-                # Dont copy the array until shared memory
-                # is allocated. Then copy it to shared memory
-                # directly
-                self._spec_dict["xsecarr"][()],
+                xsec_data,
                 logger=self,
+                force_shared=True,
             )
+            # Release the temporary array on root rank
+            if xsec_data is not None:
+                del xsec_data
         elif self.in_memory:
             self._xsec_grid = self._spec_dict["xsecarr"][()]
         else:

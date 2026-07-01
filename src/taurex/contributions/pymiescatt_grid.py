@@ -319,10 +319,20 @@ class PyMieScattGridExtinctionContribution(Contribution):
         t.List[npt.NDArray[np.float64]],
         t.List[npt.NDArray[np.float64]],
     ]:
-        """Load input files for all species."""
+        """Load input files for all species.
+
+        When MPI shared memory is enabled, only the shared-memory root
+        rank loads the full Qext grids from disk. Other ranks attach
+        via shared memory without holding private copies.
+        """
+        from taurex.cache import GlobalCache
+        from taurex.mpi import allocate_as_shared, shared_rank
+
         radius_grids = []
         qexts = []
         wavenumber_grids = []
+
+        use_shared = GlobalCache()["mpi_use_shared"]
 
         for path in paths:
             with h5py.File(path, "r") as grid_file:
@@ -338,7 +348,20 @@ class PyMieScattGridExtinctionContribution(Contribution):
                         f"{path} is missing required dataset {exc!s}"
                     ) from exc
 
-                qext_grid = self._read_qext_dataset(grid_file, path)
+                if use_shared:
+                    # Only the shared-memory root reads the Qext data.
+                    # Non-root ranks get an empty placeholder.
+                    if shared_rank() == 0:
+                        qext_grid = self._read_qext_dataset(grid_file, path)
+                    else:
+                        qext_grid = None
+                    qext_grid = allocate_as_shared(
+                        qext_grid,
+                        logger=self,
+                        force_shared=True,
+                    )
+                else:
+                    qext_grid = self._read_qext_dataset(grid_file, path)
 
             radius_grids.append(radius_grid)
             qexts.append(qext_grid)

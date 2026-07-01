@@ -117,6 +117,13 @@ class PickleOpacity(InterpolatingOpacity):
         self._temperature_grid = self._spec_dict["t"]
         self._pressure_grid = self._spec_dict["p"] * 1e5
         self._xsec_grid = allocate_as_shared(self._spec_dict["xsecarr"], logger=self)
+        # Release the private copy of the large xsec array after
+        # moving to shared memory (if MPI shared mode is active).
+        # Small metadata arrays are kept in _spec_dict.
+        from taurex.cache import GlobalCache
+
+        if GlobalCache()["mpi_use_shared"]:
+            del self._spec_dict["xsecarr"]
         self._resolution = np.average(np.diff(self._wavenumber_grid))
 
         splits = filename.stem.split(".")

@@ -268,7 +268,7 @@ def shared_rank() -> int:
 
 
 def allocate_as_shared(
-    arr: np.ndarray,
+    arr: t.Optional[np.ndarray],
     logger: t.Optional[logging.Logger] = None,
     force_shared: t.Optional[bool] = False,
 ):
@@ -284,10 +284,17 @@ def allocate_as_shared(
     or ``force_shared=True`` otherwise does nothing and
     returns the same array back
 
+    When using MPI shared memory, only the shared-memory root rank
+    (rank 0 in the shared communicator) needs to pass the actual data
+    array. Non-root ranks can pass ``None`` to avoid allocating a
+    private copy of the array in their local memory. The shape, dtype,
+    and size are automatically broadcast from the root rank.
+
     Parameters
     ----------
-    arr: numpy array
-        Array to convert
+    arr: numpy array or None
+        Array to convert to shared memory. Can be None on non-root
+        ranks of the shared communicator.
 
     logger: :class:`~taurex.log.logger.Logger`
         Logger object to print outputs
@@ -313,18 +320,42 @@ def allocate_as_shared(
         if logger is not None:
             logger.info("Moving to shared memory")
         comm = shared_comm()
-        nbytes = arr.size * arr.itemsize
+        sh_rank = shared_rank()
 
-        window = MPI.Win.Allocate_shared(nbytes, arr.itemsize, comm=comm)
-        buf, itemsize = window.Shared_query(0)
-        if itemsize != arr.itemsize:
+        # Determine shape, dtype, and size across ranks.
+        # On non-root ranks, arr may be None to avoid private allocation.
+        if sh_rank == 0:
+            if arr is None:
+                raise ValueError(
+                    "Shared-memory root rank (0) must provide the data array"
+                )
+            shape = arr.shape
+            dtype = arr.dtype
+            itemsize = arr.itemsize
+            nbytes = arr.size * itemsize
+        else:
+            shape = None
+            dtype = None
+            itemsize = None
+            nbytes = 0
+
+        # Broadcast metadata from root to all ranks in shared communicator
+        nbytes = comm.bcast(nbytes, root=0)
+        itemsize = comm.bcast(itemsize, root=0)
+        shape = comm.bcast(shape, root=0)
+        dtype = comm.bcast(dtype, root=0)
+
+        window = MPI.Win.Allocate_shared(nbytes, itemsize, comm=comm)
+        buf, actual_itemsize = window.Shared_query(0)
+        if actual_itemsize != itemsize:
             raise Exception(
-                f"Shared memory size {itemsize} != array " f"itemsize {arr.itemsize}"
+                f"Shared memory itemsize {actual_itemsize} != "
+                f"array itemsize {itemsize}"
             )
 
-        shared_array = np.ndarray(buffer=buf, dtype=arr.dtype, shape=arr.shape)
+        shared_array = np.ndarray(buffer=buf, dtype=dtype, shape=shape)
 
-        if shared_rank() == 0:
+        if sh_rank == 0:
             np.copyto(shared_array, arr)
 
         comm.Barrier()

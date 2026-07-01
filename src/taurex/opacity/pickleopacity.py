@@ -120,6 +120,8 @@ class PickleOpacity(InterpolatingOpacity):
         # Release the private copy of the large xsec array after
         # moving to shared memory (if MPI shared mode is active).
         # Small metadata arrays are kept in _spec_dict.
+        from taurex.cache import GlobalCache
+
         if GlobalCache()["mpi_use_shared"]:
             del self._spec_dict["xsecarr"]
         self._resolution = np.average(np.diff(self._wavenumber_grid))

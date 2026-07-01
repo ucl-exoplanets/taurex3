@@ -326,7 +326,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
         via shared memory without holding private copies.
         """
         from taurex.cache import GlobalCache
-        from taurex.mpi import allocate_as_shared, shared_rank
+        from taurex.mpi import allocate_as_shared
+        from taurex.mpi import shared_rank
 
         radius_grids = []
         qexts = []

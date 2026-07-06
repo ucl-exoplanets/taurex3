@@ -206,7 +206,7 @@ class PhoenixStar(BlackbodyStar):
     def find_nearest_file(self) -> str:
         """Finds the nearest file to the current stellar parameters."""
         idx = self._index_finder([self._temperature, self._logg, self._metallicity])
-        return self._files[int(idx)]
+        return self._files[int(idx.item())]
 
     def get_avail_phoenix(self) -> None:
         """Get available PHOENIX files."""

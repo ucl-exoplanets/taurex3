@@ -16,3 +16,4 @@ scratch/
 /examples/tmp/
 .venv/
 .docs-preview/
+.github/copilot-instructions.md

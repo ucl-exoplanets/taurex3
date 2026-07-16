@@ -73,10 +73,10 @@ class CIACache(Singleton):
         self.load_cia(pair_filter=[key])
         # If we have it after a load then good job boys
         if key in self.cia_dict:
-            self._done = True
             return self.cia_dict[key]
         else:
             # Otherwise throw an error
+            self._done = True
             self.log.error("CIA for pair %s could not be loaded", key)
             self.log.error(
                 "It could not be found in the local dictionary " " %s",

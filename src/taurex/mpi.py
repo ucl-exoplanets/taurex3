@@ -333,11 +333,13 @@ def allocate_as_shared(
             dtype = arr.dtype
             itemsize = arr.itemsize
             nbytes = arr.size * itemsize
+            nbytes_alloc = nbytes
         else:
             shape = None
             dtype = None
             itemsize = None
             nbytes = 0
+            nbytes_alloc = 0
 
         # Broadcast metadata from root to all ranks in shared communicator
         nbytes = comm.bcast(nbytes, root=0)
@@ -345,7 +347,11 @@ def allocate_as_shared(
         shape = comm.bcast(shape, root=0)
         dtype = comm.bcast(dtype, root=0)
 
-        window = MPI.Win.Allocate_shared(nbytes, itemsize, comm=comm)
+        # CRITICAL: Only rank 0 allocates shared memory; other ranks pass 0.
+        # MPI_Win_Allocate_shared sums sizes across ALL ranks in the
+        # communicator, so non-root ranks MUST pass 0 to avoid multiplying
+        # the shared memory footprint by the number of ranks per node.
+        window = MPI.Win.Allocate_shared(nbytes_alloc, itemsize, comm=comm)
         buf, actual_itemsize = window.Shared_query(0)
         if actual_itemsize != itemsize:
             raise Exception(

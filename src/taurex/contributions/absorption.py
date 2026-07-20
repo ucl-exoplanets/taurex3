@@ -260,6 +260,8 @@ class AbsorptionContribution(Contribution):
         sigma_xsec = None
         self.weights = None
 
+        dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+
         for gas in model.chemistry.activeGases:
             # self._total_contrib[...] =0.0
             gas_mix = model.chemistry.get_gas_mix_profile(gas)
@@ -273,10 +275,11 @@ class AbsorptionContribution(Contribution):
             if sigma_xsec is None:
                 if self._use_ktables:
                     sigma_xsec = np.zeros(
-                        shape=(self._nlayers, self._ngrid, len(self.weights))
+                        shape=(self._nlayers, self._ngrid, len(self.weights)),
+                        dtype=dtype,
                     )
                 else:
-                    sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid))
+                    sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid), dtype=dtype)
             else:
                 sigma_xsec[...] = 0.0
 

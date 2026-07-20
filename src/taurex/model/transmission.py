@@ -172,7 +172,10 @@ class TransmissionModel(OneDForwardModel):
             path_length = self.compute_path_length_old(dz)
         self.path_length = path_length
 
-        tau = np.zeros(shape=(total_layers, wngrid_size), dtype=np.float64)
+        from taurex.cache import GlobalCache
+
+        tau_dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
         for layer in range(total_layers):
             self.debug("Computing layer %s", layer)

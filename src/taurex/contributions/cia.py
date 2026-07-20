@@ -290,7 +290,10 @@ class CIAContribution(Contribution):
         self._ngrid = wngrid.shape[0]
         self.info("Computing CIA ")
 
-        sigma_cia = np.zeros(shape=(model.nLayers, wngrid.shape[0]))
+        from taurex.cache import GlobalCache
+
+        dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        sigma_cia = np.zeros(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
 
         chemistry = model.chemistry
 

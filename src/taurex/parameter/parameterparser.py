@@ -98,6 +98,11 @@ class ParameterParser(Logger):
                 self.warning("Xsecs will be loaded in memory")
 
             try:
+                OpacityCache().set_xsec_float32(config["Global"]["xsec_float32"])
+            except KeyError:
+                pass
+
+            try:
                 OpacityCache().enable_radis(config["Global"]["use_radis"])
             except KeyError:
                 self.warning("Radis is disabled")

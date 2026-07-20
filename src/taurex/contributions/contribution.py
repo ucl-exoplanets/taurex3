@@ -378,7 +378,10 @@ class Contribution(Fittable, Logger, Writeable, Citable):
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
-        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid))
+        from taurex.cache import GlobalCache
+
+        dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid), dtype=dtype)
 
         for gas, sigma in self.prepare_each(model, wngrid):
             self.debug("Gas %s", gas)

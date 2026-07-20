@@ -69,11 +69,13 @@ class CIACache(Singleton):
         elif self._done:
             raise KeyError(f"CIA pair {key} not found")
 
-        # Try a load of the cia
-        self.load_cia(pair_filter=[key])
-        # If we have it after a load then good job boys
+        # First access: load ALL CIA files from the path (not just the
+        # requested pair), so that subsequent requests for other pairs
+        # don't short-circuit on _done=True without being loaded.
+        self.load_cia()
+        self._done = True
+
         if key in self.cia_dict:
-            self._done = True
             return self.cia_dict[key]
         else:
             # Otherwise throw an error

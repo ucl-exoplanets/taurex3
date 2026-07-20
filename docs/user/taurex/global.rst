@@ -22,6 +22,16 @@ The global section generally handles settings that affect the whole program.
     - Default is ``True``
     - e.g ``in_memory = true``
 
+- ``xsec_float32``
+    - ``True`` or ``False``
+    - When enabled, molecular cross-section data is converted from ``float64`` to
+      ``float32`` upon loading into (shared) memory. This halves memory usage per
+      opacity file with negligible impact on retrieval accuracy, at the cost of
+      slightly reduced numerical precision.
+    - Only takes effect when ``in_memory = True``.
+    - Default is ``False`` (keep original ``float64`` precision).
+    - e.g ``xsec_float32 = True``
+
 - ``cia_path``
     - str or list of str
     - Defines the path(s) that contain CIA cross-sections

@@ -152,8 +152,12 @@ class HDF5Opacity(InterpolatingOpacity):
             # of the full dataset in local RAM.
             from taurex.mpi import shared_rank
 
+            use_float32 = GlobalCache()["xsec_float32"] or False
+
             if shared_rank() == 0:
                 xsec_data = self._spec_dict["xsecarr"][()]
+                if use_float32 and xsec_data.dtype == np.float64:
+                    xsec_data = xsec_data.astype(np.float32)
             else:
                 xsec_data = None
 
@@ -166,7 +170,11 @@ class HDF5Opacity(InterpolatingOpacity):
             if xsec_data is not None:
                 del xsec_data
         elif self.in_memory:
-            self._xsec_grid = self._spec_dict["xsecarr"][()]
+            use_float32 = GlobalCache()["xsec_float32"] or False
+            xsec_data = self._spec_dict["xsecarr"][()]
+            if use_float32 and xsec_data.dtype == np.float64:
+                xsec_data = xsec_data.astype(np.float32)
+            self._xsec_grid = xsec_data
         else:
             self._xsec_grid = self._spec_dict["xsecarr"]
 

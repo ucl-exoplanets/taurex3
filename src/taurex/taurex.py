@@ -584,7 +584,8 @@ def main():  # noqa: C901
     from taurex.cache import GlobalCache
 
     if GlobalCache()["xsec_float32"]:
-        root_logger.info("Float32 mode enabled: cross-sections and computation arrays use float32 precision")
+        root_logger.info("Float32 mode enabled:"
+                         " computation arrays use float32 precision")
 
     if args.no_run and args.bibtex:
         return only_bibtex(args.bibtex, pp)

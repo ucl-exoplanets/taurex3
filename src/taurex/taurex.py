@@ -585,8 +585,7 @@ def main():  # noqa: C901
 
     if GlobalCache()["xsec_float32"]:
         root_logger.info(
-            "Float32 mode enabled:"
-            " computation arrays use float32 precision"
+            "Float32 mode enabled:" " computation arrays use float32 precision"
         )
 
     if args.no_run and args.bibtex:

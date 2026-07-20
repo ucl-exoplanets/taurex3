@@ -279,7 +279,9 @@ class AbsorptionContribution(Contribution):
                         dtype=dtype,
                     )
                 else:
-                    sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid), dtype=dtype)
+                    sigma_xsec = np.zeros(
+                        shape=(self._nlayers, self._ngrid), dtype=dtype
+                    )
             else:
                 sigma_xsec[...] = 0.0
 

@@ -626,6 +626,8 @@ class SimpleForwardModel(ForwardModel):
                 self.info("\t%s---%s contribtuion", contrib_name, name)
                 absorp, tau = self.path_integral(native_grid, False)
                 contrib_res_list.append((name, absorp, tau, None))
+                if hasattr(contrib, "sigma_xsec"):
+                    contrib.sigma_xsec = None
 
             result_dict[contrib_name] = contrib_res_list
 

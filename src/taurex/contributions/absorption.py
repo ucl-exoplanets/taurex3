@@ -1,5 +1,6 @@
 """Handling of molecular absorption."""
 
+# import gc
 import math
 import typing as t
 
@@ -9,9 +10,8 @@ import numpy.typing as npt
 from taurex.cache import GlobalCache
 from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
+from taurex.contributions import Contribution
 from taurex.model.model import ForwardModel
-
-from .contribution import Contribution
 
 
 contribute_ktau: t.Callable[
@@ -272,18 +272,13 @@ class AbsorptionContribution(Contribution):
             if self._use_ktables and self.weights is None:
                 self.weights = xsec.weights
 
-            if sigma_xsec is None:
-                if self._use_ktables:
-                    sigma_xsec = np.zeros(
-                        shape=(self._nlayers, self._ngrid, len(self.weights)),
-                        dtype=dtype,
-                    )
-                else:
-                    sigma_xsec = np.zeros(
-                        shape=(self._nlayers, self._ngrid), dtype=dtype
-                    )
+            if self._use_ktables:
+                sigma_xsec = np.empty(
+                    shape=(self._nlayers, self._ngrid, len(self.weights)),
+                    dtype=dtype,
+                )
             else:
-                sigma_xsec[...] = 0.0
+                sigma_xsec = np.empty(shape=(self._nlayers, self._ngrid), dtype=dtype)
 
             for idx_layer, tp in enumerate(
                 zip(model.temperatureProfile, model.pressureProfile, strict=True)
@@ -293,7 +288,7 @@ class AbsorptionContribution(Contribution):
                 temperature, pressure = tp
                 # print(gas,self._opacity_cache[gas].opacity(
                 #     temperature,pressure,wngrid),gas_mix[idx_layer])
-                sigma_xsec[idx_layer] += (
+                sigma_xsec[idx_layer] = (
                     xsec.opacity(temperature, pressure, wngrid) * gas_mix[idx_layer]
                 )
 
@@ -327,9 +322,10 @@ class AbsorptionContribution(Contribution):
             self.debug("Gas %s", gas)
             self.debug("Sigma %s", sigma)
             if sigma_xsec is None:
-                sigma_xsec = np.zeros_like(sigma)
-            sigma_xsec += sigma
-
+                sigma_xsec = sigma
+            else:
+                np.add(sigma_xsec, sigma, out=sigma_xsec)
+            self.sigma_xsec = None
         self.sigma_xsec = sigma_xsec
         self.debug("Final sigma is %s", self.sigma_xsec)
         self.info("Done")

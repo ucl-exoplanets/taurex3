@@ -293,7 +293,7 @@ class CIAContribution(Contribution):
         from taurex.cache import GlobalCache
 
         dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
-        sigma_cia = np.zeros(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
+        sigma_cia = np.empty(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
 
         chemistry = model.chemistry
 
@@ -307,7 +307,7 @@ class CIAContribution(Contribution):
 
             for idx_layer, temperature in enumerate(model.temperatureProfile):
                 _cia_xsec = cia.cia(temperature, wngrid)
-                sigma_cia[idx_layer] += _cia_xsec * cia_factor[idx_layer]
+                sigma_cia[idx_layer] = _cia_xsec * cia_factor[idx_layer]
             self.sigma_xsec = sigma_cia
             yield pair_name, sigma_cia
 

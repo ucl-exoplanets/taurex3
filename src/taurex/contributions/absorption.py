@@ -10,8 +10,9 @@ import numpy.typing as npt
 from taurex.cache import GlobalCache
 from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
-from taurex.contributions import Contribution
 from taurex.model.model import ForwardModel
+
+from .contribution import Contribution
 
 
 contribute_ktau: t.Callable[

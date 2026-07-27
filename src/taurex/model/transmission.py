@@ -175,7 +175,7 @@ class TransmissionModel(OneDForwardModel):
 
         from taurex.cache import GlobalCache
 
-        tau_dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        tau_dtype = get_float_dtype()
         tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
         # Memory-efficient: prepare each contribution just before use,

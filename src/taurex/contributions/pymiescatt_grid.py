@@ -337,7 +337,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
 
         use_shared = bool(GlobalCache()["mpi_use_shared"])
         sh_root = (not has_mpi()) or shared_rank() == 0
-        target_dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        target_dtype = get_float_dtype()
 
         for path in paths:
             if use_shared and not sh_root:

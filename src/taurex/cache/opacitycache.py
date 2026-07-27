@@ -177,21 +177,20 @@ class OpacityCache(Singleton):
         GlobalCache()["xsec_in_memory"] = in_memory
         self.clear_cache()
 
-    def set_xsec_float32(self, enabled: bool) -> None:
-        """Sets whether to convert cross-sections to float32.
+    def set_float32_mode(self, enabled: bool) -> None:
+        """Sets whether to use float32 arrays throughout the computation.
 
-        When enabled, HDF5 opacity cross-section data is converted
-        from float64 to float32 when loaded into (shared) memory.
+        When enabled, all floating-point arrays (opacity cross-sections,
+        optical depths, profiles, etc.) use float32 instead of float64.
         This halves memory usage with negligible precision loss
-        for retrieval-grade cross-section data.
+        for retrieval-grade data.
 
         Parameters
         ----------
         enabled: bool
-            Whether to store cross-sections as float32 (True)
-            or keep original float64 (False, default)
+            Whether to use float32 arrays (True) or float64 (False, default)
         """
-        GlobalCache()["xsec_float32"] = enabled
+        GlobalCache()["float32_mode"] = enabled
         self.clear_cache()
 
     def force_active(self, molecules: t.List[str]):

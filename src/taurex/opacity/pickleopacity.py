@@ -7,10 +7,12 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
+from taurex.cache import GlobalCache
 from taurex.mpi import allocate_as_shared
 from taurex.mpi import has_mpi
 from taurex.mpi import shared_rank
 from taurex.types import PathLike
+from taurex.types import get_float_dtype
 from taurex.util import sanitize_molecule_string
 
 from .interpolateopacity import InterpModeType
@@ -151,6 +153,15 @@ class PickleOpacity(InterpolatingOpacity):
             self._wavenumber_grid = wn_arr
             self._temperature_grid = temp_arr
             self._pressure_grid = press_arr
+
+        # ---- float32_mode: cast all loaded arrays to float32 if enabled ----
+        if GlobalCache()["float32_mode"]:
+            _dt = get_float_dtype()
+            self._wavenumber_grid = self._wavenumber_grid.astype(_dt)
+            self._temperature_grid = self._temperature_grid.astype(_dt)
+            self._pressure_grid = self._pressure_grid.astype(_dt)
+            self._xsec_grid = self._xsec_grid.astype(_dt)
+        # --------------------------------------------------------------------
 
         self._resolution = np.average(np.diff(self._wavenumber_grid))
 

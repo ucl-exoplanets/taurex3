@@ -10,6 +10,7 @@ from taurex.data.fittable import Fittable
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
+from taurex.types import get_float_dtype
 
 
 if t.TYPE_CHECKING:

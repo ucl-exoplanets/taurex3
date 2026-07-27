@@ -19,6 +19,7 @@ from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 from taurex.util import clip_native_to_wngrid
 from taurex.util.emission import black_body
+from taurex.types import get_float_dtype
 
 from .directimage import DirectImageModel
 from .directimage import compute_direct_image_final_flux
@@ -727,11 +728,11 @@ class EmissionModelRadiusScale(EmissionModel):
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
-        layer_tau = np.zeros(shape=(1, wngrid_size))
-        tmp_tau = np.zeros(shape=(1, wngrid_size))
-        dtau = np.zeros(shape=(1, wngrid_size))
+        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
+        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        tmp_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
         planet_radius = self._planet.fullRadius
         layer_radius = self.altitudeProfile + self._planet.fullRadius
 
@@ -901,10 +902,10 @@ class EmissionModelRadiusScale(EmissionModel):
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
-        layer_tau = np.zeros(shape=(1, wngrid_size))
-        dtau = np.zeros(shape=(1, wngrid_size))
+        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
+        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
 
         for contribution in self.contribution_list:
             contribution.contribute(

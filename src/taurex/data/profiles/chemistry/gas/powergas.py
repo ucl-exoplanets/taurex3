@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 from taurex.util import molecule_texlabel
 
 from .gas import Gas
@@ -311,7 +312,7 @@ class PowerGas(Gas):
             altitude profile, deprecated
 
         """
-        self._mix_profile = np.zeros(nlayers)
+        self._mix_profile = np.zeros(nlayers, dtype=get_float_dtype())
         molecule_name = self._profile_type
         coeffs = None, None, None, None
         if molecule_name in KNOWN_MOLECULES:

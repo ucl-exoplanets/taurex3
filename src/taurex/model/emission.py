@@ -14,6 +14,7 @@ from taurex.planet import Planet
 from taurex.pressure import PressureProfile
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
+from taurex.types import get_float_dtype
 from taurex.util.emission import black_body
 
 from .simplemodel import OneDForwardModel
@@ -206,7 +207,7 @@ class EmissionModel(OneDForwardModel):
         self._wi_quads = weight / 2
         self._coeffs = coeffs
         if coeffs is None:
-            self._coeffs = np.ones(self._ngauss)
+            self._coeffs = np.ones(self._ngauss, dtype=get_float_dtype())
 
     def compute_final_flux(
         self, f_total: npt.NDArray[np.float64]
@@ -316,11 +317,11 @@ class EmissionModel(OneDForwardModel):
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
-        layer_tau = np.zeros(shape=(1, wngrid_size))
-        tmp_tau = np.zeros(shape=(1, wngrid_size))
-        dtau = np.zeros(shape=(1, wngrid_size))
+        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
+        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        tmp_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
 
         mol_type = AbsorptionContribution
 
@@ -534,12 +535,12 @@ class EmissionModel(OneDForwardModel):
         wngrid_size = wngrid.shape[0]
 
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
+        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
+        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
 
-        layer_tau = np.zeros(shape=(1, wngrid_size))
+        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
 
-        dtau = np.zeros(shape=(1, wngrid_size))
+        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
 
         # Do surface first
         # for layer in range(total_layers):

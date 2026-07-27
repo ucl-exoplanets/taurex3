@@ -29,3 +29,25 @@ AnyValType = t.Union[ScalarType, ArrayType]
 
 PathLike = t.Union[str, bytes, os.PathLike, pathlib.Path]
 """Path like type."""
+
+
+def get_float_dtype():
+    """Return the floating-point dtype based on the global float32_mode setting.
+
+    When ``float32_mode`` (or the legacy ``xsec_float32``) is set to ``True``
+    in the ``[Global]`` section of the parameter file, all arrays use
+    ``np.float32`` instead of the default ``np.float64``. This can
+    significantly reduce memory usage and may improve I/O performance.
+
+    Returns
+    -------
+    np.dtype
+        ``np.float32`` if ``GlobalCache()["float32_mode"]`` is truthy,
+        ``np.float64`` otherwise.
+    """
+    from taurex.cache import GlobalCache
+
+    gc = GlobalCache()
+    if gc["float32_mode"] or gc["xsec_float32"]:
+        return np.float32
+    return np.float64

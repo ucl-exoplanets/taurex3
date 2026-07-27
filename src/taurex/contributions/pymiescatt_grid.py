@@ -13,6 +13,7 @@ from taurex.mpi import allocate_as_shared
 from taurex.mpi import has_mpi
 from taurex.mpi import shared_rank
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -682,7 +683,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
         self._nlayers = model.nLayers
         self._ngrid = wngrid.shape[0]
         pressure_profile = model.pressureProfile
-        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid))
+        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid), dtype=get_float_dtype())
 
         for specie_idx, _ in enumerate(self._species):
             wn = self._qext_wn[specie_idx]
@@ -754,7 +755,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 right=0,
             )
 
-            sigma_mie = np.zeros(self._ngrid)
+            sigma_mie = np.zeros(self._ngrid, dtype=get_float_dtype())
             valid_qext = qext_interp != 0
             sigma_mie[valid_qext] = qext_interp[valid_qext] * np.pi * 1e-18
 

@@ -11,6 +11,7 @@ from taurex.cache import GlobalCache
 from taurex.cache import OpacityCache
 from taurex.cache.ktablecache import KTableCache
 from taurex.model.model import ForwardModel
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -261,7 +262,7 @@ class AbsorptionContribution(Contribution):
         sigma_xsec = None
         self.weights = None
 
-        dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        dtype = get_float_dtype()
 
         for gas in model.chemistry.activeGases:
             # self._total_contrib[...] =0.0

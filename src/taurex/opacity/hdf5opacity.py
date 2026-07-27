@@ -12,6 +12,7 @@ from taurex.mpi import allocate_as_shared
 from taurex.mpi import has_mpi
 from taurex.mpi import shared_rank
 from taurex.types import PathLike
+from taurex.types import get_float_dtype
 
 from .interpolateopacity import InterpModeType
 from .interpolateopacity import InterpolatingOpacity
@@ -179,6 +180,16 @@ class HDF5Opacity(InterpolatingOpacity):
             self._xsec_grid = self._spec_dict["xsecarr"][()]
         else:
             self._xsec_grid = self._spec_dict["xsecarr"]
+
+        # ---- float32_mode: cast all loaded arrays to float32 if enabled ----
+        if GlobalCache()["float32_mode"]:
+            _dt = get_float_dtype()
+            self._wavenumber_grid = self._wavenumber_grid.astype(_dt)
+            self._temperature_grid = self._temperature_grid.astype(_dt)
+            self._pressure_grid = self._pressure_grid.astype(_dt)
+            if self.in_memory:
+                self._xsec_grid = self._xsec_grid.astype(_dt)
+        # --------------------------------------------------------------------
 
         self._resolution = np.average(np.diff(self._wavenumber_grid))
         self._molecule_name = self._spec_dict["mol_name"][()][()]

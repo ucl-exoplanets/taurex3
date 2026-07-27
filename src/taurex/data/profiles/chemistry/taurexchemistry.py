@@ -9,6 +9,7 @@ from taurex.core import FittingType
 from taurex.core import derivedparam
 from taurex.exceptions import InvalidModelException
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 from taurex.util import has_duplicates
 from taurex.util import molecule_texlabel
 
@@ -402,7 +403,7 @@ class TaurexChemistry(AutoChemistry):
 
         mixratio_remainder = 1.0 - total_mix
 
-        mixratio_remainder += np.zeros(shape=(nlayers))
+        mixratio_remainder += np.zeros(shape=(nlayers), dtype=get_float_dtype())
         mix_profile = self.fill_atmosphere(mixratio_remainder) + mix_profile
 
         if len(mix_profile) > 0:

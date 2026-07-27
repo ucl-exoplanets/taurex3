@@ -8,6 +8,7 @@ import numpy.typing as npt
 from taurex.cache import CIACache
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -292,7 +293,7 @@ class CIAContribution(Contribution):
 
         from taurex.cache import GlobalCache
 
-        dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
+        dtype = get_float_dtype()
 
         chemistry = model.chemistry
 

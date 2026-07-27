@@ -7,6 +7,7 @@ import numpy.typing as npt
 
 from taurex.data.fittable import fitparam
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .tprofile import TemperatureProfile
 
@@ -43,7 +44,7 @@ class Isothermal(TemperatureProfile):
     @property
     def profile(self) -> npt.NDArray[np.float64]:
         """Returns an isothermal temperature profile."""
-        return np.full(self.nlayers, self._iso_temp, dtype=np.float64)
+        return np.full(self.nlayers, self._iso_temp, dtype=get_float_dtype())
 
     def write(self, output: OutputGroup) -> OutputGroup:
         """Write isothermal temperature profile to output group."""

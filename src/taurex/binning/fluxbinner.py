@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex import OutputSize
+from taurex.types import get_float_dtype
 from taurex.util import compute_bin_edges
 
 from ..types import ModelOutputType
@@ -118,10 +119,10 @@ class FluxBinner(Binner):
         if error is not None:
             error = error[..., sorted_input]
 
-        bin_spectrum = np.zeros(spectrum[..., 0].shape + self._wngrid.shape)
+        bin_spectrum = np.zeros(spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype())
 
         if error is not None:
-            bin_error = np.zeros(spectrum[..., 0].shape + self._wngrid.shape)
+            bin_error = np.zeros(spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype())
         else:
             bin_error = None
 

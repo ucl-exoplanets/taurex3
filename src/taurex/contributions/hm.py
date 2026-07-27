@@ -9,6 +9,7 @@ import numpy.typing as npt
 from taurex.exceptions import InvalidModelException
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -191,7 +192,7 @@ class HydrogenIon(Contribution):
         xsec_ff = []
         xsec_bf = []
         self.sigma_xsec = np.empty(
-            shape=(self._nlayers, wngrid.shape[0]), dtype=np.float64
+            shape=(self._nlayers, wngrid.shape[0]), dtype=get_float_dtype()
         )
         self._f_res = self.f(10000 / wngrid)
         self.precalc_k_ff(10000 / wngrid)

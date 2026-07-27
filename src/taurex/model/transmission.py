@@ -10,6 +10,7 @@ from taurex.planet import Planet
 from taurex.pressure import PressureProfile
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
+from taurex.types import get_float_dtype
 
 from .simplemodel import OneDForwardModel
 
@@ -107,7 +108,7 @@ class TransmissionModel(OneDForwardModel):
 
         for layer in range(0, total_layers):
             p = (planet_radius + dz[0] / 2 + z[layer]) ** 2
-            k = np.zeros(shape=(self.nLayers - layer))
+            k = np.zeros(shape=(self.nLayers - layer), dtype=get_float_dtype())
             k[0] = np.sqrt(
                 (planet_radius + dz[0] / 2.0 + z[layer] + dz[layer] / 2.0) ** 2 - p
             )

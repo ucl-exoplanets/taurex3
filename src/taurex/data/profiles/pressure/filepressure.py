@@ -5,6 +5,7 @@ import typing as t
 import numpy as np
 
 from taurex.types import PathLike
+from taurex.types import get_float_dtype
 from taurex.util import conversion_factor
 
 from .arraypressure import ArrayPressureProfile
@@ -52,7 +53,7 @@ class FilePressureProfile(ArrayPressureProfile):
             usecols=int(usecols),
             skiprows=int(skiprows),
             delimiter=delimiter,
-            dtype=np.float64,
+            dtype=get_float_dtype(),
         )
         super().__init__(read_arr * to_pa, reverse=reverse, is_central=is_central)
 

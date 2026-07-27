@@ -7,7 +7,11 @@ import numpy as np
 import numpy.typing as npt
 import scipy.stats as stats
 
+from taurex.cache import GlobalCache
 from taurex.exceptions import InvalidModelException
+from taurex.mpi import allocate_as_shared
+from taurex.mpi import has_mpi
+from taurex.mpi import shared_rank
 from taurex.output import OutputGroup
 
 from .contribution import Contribution
@@ -285,7 +289,11 @@ class PyMieScattGridExtinctionContribution(Contribution):
         self.generate_particle_fitting_params()
 
     @staticmethod
-    def _read_qext_dataset(grid_file: h5py.File, path: str) -> npt.NDArray[np.float64]:
+    def _read_qext_dataset(
+        grid_file: h5py.File,
+        path: str,
+        dtype: npt.DTypeLike,
+    ) -> npt.NDArray[np.float64]:
         """Read the Qext dataset from the HDF5 file.
 
         Parameters
@@ -294,6 +302,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             The HDF5 file object.
         path : str
             Path to the file (used in error messages).
+        dtype : npt.DTypeLike
+            Data type for the returned array (e.g. np.float32, np.float64).
 
         Returns
         -------
@@ -308,7 +318,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
         """
         for dataset_name in ("Qext", "Qext_grid"):
             if dataset_name in grid_file:
-                return np.asarray(grid_file[dataset_name][()], dtype=np.float64)
+                return np.asarray(grid_file[dataset_name][()], dtype=dtype)
 
         raise InvalidPyMieScattGridException(
             f"{path} must contain a 'Qext' or 'Qext_grid' dataset"
@@ -319,50 +329,44 @@ class PyMieScattGridExtinctionContribution(Contribution):
         t.List[npt.NDArray[np.float64]],
         t.List[npt.NDArray[np.float64]],
     ]:
-        """Load input files for all species.
-
-        When MPI shared memory is enabled, only the shared-memory root
-        rank loads the full Qext grids from disk. Other ranks attach
-        via shared memory without holding private copies.
-        """
-        from taurex.cache import GlobalCache
-        from taurex.mpi import allocate_as_shared
-        from taurex.mpi import shared_rank
-
+        """Load input files for all species."""
         radius_grids = []
         qexts = []
         wavenumber_grids = []
 
-        use_shared = GlobalCache()["mpi_use_shared"]
+        use_shared = bool(GlobalCache()["mpi_use_shared"])
+        sh_root = (not has_mpi()) or shared_rank() == 0
+        target_dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
 
         for path in paths:
-            with h5py.File(path, "r") as grid_file:
-                try:
-                    radius_grid = np.asarray(
-                        grid_file["radius_grid"][()], dtype=np.float64
-                    )
-                    wavenumber_grid = np.asarray(
-                        grid_file["wavenumber_grid"][()], dtype=np.float64
-                    )
-                except KeyError as exc:
-                    raise InvalidPyMieScattGridException(
-                        f"{path} is missing required dataset {exc!s}"
-                    ) from exc
+            if use_shared and not sh_root:
+                radius_grid = None
+                wavenumber_grid = None
+                qext_grid = None
+            else:
+                with h5py.File(path, "r") as grid_file:
+                    try:
+                        radius_grid = np.asarray(
+                            grid_file["radius_grid"][()], dtype=target_dtype
+                        )
+                        wavenumber_grid = np.asarray(
+                            grid_file["wavenumber_grid"][()], dtype=target_dtype
+                        )
+                    except KeyError as exc:
+                        raise InvalidPyMieScattGridException(
+                            f"{path} is missing required dataset {exc!s}"
+                        ) from exc
 
-                if use_shared:
-                    # Only the shared-memory root reads the Qext data.
-                    # Non-root ranks get an empty placeholder.
-                    if shared_rank() == 0:
-                        qext_grid = self._read_qext_dataset(grid_file, path)
-                    else:
-                        qext_grid = None
-                    qext_grid = allocate_as_shared(
-                        qext_grid,
-                        logger=self,
-                        force_shared=True,
+                    qext_grid = self._read_qext_dataset(
+                        grid_file,
+                        path,
+                        target_dtype,
                     )
-                else:
-                    qext_grid = self._read_qext_dataset(grid_file, path)
+
+            if use_shared:
+                radius_grid = allocate_as_shared(radius_grid, logger=self)
+                wavenumber_grid = allocate_as_shared(wavenumber_grid, logger=self)
+                qext_grid = allocate_as_shared(qext_grid, logger=self)
 
             radius_grids.append(radius_grid)
             qexts.append(qext_grid)
@@ -770,22 +774,19 @@ class PyMieScattGridExtinctionContribution(Contribution):
             cloud_filter = (pressure_profile <= bottom_pressure) & (
                 pressure_profile >= top_pressure
             )
-            sigma_xsec_int = np.zeros((self._nlayers, self._ngrid))
 
             if self._particle_alt_distib == "exp_decay":
                 decay = self._particle_alt_decay[specie_idx]
                 mix = self._mie_particle_mix_ratio[specie_idx] * (
                     pressure_profile / bottom_pressure
                 ) ** (-decay)
-                sigma_xsec_int[cloud_filter, :] = (
+                sigma_xsec[cloud_filter, :] += (
                     sigma_mie[None, :] * mix[cloud_filter, None]
                 )
             else:
-                sigma_xsec_int[cloud_filter, :] = (
+                sigma_xsec[cloud_filter, :] += (
                     sigma_mie[None, :] * self._mie_particle_mix_ratio[specie_idx]
                 )
-
-            sigma_xsec += sigma_xsec_int
 
         self.sigma_xsec = sigma_xsec
         yield "PyMieScattGridExt", sigma_xsec

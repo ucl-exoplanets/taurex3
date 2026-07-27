@@ -65,14 +65,43 @@ class PickleCIA(CIA):
             Path to pickle cia file
 
         """
-        # Load the pickle file
-        self.info("Loading cia cross section from %s", filename)
-        with open(filename, "rb") as f:
-            self._spec_dict = pickle.load(f, encoding="latin1")  # noqa: S301
+        from taurex.cache import GlobalCache
+        from taurex.mpi import allocate_as_shared
+        from taurex.mpi import has_mpi
+        from taurex.mpi import shared_rank
 
-        self._wavenumber_grid = self._spec_dict["wno"]
-        self._temperature_grid = self._spec_dict["t"]
-        self._xsec_grid = self._spec_dict["xsecarr"]
+        use_shared = bool(GlobalCache()["mpi_use_shared"])
+        sh_root = (not has_mpi()) or shared_rank() == 0
+
+        if use_shared and not sh_root:
+            xsec_arr = None
+            wn_arr = None
+            temp_arr = None
+        else:
+            # Load the pickle file
+            self.info("Loading cia cross section from %s", filename)
+            with open(filename, "rb") as f:
+                self._spec_dict = pickle.load(f, encoding="latin1")  # noqa: S301
+
+            # Extract arrays and free the pickle dict immediately.
+            # This avoids holding two copies (pickle dict + extracted
+            # arrays) simultaneously during the shared-memory copy below.
+            xsec_arr = self._spec_dict["xsecarr"]
+            wn_arr = self._spec_dict["wno"]
+            temp_arr = self._spec_dict["t"]
+            self._spec_dict = None
+
+        # Move CIA cross-section array into MPI shared memory so that
+        # all ranks on the same node share one copy instead of each
+        # loading their own.
+        if use_shared:
+            self._xsec_grid = allocate_as_shared(xsec_arr, logger=self)
+            self._wavenumber_grid = allocate_as_shared(wn_arr, logger=self)
+            self._temperature_grid = allocate_as_shared(temp_arr, logger=self)
+        else:
+            self._xsec_grid = xsec_arr
+            self._wavenumber_grid = wn_arr
+            self._temperature_grid = temp_arr
 
     @property
     def wavenumberGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802

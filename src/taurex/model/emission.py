@@ -283,9 +283,6 @@ class EmissionModel(OneDForwardModel):
             native_grid = clip_native_to_wngrid(native_grid, wngrid)
         self._star.initialize(native_grid)
 
-        for contrib in self.contribution_list:
-            contrib.prepare(self, native_grid)
-
         return self.evaluate_emission(native_grid, False)
 
     def evaluate_emission_ktables(  # noqa: C901
@@ -326,6 +323,11 @@ class EmissionModel(OneDForwardModel):
         dtau = np.zeros(shape=(1, wngrid_size))
 
         mol_type = AbsorptionContribution
+
+        # Prepare contributions on-demand (memory-efficient)
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
 
         non_molecule_absorption = [
             c for c in self.contribution_list if not isinstance(c, mol_type)
@@ -477,6 +479,12 @@ class EmissionModel(OneDForwardModel):
 
         self.debug("intensity: %s", intensity)
 
+        # Clean up large sigma_xsec arrays
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
+
         return intensity, _mu, _w, tau
 
     @property
@@ -486,7 +494,7 @@ class EmissionModel(OneDForwardModel):
 
         return GlobalCache()["opacity_method"] == "ktables"
 
-    def evaluate_emission(
+    def evaluate_emission(  # noqa: C901
         self, wngrid: npt.NDArray[np.float64], return_contrib: bool
     ) -> t.Tuple[
         npt.NDArray[np.float64],
@@ -511,6 +519,11 @@ class EmissionModel(OneDForwardModel):
         """
         if self.usingKTables:
             return self.evaluate_emission_ktables(wngrid, return_contrib)
+
+        # Prepare contributions on-demand (memory-efficient)
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
 
         dz = self.deltaz
 
@@ -615,6 +628,12 @@ class EmissionModel(OneDForwardModel):
             intensity += planck_term * (layer_tau_calc - dtau_calc)
 
         self.debug("intensity: %s", intensity)
+
+        # Clean up large sigma_xsec arrays
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
 
         return intensity, _mu, _w, tau
 

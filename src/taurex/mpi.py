@@ -267,7 +267,7 @@ def shared_rank() -> int:
     return shared_comm().Get_rank()
 
 
-def allocate_as_shared(
+def allocate_as_shared(  # noqa: C901
     arr: t.Optional[np.ndarray],
     logger: t.Optional[logging.Logger] = None,
     force_shared: t.Optional[bool] = False,
@@ -321,6 +321,27 @@ def allocate_as_shared(
             logger.info("Moving to shared memory")
         comm = shared_comm()
         sh_rank = shared_rank()
+        sh_size = comm.Get_size()
+
+        if logger is not None:
+            logger.info(
+                "Shared-memory group: rank %s / %s (world rank %s)",
+                sh_rank,
+                sh_size,
+                MPI.COMM_WORLD.Get_rank(),
+            )
+
+        if sh_size <= 1:
+            if logger is not None:
+                logger.warning(
+                    "Shared-memory group has only %s rank(s)! "
+                    "MPI shared memory is NOT reducing duplication — "
+                    "all ranks have private copies. Check that ranks "
+                    "are on the same NUMA node (socket) and that your "
+                    "MPI implementation supports COMM_TYPE_SHARED.",
+                    sh_size,
+                )
+            return arr
 
         # Determine shape, dtype, and size across ranks.
         # On non-root ranks, arr may be None to avoid private allocation.

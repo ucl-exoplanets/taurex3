@@ -8,6 +8,8 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.mpi import allocate_as_shared
+from taurex.mpi import has_mpi
+from taurex.mpi import shared_rank
 from taurex.types import PathLike
 from taurex.util import sanitize_molecule_string
 
@@ -103,44 +105,53 @@ class PickleOpacity(InterpolatingOpacity):
 
     def _load_pickle_file(self, filename: pathlib.Path) -> None:
         """Load pickle file into memory."""
-        # Load the pickle file
-        self.info(f"Loading opacity from {filename}")
-        try:
-            with open(filename, "rb") as f:
-                self._spec_dict = pickle.load(f)  # noqa
-        except UnicodeDecodeError:
-            with open(filename, "rb") as f:
-                self._spec_dict = pickle.load(f, encoding="latin1")  # noqa
-
-        self._wavenumber_grid = self._spec_dict["wno"]
-
-        self._temperature_grid = self._spec_dict["t"]
-        self._pressure_grid = self._spec_dict["p"] * 1e5
-
         from taurex.cache import GlobalCache
-        from taurex.mpi import shared_rank
 
-        use_float32 = GlobalCache()["xsec_float32"] or False
-        mpi_shared = GlobalCache()["mpi_use_shared"]
+        use_shared = bool(GlobalCache()["mpi_use_shared"])
+        sh_root = (not has_mpi()) or shared_rank() == 0
 
-        if mpi_shared and shared_rank() != 0:
-            # Non-root ranks: attach via shared memory without private copy
-            xsec_data = None
+        if use_shared and not sh_root:
+            # Non-root ranks in a shared-memory group avoid loading
+            # the large pickle payload and attach directly to the
+            # shared allocations created by rank 0.
+            xsec_arr = None
+            wn_arr = None
+            temp_arr = None
+            press_arr = None
         else:
-            xsec_data = self._spec_dict["xsecarr"]
-            if use_float32 and xsec_data.dtype == np.float64:
-                xsec_data = xsec_data.astype(np.float32)
+            # Load the pickle file
+            self.info(f"Loading opacity from {filename}")
+            try:
+                with open(filename, "rb") as f:
+                    self._spec_dict = pickle.load(f)  # noqa
+            except UnicodeDecodeError:
+                with open(filename, "rb") as f:
+                    self._spec_dict = pickle.load(f, encoding="latin1")  # noqa
 
-        self._xsec_grid = allocate_as_shared(
-            xsec_data,
-            logger=self,
-            force_shared=mpi_shared,
-        )
-        # Release the private copy of the large xsec array after
-        # moving to shared memory (if MPI shared mode is active).
-        # Small metadata arrays are kept in _spec_dict.
-        if xsec_data is not None and mpi_shared:
-            del self._spec_dict["xsecarr"]
+            self._wavenumber_grid = self._spec_dict["wno"]
+            self._temperature_grid = self._spec_dict["t"]
+            self._pressure_grid = self._spec_dict["p"] * 1e5
+
+            # Extract arrays and free the raw pickle dict immediately.
+            # This avoids holding two copies during the shared-memory copy.
+            xsec_arr = self._spec_dict["xsecarr"]
+            wn_arr = self._wavenumber_grid
+            temp_arr = self._temperature_grid
+            press_arr = self._pressure_grid
+            self._spec_dict = None
+
+        self._xsec_grid = allocate_as_shared(xsec_arr, logger=self)
+
+        # Also share the auxiliary grid arrays when using MPI shared memory.
+        if use_shared:
+            self._wavenumber_grid = allocate_as_shared(wn_arr, logger=self)
+            self._temperature_grid = allocate_as_shared(temp_arr, logger=self)
+            self._pressure_grid = allocate_as_shared(press_arr, logger=self)
+        else:
+            self._wavenumber_grid = wn_arr
+            self._temperature_grid = temp_arr
+            self._pressure_grid = press_arr
+
         self._resolution = np.average(np.diff(self._wavenumber_grid))
 
         splits = filename.stem.split(".")

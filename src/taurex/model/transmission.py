@@ -177,19 +177,27 @@ class TransmissionModel(OneDForwardModel):
         tau_dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
         tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
-        for layer in range(total_layers):
-            self.debug("Computing layer %s", layer)
-            dl = path_length[layer]
+        # Memory-efficient: prepare each contribution just before use,
+        # then clean up its sigma_xsec immediately after all layers.
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
 
-            end_k = total_layers - layer
+            for layer in range(total_layers):
+                self.debug("Computing layer %s", layer)
+                dl = path_length[layer]
 
-            for contrib in self.contribution_list:
+                end_k = total_layers - layer
+
                 if tau[layer].min() > 10:
-                    break
+                    continue
                 self.debug("Adding contribution from %s", contrib.name)
                 contrib.contribute(
                     self, 0, end_k, layer, layer, density_profile, tau, path_length=dl
                 )
+            # Free the large sigma_xsec array for this contribution
+            del contrib.sigma_xsec
+            contrib.sigma_xsec = None
 
         self.debug("tau %s %s", tau, tau.shape)
 

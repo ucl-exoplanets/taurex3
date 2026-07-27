@@ -293,13 +293,12 @@ class CIAContribution(Contribution):
         from taurex.cache import GlobalCache
 
         dtype = np.float32 if GlobalCache()["xsec_float32"] else np.float64
-        sigma_cia = np.empty(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
 
         chemistry = model.chemistry
 
         for pair_name in self.ciaPairs:
             cia = self._cia_cache[pair_name]
-            sigma_cia[...] = 0.0
+            sigma_cia = np.empty(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
 
             cia_factor = chemistry.get_gas_mix_profile(
                 cia.pairOne

@@ -190,7 +190,9 @@ class HydrogenIon(Contribution):
 
         xsec_ff = []
         xsec_bf = []
-        self.sigma_xsec = np.zeros(shape=(self._nlayers, wngrid.shape[0]))
+        self.sigma_xsec = np.empty(
+            shape=(self._nlayers, wngrid.shape[0]), dtype=np.float64
+        )
         self._f_res = self.f(10000 / wngrid)
         self.precalc_k_ff(10000 / wngrid)
         for i in range(self._nlayers):

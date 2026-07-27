@@ -508,11 +508,7 @@ class SimpleForwardModel(ForwardModel):
         # Initialize star
         self._star.initialize(native_grid)
 
-        # Prepare contributions
-        for contrib in self.contribution_list:
-            contrib.prepare(self, native_grid)
-
-        # Compute path integral
+        # Compute path integral (contributions prepared on-demand inside)
         absorp, tau = self.path_integral(native_grid, False)
 
         return native_grid, absorp, tau, None
@@ -569,9 +565,12 @@ class SimpleForwardModel(ForwardModel):
 
         for contrib in full_contrib_list:
             self.contribution_list = [contrib]
-            contrib.prepare(self, native_grid)
             absorp, tau = self.path_integral(native_grid, False)
             all_contrib_dict[contrib.name] = (absorp, tau, None)
+            # Ensure cleanup after each contribution
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
 
         self.contribution_list = full_contrib_list
         return native_grid, all_contrib_dict
@@ -626,7 +625,8 @@ class SimpleForwardModel(ForwardModel):
                 self.info("\t%s---%s contribtuion", contrib_name, name)
                 absorp, tau = self.path_integral(native_grid, False)
                 contrib_res_list.append((name, absorp, tau, None))
-                if hasattr(contrib, "sigma_xsec"):
+                if contrib.sigma_xsec is not None:
+                    del contrib.sigma_xsec
                     contrib.sigma_xsec = None
 
             result_dict[contrib_name] = contrib_res_list

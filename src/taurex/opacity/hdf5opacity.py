@@ -9,6 +9,8 @@ from astropy.units import UnitConversionError
 
 from taurex.cache import GlobalCache
 from taurex.mpi import allocate_as_shared
+from taurex.mpi import has_mpi
+from taurex.mpi import shared_rank
 from taurex.types import PathLike
 
 from .interpolateopacity import InterpModeType
@@ -130,51 +132,51 @@ class HDF5Opacity(InterpolatingOpacity):
 
         self._spec_dict = h5py.File(filename, "r")
 
-        self._wavenumber_grid: npt.NDArray[np.float64] = self._spec_dict["bin_edges"][
-            ()
-        ]
+        use_shared = self.in_memory and GlobalCache()["mpi_use_shared"]
+        sh_root = (not has_mpi()) or shared_rank() == 0
 
-        self._temperature_grid: npt.NDArray[np.float64] = self._spec_dict["t"][()]
+        if use_shared and not sh_root:
+            self._wavenumber_grid = None
+            self._temperature_grid = None
+            self._pressure_grid = None
+        else:
+            self._wavenumber_grid: npt.NDArray[np.float64] = self._spec_dict[
+                "bin_edges"
+            ][()]
 
-        pressure_units = self._spec_dict["p"].attrs["units"]
-        try:
-            p_conversion = u.Unit(pressure_units).to(u.Pa)
-        except UnitConversionError:
-            p_conversion = u.Unit(pressure_units, format="cds").to(u.Pa)
+            self._temperature_grid: npt.NDArray[np.float64] = self._spec_dict["t"][()]
 
-        self._pressure_grid: npt.NDArray[np.float64] = (
-            self._spec_dict["p"][()] * p_conversion
-        )
+            pressure_units = self._spec_dict["p"].attrs["units"]
+            try:
+                p_conversion = u.Unit(pressure_units).to(u.Pa)
+            except UnitConversionError:
+                p_conversion = u.Unit(pressure_units, format="cds").to(u.Pa)
 
-        if self.in_memory and GlobalCache()["mpi_use_shared"]:
-            # Only the shared-memory root rank loads the full array from disk.
-            # Non-root ranks pass None to avoid allocating a private copy
-            # of the full dataset in local RAM.
-            from taurex.mpi import shared_rank
-
-            use_float32 = GlobalCache()["xsec_float32"] or False
-
-            if shared_rank() == 0:
-                xsec_data = self._spec_dict["xsecarr"][()]
-                if use_float32 and xsec_data.dtype == np.float64:
-                    xsec_data = xsec_data.astype(np.float32)
-            else:
-                xsec_data = None
-
-            self._xsec_grid = allocate_as_shared(
-                xsec_data,
-                logger=self,
-                force_shared=True,
+            self._pressure_grid: npt.NDArray[np.float64] = (
+                self._spec_dict["p"][()] * p_conversion
             )
-            # Release the temporary array on root rank
-            if xsec_data is not None:
-                del xsec_data
+
+        if use_shared:
+            xsec_arr = self._spec_dict["xsecarr"][()] if sh_root else None
+            self._xsec_grid = allocate_as_shared(
+                # Dont copy the array until shared memory
+                # is allocated. Then copy it to shared memory
+                # directly
+                xsec_arr,
+                logger=self,
+            )
+            # Also share the auxiliary grid arrays so that all ranks
+            # on the same node share one copy instead of each loading
+            # their own.
+            self._wavenumber_grid = allocate_as_shared(
+                self._wavenumber_grid, logger=self
+            )
+            self._temperature_grid = allocate_as_shared(
+                self._temperature_grid, logger=self
+            )
+            self._pressure_grid = allocate_as_shared(self._pressure_grid, logger=self)
         elif self.in_memory:
-            use_float32 = GlobalCache()["xsec_float32"] or False
-            xsec_data = self._spec_dict["xsecarr"][()]
-            if use_float32 and xsec_data.dtype == np.float64:
-                xsec_data = xsec_data.astype(np.float32)
-            self._xsec_grid = xsec_data
+            self._xsec_grid = self._spec_dict["xsecarr"][()]
         else:
             self._xsec_grid = self._spec_dict["xsecarr"]
 
@@ -212,6 +214,7 @@ class HDF5Opacity(InterpolatingOpacity):
 
         if self.in_memory:
             self._spec_dict.close()
+            self._spec_dict = None
 
     def handle_pybtex(self) -> None:
         """Handle citations."""

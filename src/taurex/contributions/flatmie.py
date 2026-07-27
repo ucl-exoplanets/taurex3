@@ -136,7 +136,9 @@ class FlatMieContribution(Contribution):
         p_max = p_right[save_start : save_stop + 1]
         weight = np.minimum(p_range[-1], p_max) - np.maximum(p_range[0], p_min)
         weight /= weight.max()
-        sigma_xsec = np.zeros(shape=(self._nlayers, wngrid.shape[0]), dtype=get_float_dtype())
+        sigma_xsec = np.zeros(
+            shape=(self._nlayers, wngrid.shape[0]), dtype=get_float_dtype()
+        )
         sigma_xsec[save_start : save_stop + 1] = weight[:, None] * self.mieMixing
 
         sigma_xsec = sigma_xsec[::-1]

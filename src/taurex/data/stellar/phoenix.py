@@ -12,7 +12,6 @@ from taurex.cache import GlobalCache
 from taurex.constants import MSOL
 from taurex.output import OutputGroup
 from taurex.types import PathLike
-from taurex.types import get_float_dtype
 
 from .star import BlackbodyStar
 
@@ -223,15 +222,11 @@ class PhoenixStar(BlackbodyStar):
 
         self._files = files
         if self.retro_version_file is not None:
-            self._T_list = np.array(
-                [float(os.path.basename(k)[3:8]) for k in files]
-            )
+            self._T_list = np.array([float(os.path.basename(k)[3:8]) for k in files])
             self._Logg_list = np.array(
                 [float(os.path.basename(k)[9:13]) for k in files]
             )
-            self._Z_list = np.array(
-                [float(os.path.basename(k)[14:17]) for k in files]
-            )
+            self._Z_list = np.array([float(os.path.basename(k)[14:17]) for k in files])
         else:
             self._T_list = (
                 np.array([float(os.path.basename(k)[3:8]) for k in files]) * 100
@@ -239,9 +234,7 @@ class PhoenixStar(BlackbodyStar):
             self._Logg_list = np.array(
                 [float(os.path.basename(k)[9:12]) for k in files]
             )
-            self._Z_list = np.array(
-                [float(os.path.basename(k)[13:16]) for k in files]
-            )
+            self._Z_list = np.array([float(os.path.basename(k)[13:16]) for k in files])
         self._index_finder = NearestNDInterpolator(
             (self._T_list, self._Logg_list, self._Z_list),
             np.arange(0, self._T_list.shape[0]),

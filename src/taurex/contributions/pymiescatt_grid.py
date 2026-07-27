@@ -683,7 +683,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
         self._nlayers = model.nLayers
         self._ngrid = wngrid.shape[0]
         pressure_profile = model.pressureProfile
-        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid), dtype=get_float_dtype())
+        sigma_xsec = np.zeros(
+            shape=(self._nlayers, self._ngrid), dtype=get_float_dtype()
+        )
 
         for specie_idx, _ in enumerate(self._species):
             wn = self._qext_wn[specie_idx]

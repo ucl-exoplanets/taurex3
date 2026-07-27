@@ -119,10 +119,14 @@ class FluxBinner(Binner):
         if error is not None:
             error = error[..., sorted_input]
 
-        bin_spectrum = np.zeros(spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype())
+        bin_spectrum = np.zeros(
+            spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype()
+        )
 
         if error is not None:
-            bin_error = np.zeros(spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype())
+            bin_error = np.zeros(
+                spectrum[..., 0].shape + self._wngrid.shape, dtype=get_float_dtype()
+            )
         else:
             bin_error = None
 

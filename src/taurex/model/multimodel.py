@@ -17,9 +17,9 @@ from taurex.pressure import SimplePressureProfile
 from taurex.stellar import BlackbodyStar
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
+from taurex.types import get_float_dtype
 from taurex.util import clip_native_to_wngrid
 from taurex.util.emission import black_body
-from taurex.types import get_float_dtype
 
 from .directimage import DirectImageModel
 from .directimage import compute_direct_image_final_flux

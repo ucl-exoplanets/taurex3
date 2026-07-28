@@ -137,13 +137,11 @@ def contribute_ktau_numpy(
         Number of gauss points
 
     """
-    _path = path[startk:endk, None, None]
+    _path = path[startk:endk]
     _density = density[startk + density_offset : endk + density_offset]
     _sigma = sigma[layer + startk : layer + endk]
-    tau_temp = np.sum(
-        _sigma * _path[..., None, None] * _density[..., None, None],
-        axis=0,
-    )
+    # einsum avoids the (k, ngrid, ngauss) intermediate from broadcasting
+    tau_temp = np.einsum("kig,k,k->ig", _sigma, _path, _density)
 
     transtemp = np.sum(np.exp(-tau_temp) * weights[None, :], axis=-1)
 
@@ -232,7 +230,10 @@ class AbsorptionContribution(Contribution):
         self._opacity_cache = OpacityCache()
 
     def prepare_each(
-        self, model: ForwardModel, wngrid: npt.NDArray[np.float64]
+        self,
+        model: ForwardModel,
+        wngrid: npt.NDArray[np.float64],
+        _out: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]:
         """Prepare each component opacity.
 
@@ -243,6 +244,9 @@ class AbsorptionContribution(Contribution):
 
         wngrid : npt.NDArray[np.float64]
             Wavenumber grid
+
+        _out : npt.NDArray[np.float64], optional
+            Pre-allocated output buffer to reuse (avoids allocation per gas).
 
         Yields
         ------
@@ -274,7 +278,9 @@ class AbsorptionContribution(Contribution):
             if self._use_ktables and self.weights is None:
                 self.weights = xsec.weights
 
-            if self._use_ktables:
+            if _out is not None:
+                sigma_xsec = _out
+            elif self._use_ktables:
                 sigma_xsec = np.empty(
                     shape=(self._nlayers, self._ngrid, len(self.weights)),
                     dtype=dtype,
@@ -319,12 +325,17 @@ class AbsorptionContribution(Contribution):
         self._nlayers = model.nLayers
 
         sigma_xsec = None
+        # Pre-allocate one reusable temp buffer for per-gas computation,
+        # avoiding repeated allocation/deallocation in parallel MPI contexts.
+        _temp = None
         self.debug("ABSORPTION VERSION")
-        for gas, sigma in self.prepare_each(model, wngrid):
+        for gas, sigma in self.prepare_each(model, wngrid, _out=_temp):
             self.debug("Gas %s", gas)
             self.debug("Sigma %s", sigma)
             if sigma_xsec is None:
                 sigma_xsec = sigma
+                # Allocate the reusable temp buffer matching sigma_xsec shape
+                _temp = np.empty_like(sigma_xsec)
             else:
                 np.add(sigma_xsec, sigma, out=sigma_xsec)
             self.sigma_xsec = None

@@ -10,7 +10,6 @@ from taurex.data.fittable import Fittable
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
-from taurex.types import get_float_dtype
 
 
 if t.TYPE_CHECKING:
@@ -103,11 +102,12 @@ def contribute_tau_numpy(
         ``exp(-tau)`` yourself)
 
     """
-    _path = path[startk:endk, None]
-    _density = density[startk + density_offset : endk + density_offset, None]
+    _path = path[startk:endk]
+    _density = density[startk + density_offset : endk + density_offset]
     _sigma = sigma[startk + layer : endk + layer, :]
 
-    tau[layer, :] += np.sum(_sigma * _path * _density, axis=0)
+    # einsum avoids the (k, ngrid) intermediate from broadcasting
+    tau[layer, :] += np.einsum("ki,k,k->i", _sigma, _path, _density)
 
     return tau
 

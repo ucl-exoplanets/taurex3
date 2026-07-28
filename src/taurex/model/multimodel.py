@@ -17,7 +17,6 @@ from taurex.pressure import SimplePressureProfile
 from taurex.stellar import BlackbodyStar
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
-from taurex.types import get_float_dtype
 from taurex.util import clip_native_to_wngrid
 from taurex.util.emission import black_body
 
@@ -721,18 +720,23 @@ class EmissionModelRadiusScale(EmissionModel):
     ]:
         """Evaluate emission using k-tables."""
         from taurex.contributions import AbsorptionContribution
-        from taurex.util import compute_dz
 
-        dz = compute_dz(self.altitudeProfile)
+        dz = self.deltaz
         total_layers = self.nLayers
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
-        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
-        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
-        tmp_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
-        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+
+        # Reuse cached arrays to avoid repeated allocation in parallel runs
+        self._ensure_cached_arrays(total_layers, wngrid_size)
+        tau = self._cached_tau
+        tau.fill(0.0)
+        surface_tau = self._cached_surface_tau
+        surface_tau.fill(0.0)
+        layer_tau = self._cached_layer_tau
+        dtau = self._cached_dtau
+        tmp_tau = self._cached_tmp_tau
+
         planet_radius = self._planet.fullRadius
         layer_radius = self.altitudeProfile + self._planet.fullRadius
 
@@ -848,8 +852,8 @@ class EmissionModelRadiusScale(EmissionModel):
                 / (planet_radius**2)
             )
 
-            dtau_calc = np.exp(-dtau * _mu)
-            layer_tau_calc = np.exp(-layer_tau * _mu)
+            dtau_calc = np.exp(-dtau * _mu, out=self._cached_exp_mu)
+            layer_tau_calc = np.exp(-layer_tau * _mu, out=self._cached_exp_mu2)
             if (
                 molecular is not None
                 and weights is not None
@@ -863,10 +867,14 @@ class EmissionModelRadiusScale(EmissionModel):
 
             intensity += planck * (layer_tau_calc - dtau_calc)
 
-            dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = (
-                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
-            )
+            dtau_calc = 0.0
+            if dtau.min() < self._clamp:
+                np.exp(-dtau, out=self._cached_surface_tau)
+                dtau_calc = self._cached_surface_tau
+            layer_tau_calc = 0.0
+            if layer_tau.min() < self._clamp:
+                np.exp(-layer_tau, out=self._cached_tmp_tau)
+                layer_tau_calc = self._cached_tmp_tau
             if (
                 molecular is not None
                 and weights is not None
@@ -902,10 +910,15 @@ class EmissionModelRadiusScale(EmissionModel):
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size), dtype=get_float_dtype())
-        surface_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
-        layer_tau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
-        dtau = np.zeros(shape=(1, wngrid_size), dtype=get_float_dtype())
+
+        # Reuse cached arrays to avoid repeated allocation in parallel runs
+        self._ensure_cached_arrays(total_layers, wngrid_size)
+        tau = self._cached_tau
+        tau.fill(0.0)
+        surface_tau = self._cached_surface_tau
+        surface_tau.fill(0.0)
+        layer_tau = self._cached_layer_tau
+        dtau = self._cached_dtau
 
         for contribution in self.contribution_list:
             contribution.contribute(
@@ -950,10 +963,14 @@ class EmissionModelRadiusScale(EmissionModel):
                 )
 
             dtau += layer_tau
-            dtau_calc = np.exp(-dtau) if dtau.min() < self._clamp else 0.0
-            layer_tau_calc = (
-                np.exp(-layer_tau) if layer_tau.min() < self._clamp else 0.0
-            )
+            dtau_calc = 0.0
+            if dtau.min() < self._clamp:
+                np.exp(-dtau, out=self._cached_surface_tau)
+                dtau_calc = self._cached_surface_tau
+            layer_tau_calc = 0.0
+            if layer_tau.min() < self._clamp:
+                np.exp(-layer_tau, out=self._cached_tmp_tau)
+                layer_tau_calc = self._cached_tmp_tau
             _tau = layer_tau_calc - dtau_calc
             tau[layer] += _tau if isinstance(_tau, float) else _tau[0]
 
@@ -963,7 +980,10 @@ class EmissionModelRadiusScale(EmissionModel):
                 * (layer_radius[layer] ** 2)
                 / (planet_radius**2)
             )
-            intensity += planck * (np.exp(-layer_tau * _mu) - np.exp(-dtau * _mu))
+            # In-place exp for both terms, saving two temporary arrays
+            np.exp(-layer_tau * _mu, out=self._cached_exp_mu)
+            np.exp(-dtau * _mu, out=self._cached_exp_mu2)
+            intensity += planck * (self._cached_exp_mu - self._cached_exp_mu2)
 
         return intensity, _mu, _w, tau
 

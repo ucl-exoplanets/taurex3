@@ -75,11 +75,13 @@ def contribute_cia_numpy(
         ``exp(-tau)`` yourself)
 
     """
-    _path = path[startk:endk, None]
-    _density = density[startk + density_offset : endk + density_offset, None]
+    _path = path[startk:endk]
+    _density = density[startk + density_offset : endk + density_offset]
     _sigma = sigma[startk + layer : endk + layer, :]
 
-    tau[layer, :] += np.sum(_sigma * _path * _density * _density, axis=0)
+    # einsum avoids the (k, ngrid) intermediate from broadcasting (density^2)
+    d2 = _path * _density * _density
+    tau[layer, :] += np.einsum("ki,k->i", _sigma, d2)
 
     return tau
 
@@ -290,8 +292,6 @@ class CIAContribution(Contribution):
         self._nlayers = model.nLayers
         self._ngrid = wngrid.shape[0]
         self.info("Computing CIA ")
-
-        from taurex.cache import GlobalCache
 
         dtype = get_float_dtype()
 

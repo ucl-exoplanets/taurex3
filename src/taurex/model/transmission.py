@@ -106,9 +106,14 @@ class TransmissionModel(OneDForwardModel):
         z = self.altitudeProfile
         self.debug("Computing path_length: \n z=%s \n dz=%s", z, dz)
 
+        # Pre-allocate max-size k array, reuse with views to avoid
+        # repeated allocation in the loop.
+        _k_buf = np.empty(total_layers, dtype=get_float_dtype())
+
         for layer in range(0, total_layers):
             p = (planet_radius + dz[0] / 2 + z[layer]) ** 2
-            k = np.zeros(shape=(self.nLayers - layer), dtype=get_float_dtype())
+            n_remaining = total_layers - layer
+            k = _k_buf[:n_remaining]
             k[0] = np.sqrt(
                 (planet_radius + dz[0] / 2.0 + z[layer] + dz[layer] / 2.0) ** 2 - p
             )
@@ -173,8 +178,6 @@ class TransmissionModel(OneDForwardModel):
             path_length = self.compute_path_length_old(dz)
         self.path_length = path_length
 
-        from taurex.cache import GlobalCache
-
         tau_dtype = get_float_dtype()
         tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
@@ -209,7 +212,8 @@ class TransmissionModel(OneDForwardModel):
         self, tau: npt.NDArray[np.float64], dz: npt.NDArray[np.float64]
     ) -> t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Compute final absorption and optical depth."""
-        tau = np.exp(-tau)
+        # In-place exp to avoid temporary array allocation
+        np.exp(-tau, out=tau)
         ap = self.altitudeProfile[:, None]
         pradius = self._planet.fullRadius
         sradius = self._star.radius

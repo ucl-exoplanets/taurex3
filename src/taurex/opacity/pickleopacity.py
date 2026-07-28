@@ -30,7 +30,6 @@ class PickleOpacity(InterpolatingOpacity):
     @classmethod
     def discover(cls) -> t.List[t.Tuple[str, t.Tuple[pathlib.Path, str]]]:
         """Discover opacities from pickle files in path."""
-        from taurex.cache import GlobalCache
         from taurex.util import sanitize_molecule_string
 
         path = GlobalCache()["xsec_path"]
@@ -107,8 +106,6 @@ class PickleOpacity(InterpolatingOpacity):
 
     def _load_pickle_file(self, filename: pathlib.Path) -> None:
         """Load pickle file into memory."""
-        from taurex.cache import GlobalCache
-
         use_shared = bool(GlobalCache()["mpi_use_shared"])
         sh_root = (not has_mpi()) or shared_rank() == 0
 

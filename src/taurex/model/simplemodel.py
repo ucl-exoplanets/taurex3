@@ -660,6 +660,7 @@ class SimpleForwardModel(ForwardModel):
 
         """
         from taurex.util.math import OnlineVariance
+        from taurex.util.memory import trim_memory
 
         tp_profiles = OnlineVariance()
         active_gases = OnlineVariance()
@@ -671,7 +672,9 @@ class SimpleForwardModel(ForwardModel):
         binned_spectrum = OnlineVariance() if binner is not None else None
         native_spectrum = OnlineVariance()
 
+        sample_count = 0
         for weight in samples():
+            sample_count += 1
             native_grid, native, tau, _ = self.model(wngrid=wngrid, cutoff_grid=False)
 
             tp_profiles.update(self.temperatureProfile, weight=weight)
@@ -692,6 +695,12 @@ class SimpleForwardModel(ForwardModel):
                 )
 
                 binned_spectrum.update(binned, weight=weight)
+
+            # Periodically release freed memory back to OS.
+            # numpy's allocator holds onto pages freed by the
+            # sigma_xsec cleanup in path_integral.
+            if sample_count % 100 == 0:
+                trim_memory()
 
         tp_std = np.sqrt(tp_profiles.parallelVariance())
         active_std = np.sqrt(active_gases.parallelVariance())

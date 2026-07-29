@@ -177,22 +177,6 @@ class OpacityCache(Singleton):
         GlobalCache()["xsec_in_memory"] = in_memory
         self.clear_cache()
 
-    def set_float32_mode(self, enabled: bool) -> None:
-        """Sets whether to use float32 arrays throughout the computation.
-
-        When enabled, all floating-point arrays (opacity cross-sections,
-        optical depths, profiles, etc.) use float32 instead of float64.
-        This halves memory usage with negligible precision loss
-        for retrieval-grade data.
-
-        Parameters
-        ----------
-        enabled: bool
-            Whether to use float32 arrays (True) or float64 (False, default)
-        """
-        GlobalCache()["float32_mode"] = enabled
-        self.clear_cache()
-
     def force_active(self, molecules: t.List[str]):
         """Allows some molecules to be forced as active.
 

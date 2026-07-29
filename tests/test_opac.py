@@ -153,7 +153,7 @@ def test_interpolation(fake_interp_opac, temperature, pressure):
         assert np.allclose(np.zeros_like(fake_interp_opac.wavenumberGrid), op)
 
     elif maximum_case:
-        # compute_opacity does in-place np.divide(..., out=result) on the
-        # view returned by interp_bilinear_grid, so xsecGrid[-1,-1] is
-        # already divided by 10000 -- compare without re-dividing.
-        assert np.array_equal(fake_interp_opac.xsecGrid[-1, -1], op)
+        # compute_opacity divides interp_bilinear_grid result by 10000.
+        # Since xsecGrid is all ones, expect xsecGrid[-1,-1] / 10000.
+        expected = fake_interp_opac.xsecGrid[-1, -1] / 10000
+        assert np.array_equal(expected, op)

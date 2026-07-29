@@ -581,13 +581,6 @@ def main():  # noqa: C901
     # Setup global parameters
     pp.setup_globals()
 
-    from taurex.cache import GlobalCache
-
-    if GlobalCache()["float32_mode"]:
-        root_logger.info(
-            "Float32 mode enabled: all computation arrays use float32 precision"
-        )
-
     if args.no_run and args.bibtex:
         return only_bibtex(args.bibtex, pp)
 

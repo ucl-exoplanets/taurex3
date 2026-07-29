@@ -233,14 +233,7 @@ def integrate_emission_layer(
 
 
 def _black_body_wrapper(wn, temp):
-    """Wrapper to handle float32_mode for black_body."""
-    from taurex.types import get_float_dtype
-
-    if get_float_dtype() == np.float32:
-        # Only upcast if wn is not already float64 (avoid unnecessary copy)
-        if wn.dtype != np.float64:
-            wn = wn.astype(np.float64)
-        return black_body_numba(wn, temp).astype(np.float32)
+    """Compute black body radiation for given wavenumber and temperature."""
     return black_body_numba(wn, temp)
 
 

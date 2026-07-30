@@ -289,12 +289,12 @@ class InterpolatingOpacity(Opacity):
         import math
 
         logpressure = math.log10(pressure)
-        result = self.interp_bilinear_grid(
-            temperature,
-            logpressure,
-            *self.find_closest_index(temperature, logpressure),
-            wngrid,
+        return (
+            self.interp_bilinear_grid(
+                temperature,
+                logpressure,
+                *self.find_closest_index(temperature, logpressure),
+                wngrid,
+            )
+            / 10000
         )
-        # In-place divide to avoid temporary array copy
-        np.divide(result, 10000, out=result)
-        return result

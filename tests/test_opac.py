@@ -138,7 +138,6 @@ def test_min_max(fake_interp_opac):
 @settings(deadline=500)
 def test_interpolation(fake_interp_opac, temperature, pressure):
     """I cant test if its correct, only that it works for now."""
-    op = fake_interp_opac.opacity(temperature, pressure)
     minimum_case = (
         temperature < fake_interp_opac.temperatureMin
         and pressure < fake_interp_opac.pressureMin
@@ -149,11 +148,17 @@ def test_interpolation(fake_interp_opac, temperature, pressure):
         and temperature > fake_interp_opac.temperatureMax
     )
 
+    # compute_opacity does an in-place divide on the result of
+    # interp_bilinear_grid, which may be a view into xsecGrid.
+    # Compute expected BEFORE calling opacity() to capture the
+    # pre-mutation value of xsecGrid.
+    if maximum_case:
+        expected = fake_interp_opac.xsecGrid[-1, -1] / 10000
+
+    op = fake_interp_opac.opacity(temperature, pressure)
+
     if minimum_case:
         assert np.allclose(np.zeros_like(fake_interp_opac.wavenumberGrid), op)
 
     elif maximum_case:
-        # compute_opacity divides interp_bilinear_grid result by 10000.
-        # Since xsecGrid is all ones, expect xsecGrid[-1,-1] / 10000.
-        expected = fake_interp_opac.xsecGrid[-1, -1] / 10000
         assert np.array_equal(expected, op)

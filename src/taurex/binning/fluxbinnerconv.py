@@ -58,7 +58,9 @@ class FluxBinnerConv(Binner):
         self.binners: t.List[FluxBinner] = []
         for grid, widths in zip(self._wlgrids, self._wlgrid_widths, strict=False):
             sorter = np.argsort(grid)
-            self.binners.append(FluxBinner(10000.0 / grid[sorter], widths[sorter]))
+            self.binners.append(
+                FluxBinner(wlgrid=grid[sorter], wlgrid_width=widths[sorter])
+            )
 
         self._profiles: t.List[npt.NDArray[np.float64]] = []
         self._grid_fbs: t.List[FluxBinner] = []
@@ -198,10 +200,16 @@ class FluxBinnerConv(Binner):
         for index, binner in enumerate(self.binners):
             working_output = prepared
             if self._profile_type == "stsci_fits" and self._profiles:
+                wn_grid = 10000.0 / prepared[0]
+                conv_grid_width = (
+                    wn_grid**2 * prepared[3] / 10000.0
+                    if prepared[3] is not None
+                    else None
+                )
                 working_output = self._grid_fbs[index].bindown(
-                    10000.0 / prepared[0],
+                    wn_grid,
                     prepared[1],
-                    grid_width=prepared[3],
+                    grid_width=conv_grid_width,
                     error=prepared[2],
                 )
                 working_output = (
@@ -226,9 +234,9 @@ class FluxBinnerConv(Binner):
                 grid_width=working_output[3],
                 error=working_output[2],
             )
-            wlgrids.append(10000.0 / binned_output[0])
+            wlgrids.append(binned_output[0])
             spectra.append(binned_output[1])
-            widths.append(wnwidth_to_wlwidth(binned_output[0], binned_output[3]))
+            widths.append(binned_output[3])
             if binned_output[2] is not None:
                 errors.append(binned_output[2])
 

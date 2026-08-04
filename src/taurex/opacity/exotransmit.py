@@ -14,6 +14,7 @@ import numpy.typing as npt
 from taurex.opacity.interpolateopacity import InterpModeType
 from taurex.opacity.interpolateopacity import InterpolatingOpacity
 from taurex.types import PathLike
+from taurex.types import get_float_dtype
 
 
 class ExoTransmitOpacity(InterpolatingOpacity):
@@ -129,7 +130,8 @@ class ExoTransmitOpacity(InterpolatingOpacity):
                 self.pressureGrid.shape[0],
                 self.temperatureGrid.shape[0],
                 self.wavenumberGrid.shape[0],
-            )
+            ),
+            dtype=get_float_dtype(),
         )
 
         for ln in lines[2:]:

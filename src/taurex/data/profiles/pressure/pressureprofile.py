@@ -12,6 +12,7 @@ from taurex.data.fittable import fitparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
+from taurex.types import get_float_dtype
 
 
 class PressureProfile(Fittable, Logger, Writeable, Citable):
@@ -172,7 +173,7 @@ class SimplePressureProfile(PressureProfile):
             math.log10(self._atm_min_pressure),
             math.log10(self._atm_max_pressure),
             self.nLevels,
-        )[::-1]
+        )[::-1].astype(get_float_dtype())
         self.pressure_profile = self.pressure_profile_levels[:-1] * np.sqrt(
             self.pressure_profile_levels[1:] / self.pressure_profile_levels[:-1]
         )

@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 from taurex.util import molecule_texlabel
 from taurex.util import movingaverage
 
@@ -236,7 +237,7 @@ class TwoLayerGas(Gas):
             altitude profile, deprecated
 
         """
-        self._mix_profile = np.zeros(nlayers)
+        self._mix_profile = np.zeros(nlayers, dtype=get_float_dtype())
 
         smooth_window = self._mix_ratio_smoothing
         p_layer = np.abs(pressure_profile - self._mix_ratio_pressure).argmin()

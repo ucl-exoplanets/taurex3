@@ -14,6 +14,7 @@ from taurex.constants import G
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
+from taurex.types import get_float_dtype
 from taurex.util import conversion_factor
 
 from .citation import Citable
@@ -414,10 +415,10 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
 
         # build the altitude profile from the bottom up
         nlayers = temperature.shape[0]
-        scaleheight = np.zeros(nlayers)
-        g = np.zeros(nlayers)
-        z = np.zeros(nlayers + 1)
-        deltaz = np.zeros(nlayers + 1)
+        scaleheight = np.zeros(nlayers, dtype=get_float_dtype())
+        g = np.zeros(nlayers, dtype=get_float_dtype())
+        z = np.zeros(nlayers + 1, dtype=get_float_dtype())
+        deltaz = np.zeros(nlayers + 1, dtype=get_float_dtype())
 
         # surface gravity (0th layer)
         g[0] = self.gravity

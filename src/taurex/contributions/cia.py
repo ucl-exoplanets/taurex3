@@ -8,6 +8,7 @@ import numpy.typing as npt
 from taurex.cache import CIACache
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -74,11 +75,13 @@ def contribute_cia_numpy(
         ``exp(-tau)`` yourself)
 
     """
-    _path = path[startk:endk, None]
-    _density = density[startk + density_offset : endk + density_offset, None]
+    _path = path[startk:endk]
+    _density = density[startk + density_offset : endk + density_offset]
     _sigma = sigma[startk + layer : endk + layer, :]
 
-    tau[layer, :] += np.sum(_sigma * _path * _density * _density, axis=0)
+    # einsum avoids the (k, ngrid) intermediate from broadcasting (density^2)
+    d2 = _path * _density * _density
+    tau[layer, :] += np.einsum("ki,k->i", _sigma, d2)
 
     return tau
 
@@ -290,13 +293,13 @@ class CIAContribution(Contribution):
         self._ngrid = wngrid.shape[0]
         self.info("Computing CIA ")
 
-        sigma_cia = np.zeros(shape=(model.nLayers, wngrid.shape[0]))
+        dtype = get_float_dtype()
 
         chemistry = model.chemistry
 
         for pair_name in self.ciaPairs:
             cia = self._cia_cache[pair_name]
-            sigma_cia[...] = 0.0
+            sigma_cia = np.empty(shape=(model.nLayers, wngrid.shape[0]), dtype=dtype)
 
             cia_factor = chemistry.get_gas_mix_profile(
                 cia.pairOne
@@ -304,7 +307,7 @@ class CIAContribution(Contribution):
 
             for idx_layer, temperature in enumerate(model.temperatureProfile):
                 _cia_xsec = cia.cia(temperature, wngrid)
-                sigma_cia[idx_layer] += _cia_xsec * cia_factor[idx_layer]
+                sigma_cia[idx_layer] = _cia_xsec * cia_factor[idx_layer]
             self.sigma_xsec = sigma_cia
             yield pair_name, sigma_cia
 

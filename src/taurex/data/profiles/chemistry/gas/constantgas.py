@@ -6,6 +6,7 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 from taurex.util import molecule_texlabel
 
 from .gas import Gas
@@ -73,7 +74,7 @@ class ConstantGas(Gas):
             Altitude profile of atmosphere, deprecated
 
         """
-        self._mix_array = np.full(nlayers, self._mix_ratio)
+        self._mix_array = np.full(nlayers, self._mix_ratio, dtype=get_float_dtype())
 
     def add_active_gas_param(self) -> None:
         """Add the mixing ratio as a fitting parameter.

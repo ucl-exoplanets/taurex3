@@ -30,6 +30,9 @@ def trim_memory() -> int:
     collected = gc.collect()
 
     # On Linux, trim the malloc heap to return freed pages to the OS.
+    # This is critical for long-running retrieval jobs where
+    # numpy temporarily allocates large arrays (sigma_xsec, etc.)
+    # in the log-likelihood hot path.
     if sys.platform == "linux":
         try:
             libc = ctypes.CDLL("libc.so.6", use_errno=True)
@@ -38,3 +41,18 @@ def trim_memory() -> int:
             pass
 
     return collected
+
+
+def memory_usage_mb() -> float:
+    """Return current RSS in MB (Linux only, else 0)."""
+    if sys.platform != "linux":
+        return 0.0
+    try:
+        with open("/proc/self/status") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    # Format: "VmRSS:    12345 kB"
+                    return float(line.split()[1]) / 1024.0
+    except OSError:
+        return 0.0
+    return 0.0

@@ -688,6 +688,12 @@ class Optimizer(Logger, Citable):
         # Compute fit here
         self.compute_fit()
 
+        # Release freed memory back to OS after sampling completes.
+        # numpy's allocator holds onto pages, causing RSS to grow over time.
+        from taurex.util.memory import trim_memory
+
+        trim_memory()
+
         enableLogging()
         end_time = time.time()
         self.info("Sampling time %s s", end_time - start_time)
@@ -1002,6 +1008,8 @@ class Optimizer(Logger, Citable):
 
         self.info("Computing derived parameters......")
         disableLogging()
+        from taurex.util.memory import trim_memory
+
         for idx in range(rank, len_samples, num_procs):
             enableLogging()
             if rank == 0 and count % 10 == 0 and count > 0:
@@ -1019,6 +1027,15 @@ class Optimizer(Logger, Citable):
             ):
                 derived_param[p][0].append(v)
                 derived_param[p][1].append(weight)
+            count += 1
+            # Periodically release freed memory back to OS.
+            # Every 100 samples is frequent enough to curb RSS growth
+            # without significant performance overhead.
+            if count % 100 == 0:
+                trim_memory()
+
+        # Release memory after all derived computations complete
+        trim_memory()
 
         result_dict = {}
 

@@ -14,6 +14,7 @@ from taurex.pressure import PressureProfile
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 from taurex.types import ModelOutputType
+from taurex.types import get_float_dtype
 from taurex.util import clip_native_to_wngrid
 
 from .model import ForwardModel
@@ -408,7 +409,7 @@ class SimpleForwardModel(ForwardModel):
         if isinstance(spectral_grid, u.Quantity):
             wngrid = spectral_grid.to(u.k, equivalencies=u.spectral()).value
 
-        wngrid = np.array(wngrid)
+        wngrid = np.array(wngrid, dtype=get_float_dtype())
         # Sort the grid
         wngrid = np.sort(wngrid)
 
@@ -508,11 +509,7 @@ class SimpleForwardModel(ForwardModel):
         # Initialize star
         self._star.initialize(native_grid)
 
-        # Prepare contributions
-        for contrib in self.contribution_list:
-            contrib.prepare(self, native_grid)
-
-        # Compute path integral
+        # Compute path integral (contributions prepared on-demand inside)
         absorp, tau = self.path_integral(native_grid, False)
 
         return native_grid, absorp, tau, None
@@ -569,9 +566,12 @@ class SimpleForwardModel(ForwardModel):
 
         for contrib in full_contrib_list:
             self.contribution_list = [contrib]
-            contrib.prepare(self, native_grid)
             absorp, tau = self.path_integral(native_grid, False)
             all_contrib_dict[contrib.name] = (absorp, tau, None)
+            # Ensure cleanup after each contribution
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
 
         self.contribution_list = full_contrib_list
         return native_grid, all_contrib_dict
@@ -626,6 +626,9 @@ class SimpleForwardModel(ForwardModel):
                 self.info("\t%s---%s contribtuion", contrib_name, name)
                 absorp, tau = self.path_integral(native_grid, False)
                 contrib_res_list.append((name, absorp, tau, None))
+                if contrib.sigma_xsec is not None:
+                    del contrib.sigma_xsec
+                    contrib.sigma_xsec = None
 
             result_dict[contrib_name] = contrib_res_list
 
@@ -657,6 +660,7 @@ class SimpleForwardModel(ForwardModel):
 
         """
         from taurex.util.math import OnlineVariance
+        from taurex.util.memory import trim_memory
 
         tp_profiles = OnlineVariance()
         active_gases = OnlineVariance()
@@ -668,7 +672,9 @@ class SimpleForwardModel(ForwardModel):
         binned_spectrum = OnlineVariance() if binner is not None else None
         native_spectrum = OnlineVariance()
 
+        sample_count = 0
         for weight in samples():
+            sample_count += 1
             native_grid, native, tau, _ = self.model(wngrid=wngrid, cutoff_grid=False)
 
             tp_profiles.update(self.temperatureProfile, weight=weight)
@@ -689,6 +695,12 @@ class SimpleForwardModel(ForwardModel):
                 )
 
                 binned_spectrum.update(binned, weight=weight)
+
+            # Periodically release freed memory back to OS.
+            # numpy's allocator holds onto pages freed by the
+            # sigma_xsec cleanup in path_integral.
+            if sample_count % 100 == 0:
+                trim_memory()
 
         tp_std = np.sqrt(tp_profiles.parallelVariance())
         active_std = np.sqrt(active_gases.parallelVariance())

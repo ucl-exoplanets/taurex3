@@ -10,6 +10,7 @@ from taurex.planet import Planet
 from taurex.pressure import PressureProfile
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
+from taurex.types import get_float_dtype
 
 from .simplemodel import OneDForwardModel
 
@@ -105,9 +106,14 @@ class TransmissionModel(OneDForwardModel):
         z = self.altitudeProfile
         self.debug("Computing path_length: \n z=%s \n dz=%s", z, dz)
 
+        # Pre-allocate max-size k array, reuse with views to avoid
+        # repeated allocation in the loop.
+        _k_buf = np.empty(total_layers, dtype=get_float_dtype())
+
         for layer in range(0, total_layers):
             p = (planet_radius + dz[0] / 2 + z[layer]) ** 2
-            k = np.zeros(shape=(self.nLayers - layer))
+            n_remaining = total_layers - layer
+            k = _k_buf[:n_remaining]
             k[0] = np.sqrt(
                 (planet_radius + dz[0] / 2.0 + z[layer] + dz[layer] / 2.0) ** 2 - p
             )
@@ -172,21 +178,30 @@ class TransmissionModel(OneDForwardModel):
             path_length = self.compute_path_length_old(dz)
         self.path_length = path_length
 
-        tau = np.zeros(shape=(total_layers, wngrid_size), dtype=np.float64)
+        tau_dtype = get_float_dtype()
+        tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
-        for layer in range(total_layers):
-            self.debug("Computing layer %s", layer)
-            dl = path_length[layer]
+        # Memory-efficient: prepare each contribution just before use,
+        # then clean up its sigma_xsec immediately after all layers.
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
 
-            end_k = total_layers - layer
+            for layer in range(total_layers):
+                self.debug("Computing layer %s", layer)
+                dl = path_length[layer]
 
-            for contrib in self.contribution_list:
+                end_k = total_layers - layer
+
                 if tau[layer].min() > 10:
-                    break
+                    continue
                 self.debug("Adding contribution from %s", contrib.name)
                 contrib.contribute(
                     self, 0, end_k, layer, layer, density_profile, tau, path_length=dl
                 )
+            # Free the large sigma_xsec array for this contribution
+            del contrib.sigma_xsec
+            contrib.sigma_xsec = None
 
         self.debug("tau %s %s", tau, tau.shape)
 
@@ -197,7 +212,8 @@ class TransmissionModel(OneDForwardModel):
         self, tau: npt.NDArray[np.float64], dz: npt.NDArray[np.float64]
     ) -> t.Tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
         """Compute final absorption and optical depth."""
-        tau = np.exp(-tau)
+        # In-place exp to avoid temporary array allocation
+        np.exp(-tau, out=tau)
         ap = self.altitudeProfile[:, None]
         pradius = self._planet.fullRadius
         sradius = self._star.radius

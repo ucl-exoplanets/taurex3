@@ -8,6 +8,7 @@ import numpy.typing as npt
 from taurex.data.fittable import fitparam
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -101,7 +102,7 @@ class LeeMieContribution(Contribution):
             end_layer,
             density_offset,
             self.sigma_xsec,
-            np.ones(self._nlayers),
+            np.ones(self._nlayers, dtype=get_float_dtype()),
             path_length,
             self._nlayers,
             self._ngrid,
@@ -265,7 +266,9 @@ class LeeMieContribution(Contribution):
         self.debug("x %s", x)
         q_ext = 5.0 / (self.mieQ * x ** (-4.0) + x ** (0.2))
 
-        sigma_xsec = np.zeros(shape=(self._nlayers, wngrid.shape[0]))
+        sigma_xsec = np.zeros(
+            shape=(self._nlayers, wngrid.shape[0]), dtype=get_float_dtype()
+        )
 
         # This must transform um to the xsec format in TauREx (m2)
         am = a * 1e-6

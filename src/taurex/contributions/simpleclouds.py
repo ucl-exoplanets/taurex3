@@ -8,6 +8,7 @@ import numpy.typing as npt
 from taurex.data.fittable import fitparam
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
 
 from .contribution import Contribution
 
@@ -108,7 +109,8 @@ class SimpleCloudsContribution(Contribution):
             shape=(
                 model.nLayers,
                 wngrid.shape[0],
-            )
+            ),
+            dtype=get_float_dtype(),
         )
         cloud_filtr = model.pressureProfile >= self._cloud_pressure
         contrib[cloud_filtr, :] = np.inf

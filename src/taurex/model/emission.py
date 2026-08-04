@@ -14,6 +14,7 @@ from taurex.planet import Planet
 from taurex.pressure import PressureProfile
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
+from taurex.types import get_float_dtype
 from taurex.util.emission import black_body
 
 from .simplemodel import OneDForwardModel
@@ -45,7 +46,8 @@ def contribute_ktau_emission_numpy(
 
     _sigma = sigma[start_k + layer : end_k + layer, :, :]
 
-    return np.sum(_sigma * _path * _density, axis=(0, -1))
+    # einsum avoids the (k, ngrid, ngauss) intermediate from broadcasting
+    return np.einsum("kig,k,k->i", _sigma, _path, _density)
 
 
 def contribute_ktau_emission_numba(
@@ -160,6 +162,37 @@ class EmissionModel(OneDForwardModel):
 
         self.set_num_gauss(ngauss)
         self._clamp = 10
+        # Cached reusable arrays to avoid repeated allocation
+        self._cached_tau = None
+        self._cached_surface_tau = None
+        self._cached_layer_tau = None
+        self._cached_dtau = None
+        self._cached_tmp_tau = None
+        self._cached_wngrid_size = -1
+        self._cached_ngauss = -1
+        # Buffers for in-place np.exp() calls in hot layer loop
+        self._cached_exp_mu = None  # (ngauss, wngrid) for exp(-dtau * _mu)
+        self._cached_exp_mu2 = None  # (ngauss, wngrid) for exp(-layer_tau * _mu)
+
+    def _ensure_cached_arrays(self, nlayers, wngrid_size):
+        """Allocate or reuse cached work arrays.
+
+        Reuses existing arrays when wngrid_size hasn't changed, avoiding
+        repeated large allocations in parallel MPI contexts.
+        """
+        if self._cached_wngrid_size != wngrid_size:
+            dtype = get_float_dtype()
+            self._cached_tau = np.empty((nlayers, wngrid_size), dtype=dtype)
+            self._cached_surface_tau = np.empty((1, wngrid_size), dtype=dtype)
+            self._cached_layer_tau = np.empty((1, wngrid_size), dtype=dtype)
+            self._cached_dtau = np.empty((1, wngrid_size), dtype=dtype)
+            self._cached_tmp_tau = np.empty((1, wngrid_size), dtype=dtype)
+            self._cached_wngrid_size = wngrid_size
+        if self._cached_ngauss != self._ngauss:
+            dtype = get_float_dtype()
+            self._cached_exp_mu = np.empty((self._ngauss, wngrid_size), dtype=dtype)
+            self._cached_exp_mu2 = np.empty((self._ngauss, wngrid_size), dtype=dtype)
+            self._cached_ngauss = self._ngauss
 
     def set_num_gauss(
         self,
@@ -206,7 +239,7 @@ class EmissionModel(OneDForwardModel):
         self._wi_quads = weight / 2
         self._coeffs = coeffs
         if coeffs is None:
-            self._coeffs = np.ones(self._ngauss)
+            self._coeffs = np.ones(self._ngauss, dtype=get_float_dtype())
 
     def compute_final_flux(
         self, f_total: npt.NDArray[np.float64]
@@ -283,9 +316,6 @@ class EmissionModel(OneDForwardModel):
             native_grid = clip_native_to_wngrid(native_grid, wngrid)
         self._star.initialize(native_grid)
 
-        for contrib in self.contribution_list:
-            contrib.prepare(self, native_grid)
-
         return self.evaluate_emission(native_grid, False)
 
     def evaluate_emission_ktables(  # noqa: C901
@@ -312,20 +342,29 @@ class EmissionModel(OneDForwardModel):
 
         """
         from taurex.contributions import AbsorptionContribution
-        from taurex.util import compute_dz
 
-        dz = compute_dz(self.altitudeProfile)
+        dz = self.deltaz
         total_layers = self.nLayers
         density = self.densityProfile
         wngrid_size = wngrid.shape[0]
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
-        layer_tau = np.zeros(shape=(1, wngrid_size))
-        tmp_tau = np.zeros(shape=(1, wngrid_size))
-        dtau = np.zeros(shape=(1, wngrid_size))
+
+        # Reuse cached arrays to avoid repeated allocation in parallel runs
+        self._ensure_cached_arrays(total_layers, wngrid_size)
+        tau = self._cached_tau
+        tau.fill(0.0)
+        surface_tau = self._cached_surface_tau
+        surface_tau.fill(0.0)
+        layer_tau = self._cached_layer_tau
+        dtau = self._cached_dtau
+        tmp_tau = self._cached_tmp_tau
 
         mol_type = AbsorptionContribution
+
+        # Prepare contributions on-demand (memory-efficient)
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
 
         non_molecule_absorption = [
             c for c in self.contribution_list if not isinstance(c, mol_type)
@@ -446,8 +485,8 @@ class EmissionModel(OneDForwardModel):
                 planck_term,
             )
 
-            dtau_calc = np.exp(-dtau * _mu)
-            layer_tau_calc = np.exp(-layer_tau * _mu)
+            dtau_calc = np.exp(-dtau * _mu, out=self._cached_exp_mu)
+            layer_tau_calc = np.exp(-layer_tau * _mu, out=self._cached_exp_mu2)
 
             if molecule_absorption is not None:
                 dtau_calc *= np.sum(np.exp(-k_dtau * _mu[:, None]) * wg, axis=-1)
@@ -457,10 +496,14 @@ class EmissionModel(OneDForwardModel):
 
             dtau_calc = 0.0
             if dtau.min() < self._clamp:
-                dtau_calc = np.exp(-dtau)
+                # In-place: reuse surface_tau buffer (idle during layer loop)
+                np.exp(-dtau, out=self._cached_surface_tau)
+                dtau_calc = self._cached_surface_tau
             layer_tau_calc = 0.0
             if layer_tau.min() < self._clamp:
-                layer_tau_calc = np.exp(-layer_tau)
+                # In-place: reuse tmp_tau buffer (idle during layer loop)
+                np.exp(-layer_tau, out=self._cached_tmp_tau)
+                layer_tau_calc = self._cached_tmp_tau
 
             if molecule_absorption is not None:
                 if k_dtau.min() < self._clamp:
@@ -477,6 +520,12 @@ class EmissionModel(OneDForwardModel):
 
         self.debug("intensity: %s", intensity)
 
+        # Clean up large sigma_xsec arrays
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
+
         return intensity, _mu, _w, tau
 
     @property
@@ -486,7 +535,7 @@ class EmissionModel(OneDForwardModel):
 
         return GlobalCache()["opacity_method"] == "ktables"
 
-    def evaluate_emission(
+    def evaluate_emission(  # noqa: C901
         self, wngrid: npt.NDArray[np.float64], return_contrib: bool
     ) -> t.Tuple[
         npt.NDArray[np.float64],
@@ -512,6 +561,11 @@ class EmissionModel(OneDForwardModel):
         if self.usingKTables:
             return self.evaluate_emission_ktables(wngrid, return_contrib)
 
+        # Prepare contributions on-demand (memory-efficient)
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is None:
+                contrib.prepare(self, wngrid)
+
         dz = self.deltaz
 
         total_layers = self.nLayers
@@ -521,12 +575,15 @@ class EmissionModel(OneDForwardModel):
         wngrid_size = wngrid.shape[0]
 
         temperature = self.temperatureProfile
-        tau = np.zeros(shape=(self.nLayers, wngrid_size))
-        surface_tau = np.zeros(shape=(1, wngrid_size))
 
-        layer_tau = np.zeros(shape=(1, wngrid_size))
-
-        dtau = np.zeros(shape=(1, wngrid_size))
+        # Reuse cached arrays to avoid repeated allocation in parallel runs
+        self._ensure_cached_arrays(total_layers, wngrid_size)
+        tau = self._cached_tau
+        tau.fill(0.0)
+        surface_tau = self._cached_surface_tau
+        surface_tau.fill(0.0)
+        layer_tau = self._cached_layer_tau
+        dtau = self._cached_dtau
 
         # Do surface first
         # for layer in range(total_layers):
@@ -584,10 +641,14 @@ class EmissionModel(OneDForwardModel):
 
             dtau_calc = 0.0
             if dtau.min() < self._clamp:
-                dtau_calc = np.exp(-dtau)
+                # In-place: reuse surface_tau buffer (idle during layer loop)
+                np.exp(-dtau, out=self._cached_surface_tau)
+                dtau_calc = self._cached_surface_tau
             layer_tau_calc = 0.0
             if layer_tau.min() < self._clamp:
-                layer_tau_calc = np.exp(-layer_tau)
+                # In-place: reuse tmp_tau buffer (idle during layer loop)
+                np.exp(-layer_tau, out=self._cached_tmp_tau)
+                layer_tau_calc = self._cached_tmp_tau
 
             _tau = layer_tau_calc - dtau_calc
 
@@ -607,14 +668,22 @@ class EmissionModel(OneDForwardModel):
 
             dtau_calc = 0.0
             if dtau.min() < self._clamp:
-                dtau_calc = np.exp(-dtau * _mu)
+                np.exp(-dtau * _mu, out=self._cached_exp_mu)
+                dtau_calc = self._cached_exp_mu
             layer_tau_calc = 0.0
             if layer_tau.min() < self._clamp:
-                layer_tau_calc = np.exp(-layer_tau * _mu)
+                np.exp(-layer_tau * _mu, out=self._cached_exp_mu2)
+                layer_tau_calc = self._cached_exp_mu2
 
             intensity += planck_term * (layer_tau_calc - dtau_calc)
 
         self.debug("intensity: %s", intensity)
+
+        # Clean up large sigma_xsec arrays
+        for contrib in self.contribution_list:
+            if contrib.sigma_xsec is not None:
+                del contrib.sigma_xsec
+                contrib.sigma_xsec = None
 
         return intensity, _mu, _w, tau
 

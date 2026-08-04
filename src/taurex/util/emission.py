@@ -235,5 +235,10 @@ def integrate_emission_layer(
     )
 
 
-black_body = black_body_numba
+def _black_body_wrapper(wn, temp):
+    """Compute black body radiation for given wavenumber and temperature."""
+    return black_body_numba(wn, temp)
+
+
+black_body = _black_body_wrapper
 """Black body function to use."""

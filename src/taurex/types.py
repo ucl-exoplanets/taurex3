@@ -29,3 +29,14 @@ AnyValType = t.Union[ScalarType, ArrayType]
 
 PathLike = t.Union[str, bytes, os.PathLike, pathlib.Path]
 """Path like type."""
+
+
+def get_float_dtype():
+    """Return the default floating-point dtype for computation arrays.
+
+    Returns
+    -------
+    np.dtype
+        ``np.float64``
+    """
+    return np.float64

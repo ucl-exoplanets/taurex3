@@ -7,6 +7,7 @@ import numpy as np
 import numpy.typing as npt
 
 from taurex.types import PathLike
+from taurex.types import get_float_dtype
 from taurex.util import sanitize_molecule_string
 
 from ..interpolateopacity import InterpModeType
@@ -109,7 +110,7 @@ class NemesisKTables(KTable, InterpolatingOpacity):
 
         array_counter += 10 + num_quads * 2
         self._samples, self._weights = (
-            nem_file_float[10:array_counter].reshape(2, -1).astype(np.float64)
+            nem_file_float[10:array_counter].reshape(2, -1).astype(get_float_dtype())
         )
         self.debug("Samples: %s, Weights: %s", self._samples, self._weights)
         self.debug("%s", nem_file_int[array_counter])
@@ -118,7 +119,7 @@ class NemesisKTables(KTable, InterpolatingOpacity):
         array_counter += 1
         self._pressure_grid = (
             nem_file_float[array_counter : array_counter + num_pressure].astype(
-                np.float64
+                get_float_dtype()
             )
             * 1e5
         )
@@ -126,12 +127,12 @@ class NemesisKTables(KTable, InterpolatingOpacity):
         array_counter += num_pressure
         self._temperature_grid = nem_file_float[
             array_counter : array_counter + num_temperature
-        ].astype(np.float64)
+        ].astype(get_float_dtype())
         array_counter += num_temperature
         self.debug("Tgrid: %s", self._temperature_grid)
         self._wavenumber_grid = 10000 / nem_file_float[
             array_counter : array_counter + wncount
-        ].astype(np.float64)
+        ].astype(get_float_dtype())
         self._wavenumber_grid = self._wavenumber_grid[::-1]
         array_counter += wncount
         self.debug("Wngrid: %s", self._wavenumber_grid)
@@ -141,7 +142,7 @@ class NemesisKTables(KTable, InterpolatingOpacity):
                 wncount, num_pressure, num_temperature, num_quads
             )
             * 1e-20
-        ).astype(np.float64)
+        ).astype(get_float_dtype())
         self._xsec_grid = self._xsec_grid.transpose((1, 2, 0, 3))
         self._xsec_grid = self._xsec_grid[::, ::, ::-1, :]
         self._min_pressure = self._pressure_grid.min()

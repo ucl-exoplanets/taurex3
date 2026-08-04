@@ -102,11 +102,12 @@ def contribute_tau_numpy(
         ``exp(-tau)`` yourself)
 
     """
-    _path = path[startk:endk, None]
-    _density = density[startk + density_offset : endk + density_offset, None]
+    _path = path[startk:endk]
+    _density = density[startk + density_offset : endk + density_offset]
     _sigma = sigma[startk + layer : endk + layer, :]
 
-    tau[layer, :] += np.sum(_sigma * _path * _density, axis=0)
+    # einsum avoids the (k, ngrid) intermediate from broadcasting
+    tau[layer, :] += np.einsum("ki,k,k->i", _sigma, _path, _density)
 
     return tau
 
@@ -378,12 +379,15 @@ class Contribution(Fittable, Logger, Writeable, Citable):
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
-        sigma_xsec = np.zeros(shape=(self._nlayers, self._ngrid))
+        sigma_xsec = None
 
         for gas, sigma in self.prepare_each(model, wngrid):
             self.debug("Gas %s", gas)
             self.debug("Sigma %s", sigma)
-            sigma_xsec += sigma
+            if sigma_xsec is None:
+                sigma_xsec = sigma
+            else:
+                np.add(sigma_xsec, sigma, out=sigma_xsec)  # Prevent intermediate array.
 
         self.sigma_xsec = sigma_xsec
         self.debug("Final sigma is %s", self.sigma_xsec)

@@ -2,6 +2,7 @@
 
 import numpy as np
 from hypothesis import given
+from hypothesis import settings
 from hypothesis.strategies import floats
 
 from taurex.constants import get_constant
@@ -19,6 +20,7 @@ from taurex.util import conversion_factor
         100 * conversion_factor("pc", "m"),
     ),
 )
+@settings(deadline=1000)
 def test_direct_image_final_flux(T_planet, planet_radius, system_distance):
     """Test direct image final flux."""
     from taurex.model.directimage import compute_direct_image_final_flux

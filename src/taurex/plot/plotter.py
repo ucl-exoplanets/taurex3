@@ -45,7 +45,7 @@ class Plotter:
         """Initialize Plotter."""
         self.fd = h5py.File(filename, "r")
         self.title = title
-        self.cmap = mpl.cm.get_cmap(cmap)
+        self.cmap = mpl.colormaps.get_cmap(cmap)
         self.prefix = prefix
         if self.prefix is None:
             self.prefix = "output"

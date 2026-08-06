@@ -220,6 +220,35 @@ class _OffsetSpectrumBase(BaseSpectrum):
                 bounds,
             )
 
+    def generate_broadening_fitting_params(self, order):
+        """Create fittable polynomial coefficients for the response function."""
+        resolution_guess = 15000.0
+        calibrated = bool(self._broadening_profiles)
+        self.broadening_coeffs = [np.zeros(order + 1) for _ in self._raw]
+        if not calibrated:
+            for coeffs in self.broadening_coeffs:
+                coeffs[0] = np.log(resolution_guess)
+
+        for index in range(len(self.broadening_coeffs)):
+            for k in range(order + 1):
+
+                def read_coeff(self, index=index, k=k):
+                    return self.broadening_coeffs[index][k]
+
+                def write_coeff(self, value, index=index, k=k):
+                    self.broadening_coeffs[index][k] = value
+
+                if calibrated:
+                    bounds = (-0.35, 0.35) if k == 0 else (-0.2, 0.2)
+                else:
+                    bounds = (np.log(50.0), np.log(1e5)) if k == 0 else (-2.0, 2.0)
+
+                self.add_fittable_param(
+                    f"Broadening_{index + 1}_{k}",
+                    rf"$b_{{{index + 1},{k}}}$",
+                    read_coeff, write_coeff, "linear", False, bounds,
+                )
+
     def _create_convolution_binner(
         self,
         broadening_profiles: t.Optional[t.Sequence[str]] = None,
@@ -228,6 +257,9 @@ class _OffsetSpectrumBase(BaseSpectrum):
         max_wlbroadening: float = 0.1,
         factor_cut: int = 5,
         wlres: float = 15000,
+        broadening_coeffs: t.Optional[t.Sequence[t.Sequence[float]]] = None,
+        broadening_basis="chebyshev",
+        
     ) -> FluxBinnerConv:
         return FluxBinnerConv(
             wlgrids=[spectrum[:, 0] for spectrum in self._raw],
@@ -238,6 +270,8 @@ class _OffsetSpectrumBase(BaseSpectrum):
             max_wlbroadening=max_wlbroadening,
             factor_cut=factor_cut,
             wlres=wlres,
+            broadening_coeffs=broadening_coeffs,
+            broadening_basis=broadening_basis,
         )
 
     def create_binner(self, **kwargs: t.Any):
@@ -291,19 +325,23 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
         error_scale: t.Optional[t.Sequence[float]] = None,
         slope_type: t.Optional[str] = "linear",
         broadening_type: str = "stsci_fits",
-        broadening_profiles: t.Optional[t.Sequence[str]] = None,
+        path_broadening: t.Optional[t.Sequence[str]] = None,
         wlshift: float = 0.0,
         max_wlbroadening: float = 0.1,
         factor_cut: int = 5,
         wlres: float = 15000,
+        broadening_order: t.Optional[int] = None,
+        broadening_basis="chebyshev",
     ) -> None:
         """Initialise with spectrum paths and systematic correction parameters."""
         self._wlshift = wlshift
-        self._broadening_profiles = list(broadening_profiles or [])
+        self._broadening_profiles = list(path_broadening or [])
         self._profile_type = broadening_type
+        self._broadening_basis = broadening_basis
         self._max_wlbroadening = max_wlbroadening
         self._factor_cut = factor_cut
         self._wlres = wlres
+        self.broadening_coeffs = None
 
         super().__init__(
             path_spectra=path_spectra,
@@ -312,6 +350,9 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
             error_scale=error_scale,
             slope_type=slope_type,
         )
+
+        if broadening_order is not None:
+            self.generate_broadening_fitting_params(broadening_order)
 
     def create_binner(self, **kwargs: t.Any) -> FluxBinnerConv:
         """Create a multi-grid binner for the instrument spectra."""
@@ -324,6 +365,8 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
             max_wlbroadening=kwargs.get("max_wlbroadening", self._max_wlbroadening),
             factor_cut=kwargs.get("factor_cut", self._factor_cut),
             wlres=kwargs.get("wlres", self._wlres),
+            broadening_coeffs=kwargs.get("broadening_coeffs", self.broadening_coeffs),
+            broadening_basis=self._broadening_basis,
         )
 
     @classmethod

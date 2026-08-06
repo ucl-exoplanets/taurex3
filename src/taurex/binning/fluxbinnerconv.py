@@ -10,6 +10,7 @@ from taurex import OutputSize
 from taurex.util import compute_bin_edges
 from taurex.util import create_grid_res
 from taurex.util import wnwidth_to_wlwidth
+from numpy.polynomial import chebyshev
 
 from ..types import ModelOutputType
 from .binner import BinDownType
@@ -29,6 +30,8 @@ class FluxBinnerConv(Binner):
         broadening_type: str = "stsci_fits",
         wlshift: t.Optional[t.Union[float, t.Sequence[float]]] = 0.0,
         max_wlbroadening: t.Optional[float] = None,
+        broadening_coeffs=None,
+        broadening_basis: str = "chebyshev",
         factor_cut: int = 5,
         wlres: float = 15000,
     ) -> None:
@@ -51,6 +54,8 @@ class FluxBinnerConv(Binner):
         self._max_wlbroadening = max_wlbroadening
         self._factor_cut = factor_cut
         self._wlres = wlres
+        self._broadening_coeffs = broadening_coeffs
+        self._broadening_basis = broadening_basis
 
         self._wlgrid = np.concatenate(self._wlgrids)
         self._wlgrid_width = np.concatenate(self._wlgrid_widths)
@@ -72,6 +77,16 @@ class FluxBinnerConv(Binner):
             self._profiles, self._grid_fbs = self.load_stsci_profiles(
                 self._broadening_profiles
             )
+        elif self._profile_type == "polynomial":
+            if self._max_wlbroadening is None:
+                raise ValueError("max_wlbroadening is required when broadening_type='polynomial'")
+            for wlgrid in self._wlgrids:
+                pad = self._factor_cut * self._max_wlbroadening
+                native = create_grid_res(self._wlres, wlgrid[0] - pad, wlgrid[-1] + pad)
+                self._grid_fbs.append(
+                    FluxBinner(wngrid=10000.0 / native[:, 0],
+                               wngrid_width=10000.0 * native[:, 1] / native[:, 0] ** 2)
+                )
 
     @staticmethod
     def _normalize_wlshift(
@@ -88,6 +103,48 @@ class FluxBinnerConv(Binner):
             return shifts
 
         return [float(wlshift)] * grid_count
+
+    def sigma(self, index):
+        """Gaussian sigma (microns) on the convolution grid of instrument `index`."""
+        if self._broadening_coeffs is None:
+            return self._profiles[index]                    
+
+        wl = 10000.0 / self._grid_fbs[index]._bin_centers[::-1]
+        coeffs = self._broadening_coeffs[index]
+
+        if self._broadening_basis == "sigma_poly":
+            # legacy in sigma directly
+            poly = np.polynomial.polynomial.polyval(wl, coeffs)
+            if self._profiles:
+                sigma = self._profiles[index] + poly 
+            else:
+                sigma = poly 
+            return np.clip(sigma, 1e-20, self._max_wlbroadening)
+
+        if self._broadening_basis == "resolution_poly":
+            # legacy in Resolution
+            resolution = np.polynomial.polynomial.polyval(wl, coeffs)
+            if self._profiles:
+                resolution = resolution + 0.5 * wl / self._profiles[index]
+            with np.errstate(divide="ignore", invalid="ignore"):
+                sigma = 0.5 * wl / np.clip(resolution, a_min=1, a_max=self._wlres)
+            sigma = np.nan_to_num(sigma, nan=1e-20, posinf=np.inf, neginf=1e-20)
+            return np.clip(sigma, 1e-20, self._max_wlbroadening)
+
+        # default is log-space Chebyshev
+        x = 2.0 * (wl - wl[0]) / (wl[-1] - wl[0]) - 1.0
+        poly = np.exp(chebyshev.chebval(x, coeffs))
+        if self._broadening_basis == "chebyshev_linear":
+            if self._profiles:
+                sigma = self._profiles[index] * np.maximum(1.0 + poly, 0.05)
+            else:
+                sigma = 0.5 * wl / np.maximum(poly, 1.0)
+        else:
+            if self._profiles:
+                sigma = self._profiles[index] * poly              # this handles departure from calibration
+            else:
+                sigma = 0.5 * wl / poly                           # this handles direct fitting of resolution
+        return np.clip(sigma, 0.5 * np.gradient(wl), self._max_wlbroadening)
 
     def load_stsci_profiles(
         self, files: t.Sequence[str]
@@ -190,6 +247,47 @@ class FluxBinnerConv(Binner):
         grid_width: t.Optional[npt.NDArray[np.float64]] = None,
         error: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> BinDownType:
+        """Bin a native model spectrum onto the configured instrument grids."""
+        wlgrids = []
+        spectra = []
+        errors = []
+        widths = []
+ 
+        for index, binner in enumerate(self.binners):
+            wn, flux, err, wnwidth = wngrid, spectrum, error, grid_width
+ 
+            if self._grid_fbs:
+                wn, flux, err, wnwidth = self._grid_fbs[index].bindown(
+                    wn, flux, grid_width=wnwidth, error=err
+                )
+                conv_wl = 10000.0 / wn[::-1]
+                flux = self.low_res_convolved(
+                    (conv_wl, flux[..., ::-1], None, None), self.sigma(index)
+                )[1][..., ::-1]
+ 
+            binned_output = binner.bindown(
+                wn, flux, grid_width=wnwidth, error=err
+            )
+            wlgrids.append(binned_output[0])
+            spectra.append(binned_output[1])
+            widths.append(binned_output[3])
+            if binned_output[2] is not None:
+                errors.append(binned_output[2])
+ 
+        merged_wlgrid = np.concatenate(wlgrids)
+        merged_spectrum = np.concatenate(spectra, axis=-1)
+        merged_error = np.concatenate(errors, axis=-1) if error is not None else None
+        merged_widths = np.concatenate(widths)
+ 
+        return merged_wlgrid, merged_spectrum, merged_error, merged_widths
+
+    def bindown_old(
+        self,
+        wngrid: npt.NDArray[np.float64],
+        spectrum: npt.NDArray[np.float64],
+        grid_width: t.Optional[npt.NDArray[np.float64]] = None,
+        error: t.Optional[npt.NDArray[np.float64]] = None,
+    ) -> BinDownType:
         """Bind a native model spectrum to the configured instrument grids."""
         wlgrid, flux, wlerror, wlwidth = self._prepare_input(
             wngrid, spectrum, grid_width=grid_width, error=error
@@ -223,7 +321,7 @@ class FluxBinnerConv(Binner):
                     None if working_output[3] is None else working_output[3][::-1],
                 )
                 working_output = self.low_res_convolved(
-                    working_output, self._profiles[index]
+                    working_output, self.sigma(index)
                 )
                 working_output = (
                     10000.0 / working_output[0][::-1],

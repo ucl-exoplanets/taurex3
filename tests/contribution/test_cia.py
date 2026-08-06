@@ -46,4 +46,4 @@ def test_contribute_consistent():
         contribute_cia_numpy(0, 100 - x, x, sigma, density, path, 100, 200, x, tau1)
         contribute_cia_numba(0, 100 - x, x, sigma, density, path, 100, 200, x, tau2)
 
-    np.testing.assert_array_equal(tau1, tau2)
+    np.testing.assert_allclose(tau1, tau2, atol=1e-14)

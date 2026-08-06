@@ -113,7 +113,9 @@ class FluxBinnerConv(Binner):
                 wlgrid[0] - 10.0 * std[0],
                 wlgrid[-1] + 10.0 * std[-1],
             )
-            grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], native_grid[:, 1]))
+            ##grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], native_grid[:, 1])) # It was this beofr, must be a forgotten error!
+            ww = wnwidth_to_wlwidth(native_grid[:, 0], native_grid[:, 1])
+            grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], ww))
 
             sigma = np.interp(
                 native_grid[:, 0],
@@ -146,21 +148,23 @@ class FluxBinnerConv(Binner):
     ) -> BinDownType:
         """Convolve a binned spectrum with a wavelength-dependent profile."""
         grid, flux, error, widths = binned_output
-        convolved_flux = np.zeros_like(flux)
-
+        convolved_flux = np.zeros(flux.shape, dtype=np.float64)
+    
+        dwl = np.gradient(grid)
+        lo = np.searchsorted(grid, grid - self._factor_cut * profile, side="left")
+        hi = np.searchsorted(grid, grid + self._factor_cut * profile, side="right")
+    
         for index, centre in enumerate(grid):
-            std = profile[index]
-            if index != len(grid) - 1:
-                spacing = np.abs(grid[index + 1] - centre)
-            else:
-                spacing = np.abs(centre - grid[index - 1])
-
-            window = max(1, int(self._factor_cut * std / spacing))
-            start = max(0, index - window)
-            stop = min(len(grid), index + window + 1)
-            x = grid[start:stop]
-            weights = self.gaussian(x, centre, std)
-            convolved_flux[start:stop] += flux[index] * weights / np.sum(weights)
+            start = int(lo[index])
+            stop = max(int(hi[index]), start + 1)
+            weights = (
+                self.gaussian(grid[start:stop], centre, profile[index])
+                * dwl[start:stop]
+            )
+            weights /= weights.sum()
+            convolved_flux[..., index] = np.sum(
+                flux[..., start:stop] * weights, axis=-1
+            )
 
         return grid, convolved_flux, error, widths
 
@@ -241,8 +245,8 @@ class FluxBinnerConv(Binner):
                 errors.append(binned_output[2])
 
         merged_wlgrid = np.concatenate(wlgrids)
-        merged_spectrum = np.concatenate(spectra)
-        merged_error = np.concatenate(errors) if errors else None
+        merged_spectrum = np.concatenate(spectra, axis=-1)
+        merged_error = (None if not errors or any(e is None for e in errors) else np.concatenate(errors, axis=-1))
         merged_widths = np.concatenate(widths)
 
         return merged_wlgrid, merged_spectrum, merged_error, merged_widths

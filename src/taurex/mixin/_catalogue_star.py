@@ -4,9 +4,9 @@ import requests
 
 from taurex.constants import MSOL
 from taurex.constants import RSOL
-from taurex.mixin import StarMixin
 
 from ._catalogue_reader import FileReader
+from .core import StarMixin
 
 
 # ---------------------------------------------------------------------------

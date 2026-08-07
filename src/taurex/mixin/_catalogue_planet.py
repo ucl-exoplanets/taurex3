@@ -2,9 +2,8 @@
 
 import requests
 
-from taurex.mixin import PlanetMixin
-
 from ._catalogue_reader import FileReader
+from .core import PlanetMixin
 
 
 # ---------------------------------------------------------------------------

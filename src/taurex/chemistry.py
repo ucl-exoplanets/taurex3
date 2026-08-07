@@ -10,6 +10,7 @@ from taurex.data.profiles.chemistry import PowerGas
 from taurex.data.profiles.chemistry import TaurexChemistry
 from taurex.data.profiles.chemistry import TwoLayerGas
 from taurex.data.profiles.chemistry import TwoPointGas
+from taurex.data.profiles.chemistry.gas.arraygas import ArrayGas
 
 
 __all__ = [
@@ -23,4 +24,5 @@ __all__ = [
     "TaurexChemistry",
     "AutoChemistry",
     "ChemistryFile",
+    "ArrayGas",
 ]

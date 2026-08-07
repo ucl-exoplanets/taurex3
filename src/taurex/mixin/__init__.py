@@ -1,5 +1,9 @@
 """Module for mixin classes."""
 
+from ._catalogue_planet import PlanetCatalogueExomast
+from ._catalogue_planet import PlanetCatalogueFile
+from ._catalogue_star import StarCatalogueExomast
+from ._catalogue_star import StarCatalogueFile
 from .core import AnyMixin
 from .core import ChemistryMixin
 from .core import ContributionMixin
@@ -39,4 +43,8 @@ __all__ = [
     "AnyMixin",
     "TempScaler",
     "find_mapped_mixin",
+    "PlanetCatalogueFile",
+    "PlanetCatalogueExomast",
+    "StarCatalogueFile",
+    "StarCatalogueExomast",
 ]

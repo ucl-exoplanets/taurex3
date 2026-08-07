@@ -609,11 +609,9 @@ class Optimizer(Logger, Citable):
 
         # self.update_model(fit_params)
         obs_bins = self._observed.wavenumberGrid
-
+        binner = self._observed.create_binner()
         try:
-            _, final_model, _, _ = self._binner.bin_model(
-                self._model.model(wngrid=obs_bins)
-            )
+            _, final_model, _, _ = binner.bin_model(self._model.model(wngrid=obs_bins))
         except InvalidModelException:
             return np.nan
 

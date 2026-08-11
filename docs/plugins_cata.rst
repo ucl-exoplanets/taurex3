@@ -11,6 +11,16 @@ Here is a list of plugins that can be installed to give
 TauREx 3 new features and components. Plugins are usually hosted on PyPi
 and may have precompiled binary wheels for Windows, MacOS and/or manylinux
 
+.. note::
+
+   Since |version|, the functionality of two previously external plugins has
+   been integrated directly into TauREx:
+
+   * **Phoenix4All** — :class:`~taurex.data.stellar.phoenix4all.Phoenix4AllStar`
+     replaces the legacy ``PhoenixStar`` (see :ref:`userstar`).
+   * **taurex-catalogue** — The catalogue mixins in :mod:`taurex.mixin` provide
+     automatic planet/star parameter loading from local files or the ExoMAST
+     API (see :doc:`api/taurex.mixin`).
 
 
 +------------------+--------------------------------------------------+------+--------+-------+-----------+

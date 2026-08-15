@@ -82,6 +82,25 @@ def test_grid_res(res):
     assert round(np.mean(wn / np.gradient(wn))) == res
 
 
+def test_set_native_grid_quantity():
+    """Test spectral grids accept plain arrays and Astropy quantity inputs."""
+    import astropy.units as u
+
+    from taurex.model.simplemodel import OneDForwardModel
+
+    plain_model = OneDForwardModel("plain_model")
+    plain_grid = np.array([1.0, 2.0, 3.0])
+    plain_model.set_native_grid(plain_grid)
+    np.testing.assert_allclose(plain_model.nativeWavenumberGrid, np.sort(plain_grid))
+
+    quantity_model = OneDForwardModel("quantity_model")
+    grid = np.array([1.0, 2.0, 3.0]) * u.micron
+    quantity_model.set_native_grid(grid)
+
+    expected = np.sort(grid.to(u.k, equivalencies=u.spectral()).value)
+    np.testing.assert_allclose(quantity_model.nativeWavenumberGrid, expected)
+
+
 def test_molecule_sanitization_same():
     """Test molecule sanitization doesn't change already correct names."""
     from taurex.util import sanitize_molecule_string

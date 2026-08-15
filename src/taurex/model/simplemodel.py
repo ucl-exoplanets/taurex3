@@ -408,8 +408,10 @@ class SimpleForwardModel(ForwardModel):
         """
         if isinstance(spectral_grid, u.Quantity):
             wngrid = spectral_grid.to(u.k, equivalencies=u.spectral()).value
+        else:
+            wngrid = np.asarray(spectral_grid, dtype=get_float_dtype())
 
-        wngrid = np.array(wngrid, dtype=get_float_dtype())
+        wngrid = np.asarray(wngrid, dtype=get_float_dtype())
         # Sort the grid
         wngrid = np.sort(wngrid)
 

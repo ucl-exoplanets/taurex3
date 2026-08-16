@@ -36,7 +36,7 @@ class BaseSpectrum(Logger, Fittable, Writeable):
         Logger.__init__(self, name)
         Fittable.__init__(self)
 
-    def create_binner(self) -> Binner:
+    def create_binner(self, **kwargs: t.Any) -> Binner:
         """Creates the appropriate binning object."""
         from taurex.binning import FluxBinner
 

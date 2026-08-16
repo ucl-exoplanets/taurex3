@@ -135,6 +135,43 @@ parameters such as ``m1_T`` whenever profiles are not coupled between regions::
 The same pattern applies to ``model_type = multi_eclipse`` and
 ``model_type = multi_directimage``.
 
+The same expansion happens in the ``[Observation]`` block. A standard observation
+entry might look like this::
+
+    [Observation]
+    observed_spectrum = /path/to/data.dat
+
+If instead you switch to the integrated multi-instrument loader, the accepted
+keys expand to include per-spectrum systematics controls::
+
+    [Observation]
+    observation = spectra_w_offsets
+    path_spectra = /path/spec_1.dat, /path/spec_2.dat
+    offsets = 0.0, 0.0
+    slopes = 0.0, 0.0
+    error_scale = 1.0, 1.0
+
+That change also adds new fitting parameters such as ``Offset_1``, ``Slope_1``
+and ``EScale_1`` that can be configured in ``[Fitting]``::
+
+    [Fitting]
+    Offset_1:fit = True
+    Slope_1:fit = True
+    EScale_1:fit = True
+
+Instrument response handling is now configured on the binner rather than on the
+model. That means the same convolution and wavelength-calibration settings can
+be shared by instruments as well as retrieval binning::
+
+    [Binning]
+    bin_type = observed
+    broadening_type = stsci_fits
+    broadening_profiles = /path/profile_1.fits, /path/profile_2.fits
+    wlshift = 0.0, 0.0
+
+The legacy ``observation = spectra_instr`` form remains available as a
+backwards-compatible shortcut for the same observation-plus-binner setup.
+
 
 Mixins
 ------

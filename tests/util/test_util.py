@@ -178,9 +178,7 @@ def test_convert_to_unit_value_uses_default_unit():
     """A default unit can be assumed for otherwise unitless input."""
     from taurex.util import convert_to_unit_value
 
-    np.testing.assert_allclose(
-        convert_to_unit_value([1.0, 2.0], "m", "km"), [1e3, 2e3]
-    )
+    np.testing.assert_allclose(convert_to_unit_value([1.0, 2.0], "m", "km"), [1e3, 2e3])
 
 
 def test_convert_to_unit_value_preserves_matching_default_unit():

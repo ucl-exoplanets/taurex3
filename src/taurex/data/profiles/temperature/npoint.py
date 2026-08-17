@@ -153,9 +153,7 @@ class NPoint(TemperatureProfile):
         return self._T_top
 
     @temperatureTop.setter
-    def temperatureTop(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def temperatureTop(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Temperature at top of atmosphere in Kelvin.
 
         Parameters
@@ -180,9 +178,7 @@ class NPoint(TemperatureProfile):
         return self._P_surface
 
     @pressureSurface.setter
-    def pressureSurface(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def pressureSurface(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Pressure at planet surface in Pa.
 
         Parameters
@@ -205,9 +201,7 @@ class NPoint(TemperatureProfile):
         return self._P_top
 
     @pressureTop.setter
-    def pressureTop(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def pressureTop(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Pressure at top of atmosphere in Pa.
 
         Parameters

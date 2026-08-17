@@ -108,7 +108,7 @@ def test_npoint_fitting_setters_accept_quantities():
     ],
 )
 def test_npoint_rejects_incompatible_quantities(parameter, value):
-    """NPoint rejects incompatible temperature and pressure dimensions."""
+    """Reject incompatible NPoint temperature and pressure dimensions."""
     kwargs = {
         "temperature_points": [500.0] if parameter != "temperature_points" else [],
         "pressure_points": [1e4] if parameter != "pressure_points" else [],

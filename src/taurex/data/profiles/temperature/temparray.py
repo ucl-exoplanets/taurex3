@@ -44,9 +44,7 @@ class TemperatureArray(TemperatureProfile):
         if reverse:
             self._tp_profile = self._tp_profile[::-1]
         if p_points is not None:
-            p_points = convert_to_unit_value(
-                p_points, u.Pa, default_unit=u.Pa
-            )
+            p_points = convert_to_unit_value(p_points, u.Pa, default_unit=u.Pa)
             self._p_profile = np.asarray(p_points, dtype=get_float_dtype())
             if reverse:
                 self._p_profile = self._p_profile[::-1]

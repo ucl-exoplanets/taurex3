@@ -44,9 +44,7 @@ class Isothermal(TemperatureProfile):
         return self._iso_temp
 
     @isoTemperature.setter
-    def isoTemperature(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def isoTemperature(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set the isothermal temperature in K when unitless."""
         self._iso_temp = convert_to_unit_value(
             value, u.K, default_unit=u.K, equivalencies=u.temperature()

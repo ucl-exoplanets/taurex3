@@ -1023,6 +1023,9 @@ def convert_to_unit_value(
     if default_unit is None:
         return value
 
+    if u.Unit(default_unit) == u.Unit(target_unit):
+        return value
+
     return u.Quantity(value, default_unit).to_value(
         target_unit, equivalencies=equivalencies or []
     )

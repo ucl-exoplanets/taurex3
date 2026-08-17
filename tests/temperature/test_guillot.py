@@ -1,6 +1,7 @@
 """Test Guillot 2010 temperature profile."""
 
 import pytest
+from astropy import units as u
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -136,3 +137,38 @@ def test_guillot_values():
     Should be a list of inputs and outputs
     """
     pass
+
+
+def test_guillot_accepts_temperature_quantities():
+    """Physical temperature parameters are normalized to Kelvin."""
+    profile = Guillot2010(
+        T_irr=1.5 * u.kK,
+        T_int=u.Quantity(20.0, u.deg_C),
+    )
+
+    assert profile.equilTemperature == pytest.approx(1500.0)
+    assert profile.internalTemperature == pytest.approx(293.15)
+
+
+def test_guillot_temperature_setters_accept_quantities():
+    """Fittable temperature setters normalize Quantity values."""
+    profile = Guillot2010()
+
+    profile.equilTemperature = 2.0 * u.kK
+    profile.internalTemperature = 0.5 * u.kK
+
+    assert profile.equilTemperature == pytest.approx(2000.0)
+    assert profile.internalTemperature == pytest.approx(500.0)
+
+
+@pytest.mark.parametrize("parameter", ["T_irr", "T_int"])
+def test_guillot_rejects_incompatible_temperature_quantity(parameter):
+    """Temperature parameters reject incompatible physical dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        Guillot2010(**{parameter: 1.0 * u.m})
+
+
+def test_guillot_rejects_quantity_below_absolute_zero():
+    """Validation occurs after conversion to the internal Kelvin unit."""
+    with pytest.raises(InvalidModelException, match="Negative temperature"):
+        Guillot2010(T_int=u.Quantity(-300.0, u.deg_C))

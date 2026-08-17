@@ -183,6 +183,15 @@ def test_convert_to_unit_value_uses_default_unit():
     )
 
 
+def test_convert_to_unit_value_preserves_matching_default_unit():
+    """No conversion is needed when default and target units match."""
+    from taurex.util import convert_to_unit_value
+
+    values = np.array([1.0, 2.0, 3.0])
+
+    assert convert_to_unit_value(values, "K", "K") is values
+
+
 def test_convert_to_unit_value_converts_quantity():
     """Quantity input is returned as plain values in the target unit."""
     import astropy.units as u

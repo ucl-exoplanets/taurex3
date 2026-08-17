@@ -4,10 +4,13 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.exceptions import InvalidModelException
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 from taurex.util import movingaverage
 
 from .tprofile import TemperatureProfile
@@ -39,12 +42,12 @@ class NPoint(TemperatureProfile):
 
     def __init__(
         self,
-        T_surface: t.Optional[float] = 1500.0,  # noqa: N803
-        T_top: t.Optional[float] = 200.0,  # noqa: N803
-        P_surface: t.Optional[float] = None,  # noqa: N803
-        P_top: t.Optional[float] = None,  # noqa: N803
-        temperature_points: t.Optional[npt.ArrayLike] = None,
-        pressure_points: t.Optional[npt.ArrayLike] = None,
+        T_surface: t.Optional[t.Union[float, u.Quantity]] = 1500.0,  # noqa: N803
+        T_top: t.Optional[t.Union[float, u.Quantity]] = 200.0,  # noqa: N803
+        P_surface: t.Optional[t.Union[float, u.Quantity]] = None,  # noqa: N803
+        P_top: t.Optional[t.Union[float, u.Quantity]] = None,  # noqa: N803
+        temperature_points: t.Optional[t.Union[npt.ArrayLike, u.Quantity]] = None,
+        pressure_points: t.Optional[t.Union[npt.ArrayLike, u.Quantity]] = None,
         smoothing_window: t.Optional[int] = 10,
         limit_slope: t.Optional[int] = 9999999,
     ):
@@ -52,27 +55,34 @@ class NPoint(TemperatureProfile):
 
         Parameters
         ----------
-        T_surface : float
-            BOA temperature in Kelvin
-        T_top : float
-            TOA temperature in Kelvin
-        P_surface : float
-            BOA pressure in Pa
-        P_top : float
-            TOA pressure in Pa
-        temperature_points : array-like
-            Temperature points
-        pressure_points : array-like
-            Pressure points
+        T_surface : float or astropy.units.Quantity
+            BOA temperature in K when unitless.
+        T_top : float or astropy.units.Quantity
+            TOA temperature in K when unitless.
+        P_surface : float or astropy.units.Quantity
+            BOA pressure in Pa when unitless.
+        P_top : float or astropy.units.Quantity
+            TOA pressure in Pa when unitless.
+        temperature_points : array-like or astropy.units.Quantity
+            Temperature points in K when unitless.
+        pressure_points : array-like or astropy.units.Quantity
+            Pressure points in Pa when unitless.
         smoothing_window : int
             Smoothing window
         limit_slope : int
             Gradient limit to be considered valid
         """
-        temperature_points = (
-            temperature_points if temperature_points is not None else []
+        temperature_points = convert_to_unit_value(
+            temperature_points if temperature_points is not None else [],
+            u.K,
+            default_unit=u.K,
+            equivalencies=u.temperature(),
         )
-        pressure_points = pressure_points if pressure_points is not None else []
+        pressure_points = convert_to_unit_value(
+            pressure_points if pressure_points is not None else [],
+            u.Pa,
+            default_unit=u.Pa,
+        )
 
         super().__init__(f"{len(temperature_points) + 2}Point")
 
@@ -91,12 +101,16 @@ class NPoint(TemperatureProfile):
         self.info("Npoint temeprature profile is initialized")
         self.debug("Passed temeprature points %s", temperature_points)
         self.debug("Passed pressure points %s", pressure_points)
-        self._t_points = temperature_points
-        self._p_points = pressure_points
-        self._T_surface = T_surface
-        self._T_top = T_top
-        self._P_surface = P_surface
-        self._P_top = P_top
+        self._t_points = np.asarray(temperature_points, dtype=get_float_dtype())
+        self._p_points = np.asarray(pressure_points, dtype=get_float_dtype())
+        self.temperatureSurface = T_surface
+        self.temperatureTop = T_top
+        self._P_surface = None
+        self._P_top = None
+        if P_surface is not None:
+            self.pressureSurface = P_surface
+        if P_top is not None:
+            self.pressureTop = P_top
         self._smooth_window = smoothing_window
         self._limit_slope = limit_slope
         self.generate_pressure_fitting_params()
@@ -113,7 +127,9 @@ class NPoint(TemperatureProfile):
         return self._T_surface
 
     @temperatureSurface.setter
-    def temperatureSurface(self, value: float) -> None:  # noqa: N802
+    def temperatureSurface(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Temperature at planet surface in Kelvin.
 
         Parameters
@@ -122,7 +138,9 @@ class NPoint(TemperatureProfile):
             Surface temperature in Kelvin.
 
         """
-        self._T_surface = value
+        self._T_surface = convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     @fitparam(
         param_name="T_top",
@@ -135,7 +153,9 @@ class NPoint(TemperatureProfile):
         return self._T_top
 
     @temperatureTop.setter
-    def temperatureTop(self, value: float) -> None:  # noqa: N802
+    def temperatureTop(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Temperature at top of atmosphere in Kelvin.
 
         Parameters
@@ -144,7 +164,9 @@ class NPoint(TemperatureProfile):
             Top temperature in Kelvin.
 
         """
-        self._T_top = value
+        self._T_top = convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     @fitparam(
         param_name="P_surface",
@@ -158,7 +180,9 @@ class NPoint(TemperatureProfile):
         return self._P_surface
 
     @pressureSurface.setter
-    def pressureSurface(self, value: float) -> None:  # noqa: N802
+    def pressureSurface(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Pressure at planet surface in Pa.
 
         Parameters
@@ -167,7 +191,7 @@ class NPoint(TemperatureProfile):
             Surface pressure in Pa.
 
         """
-        self._P_surface = value
+        self._P_surface = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @fitparam(
         param_name="P_top",
@@ -181,7 +205,9 @@ class NPoint(TemperatureProfile):
         return self._P_top
 
     @pressureTop.setter
-    def pressureTop(self, value: float) -> None:  # noqa: N802
+    def pressureTop(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Pressure at top of atmosphere in Pa.
 
         Parameters
@@ -190,7 +216,7 @@ class NPoint(TemperatureProfile):
             Top pressure in Pa.
 
         """
-        self._P_top = value
+        self._P_top = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     def generate_pressure_fitting_params(self) -> None:
         """Generates the fitting parameters for the pressure points.
@@ -209,7 +235,9 @@ class NPoint(TemperatureProfile):
                 return self._p_points[idx]
 
             def write_point(self, value, idx=idx):
-                self._p_points[idx] = value
+                self._p_points[idx] = convert_to_unit_value(
+                    value, u.Pa, default_unit=u.Pa
+                )
 
             read_point.__doc__ = f"Pressure point {point_num} in Pa"
 
@@ -244,7 +272,9 @@ class NPoint(TemperatureProfile):
                 return self._t_points[idx]
 
             def write_point(self, value, idx=idx):
-                self._t_points[idx] = value
+                self._t_points[idx] = convert_to_unit_value(
+                    value, u.K, default_unit=u.K, equivalencies=u.temperature()
+                )
 
             read_point.__doc__ = f"Temperature point {point_num} in K"
 

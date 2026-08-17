@@ -5,6 +5,7 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.citation import Citable
 from taurex.data.fittable import Fittable
@@ -13,6 +14,7 @@ from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 
 class PressureProfile(Fittable, Logger, Writeable, Citable):
@@ -129,8 +131,8 @@ class SimplePressureProfile(PressureProfile):
     def __init__(
         self,
         nlayers: t.Optional[int] = 100,
-        atm_min_pressure: t.Optional[float] = 1e-4,
-        atm_max_pressure: t.Optional[float] = 1e6,
+        atm_min_pressure: t.Optional[t.Union[float, u.Quantity]] = 1e-4,
+        atm_max_pressure: t.Optional[t.Union[float, u.Quantity]] = 1e6,
     ):
         """Initialize pressure profile.
 
@@ -139,17 +141,23 @@ class SimplePressureProfile(PressureProfile):
         nlayers : int
             Number of layers in atmosphere
 
-        atm_min_pressure : float
-            minimum pressure in Pascal (top of atmosphere)
+        atm_min_pressure : float or astropy.units.Quantity
+            Minimum pressure in Pa when unitless (top of atmosphere).
 
-        atm_max_pressure : float
-            maximum pressure in Pascal (surface of planet)
+        atm_max_pressure : float or astropy.units.Quantity
+            Maximum pressure in Pa when unitless (surface of planet).
 
         """
         from warnings import warn
 
         super().__init__("pressure_profile", nlayers)
         self.pressure_profile = None
+        atm_min_pressure = convert_to_unit_value(
+            atm_min_pressure, u.Pa, default_unit=u.Pa
+        )
+        atm_max_pressure = convert_to_unit_value(
+            atm_max_pressure, u.Pa, default_unit=u.Pa
+        )
         if self.WARN:
             warn(
                 "SimplePressureProfile is deprecated. "
@@ -190,16 +198,20 @@ class SimplePressureProfile(PressureProfile):
         return self._atm_min_pressure
 
     @minAtmospherePressure.setter
-    def minAtmospherePressure(self, value: float) -> None:  # noqa: N802
+    def minAtmospherePressure(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set the minimum pressure of atmosphere (top layer) in Pascal.
 
         Parameters
         ----------
-        value : float
-            Minimum pressure in Pascal.
+        value : float or astropy.units.Quantity
+            Minimum pressure in Pa when unitless.
 
         """
-        self._atm_min_pressure = value
+        self._atm_min_pressure = convert_to_unit_value(
+            value, u.Pa, default_unit=u.Pa
+        )
 
     @fitparam(
         param_name="atm_max_pressure",
@@ -213,16 +225,20 @@ class SimplePressureProfile(PressureProfile):
         return self._atm_max_pressure
 
     @maxAtmospherePressure.setter
-    def maxAtmospherePressure(self, value: float):  # noqa: N802
+    def maxAtmospherePressure(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set the maximum pressure of the atmosphere (surface) in Pascal.
 
         Parameters
         ----------
-        value : float
-            Maximum pressure in Pascal.
+        value : float or astropy.units.Quantity
+            Maximum pressure in Pa when unitless.
 
         """
-        self._atm_max_pressure = value
+        self._atm_max_pressure = convert_to_unit_value(
+            value, u.Pa, default_unit=u.Pa
+        )
 
     @property
     def profile(self) -> npt.NDArray[np.float64]:

@@ -16,8 +16,8 @@ from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
 from taurex.types import get_float_dtype
-from taurex.util import convert_to_unit_value
 from taurex.util import conversion_factor
+from taurex.util import convert_to_unit_value
 
 from .citation import Citable
 from .fittable import Fittable

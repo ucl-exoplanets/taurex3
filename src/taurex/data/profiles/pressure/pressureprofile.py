@@ -209,9 +209,7 @@ class SimplePressureProfile(PressureProfile):
             Minimum pressure in Pa when unitless.
 
         """
-        self._atm_min_pressure = convert_to_unit_value(
-            value, u.Pa, default_unit=u.Pa
-        )
+        self._atm_min_pressure = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @fitparam(
         param_name="atm_max_pressure",
@@ -236,9 +234,7 @@ class SimplePressureProfile(PressureProfile):
             Maximum pressure in Pa when unitless.
 
         """
-        self._atm_max_pressure = convert_to_unit_value(
-            value, u.Pa, default_unit=u.Pa
-        )
+        self._atm_max_pressure = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @property
     def profile(self) -> npt.NDArray[np.float64]:

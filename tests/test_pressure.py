@@ -2,11 +2,13 @@
 
 import numpy as np
 import pytest
+from astropy import units as u
 from hypothesis import example
 from hypothesis import given
 from hypothesis.strategies import floats
 from hypothesis.strategies import integers
 
+from taurex.data.profiles.pressure import LogPressureProfile
 from taurex.pressure import PressureProfile
 from taurex.pressure import SimplePressureProfile
 
@@ -73,3 +75,51 @@ def test_simple_pressure(min_pressure, max_pressure, nlayers):
 
         assert np.all(pressure_profile_levels[:-1] > pressure_profile)
         assert np.all(pressure_profile_levels[1:] < pressure_profile)
+
+
+def test_log_pressure_accepts_quantity_bounds():
+    """Pressure bounds are normalized to Pa before building the profile."""
+    profile = LogPressureProfile(
+        nlayers=10,
+        atm_min_pressure=1.0 * u.mbar,
+        atm_max_pressure=2.0 * u.bar,
+    )
+
+    profile.compute_pressure_profile()
+
+    assert profile.minAtmospherePressure == pytest.approx(100.0)
+    assert profile.maxAtmospherePressure == pytest.approx(2e5)
+    assert profile.pressure_profile_levels.min() == pytest.approx(100.0)
+    assert profile.pressure_profile_levels.max() == pytest.approx(2e5)
+
+
+def test_log_pressure_preserves_unitless_pa_bounds():
+    """Plain pressure bounds retain their legacy interpretation in Pa."""
+    profile = LogPressureProfile(
+        nlayers=10,
+        atm_min_pressure=100.0,
+        atm_max_pressure=2e5,
+    )
+
+    assert profile.minAtmospherePressure == pytest.approx(100.0)
+    assert profile.maxAtmospherePressure == pytest.approx(2e5)
+
+
+def test_log_pressure_setters_accept_quantities():
+    """Fittable pressure setters also normalize Quantity input to Pa."""
+    profile = LogPressureProfile()
+
+    profile.minAtmospherePressure = 2.0 * u.mbar
+    profile.maxAtmospherePressure = 3.0 * u.bar
+
+    assert profile.minAtmospherePressure == pytest.approx(200.0)
+    assert profile.maxAtmospherePressure == pytest.approx(3e5)
+
+
+@pytest.mark.parametrize("parameter", ["atm_min_pressure", "atm_max_pressure"])
+def test_log_pressure_rejects_incompatible_quantity(parameter):
+    """Pressure bounds reject quantities with incompatible dimensions."""
+    kwargs = {parameter: 1.0 * u.m}
+
+    with pytest.raises(u.UnitConversionError):
+        LogPressureProfile(**kwargs)

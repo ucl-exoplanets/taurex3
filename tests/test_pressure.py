@@ -9,6 +9,7 @@ from hypothesis.strategies import floats
 from hypothesis.strategies import integers
 
 from taurex.data.profiles.pressure import LogPressureProfile
+from taurex.pressure import ArrayPressureProfile
 from taurex.pressure import PressureProfile
 from taurex.pressure import SimplePressureProfile
 
@@ -123,3 +124,32 @@ def test_log_pressure_rejects_incompatible_quantity(parameter):
 
     with pytest.raises(u.UnitConversionError):
         LogPressureProfile(**kwargs)
+
+
+def test_array_pressure_accepts_quantity():
+    """Array pressure profiles are normalized to Pa."""
+    profile = ArrayPressureProfile(np.array([1.0, 0.1]) * u.bar)
+
+    np.testing.assert_allclose(profile.profile, [1e5, 1e4])
+
+
+def test_array_pressure_preserves_unitless_pa_values():
+    """Plain arrays retain their legacy interpretation in Pa."""
+    profile = ArrayPressureProfile([1e5, 1e4], reverse=True)
+
+    np.testing.assert_allclose(profile.profile, [1e4, 1e5])
+
+
+def test_array_pressure_computes_levels():
+    """The normalized pressure array is used to compute level pressures."""
+    profile = ArrayPressureProfile([1e5, 1e4])
+
+    profile.compute_pressure_profile()
+
+    assert profile.pressure_profile_levels.shape == (3,)
+
+
+def test_array_pressure_rejects_incompatible_quantity():
+    """Pressure arrays reject incompatible physical dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        ArrayPressureProfile(np.array([1.0, 2.0]) * u.m)

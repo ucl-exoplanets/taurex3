@@ -72,9 +72,7 @@ class Guillot2010(TemperatureProfile):
         return self.T_irr
 
     @equilTemperature.setter
-    def equilTemperature(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def equilTemperature(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set planet equilibrium temperature.
 
         Parameters

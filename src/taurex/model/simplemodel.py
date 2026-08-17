@@ -407,9 +407,7 @@ class SimpleForwardModel(ForwardModel):
         spectral_grid:
             Wavenumber grid
         """
-        wngrid = convert_to_unit_value(
-            spectral_grid, u.k, equivalencies=u.spectral()
-        )
+        wngrid = convert_to_unit_value(spectral_grid, u.k, equivalencies=u.spectral())
         wngrid = np.asarray(wngrid, dtype=get_float_dtype())
         # Sort the grid
         wngrid = np.sort(wngrid)

@@ -7,6 +7,7 @@ from hypothesis.strategies import floats
 from hypothesis.strategies import integers
 
 from taurex.chemistry import ConstantGas
+from taurex.data.profiles.chemistry.gas.arraygas import ArrayGas
 
 from ..strategies import molecule_vmr
 
@@ -50,3 +51,11 @@ def test_constant_gas_quantity_input():
     assert np.isclose(cg._mix_ratio, 0.05)
     cg.initialize_profile(nlayers=3)
     assert np.allclose(cg.mixProfile, 0.05)
+
+
+def test_array_gas_quantity_sequence_input():
+    """ArrayGas should normalize a sequence of dimensionless quantities."""
+    gas = ArrayGas("H2O", mix_ratio_array=np.array([5, 1]) * u.percent)
+
+    assert not np.any(np.vectorize(lambda x: isinstance(x, u.Quantity))(gas._mix_ratio_array))
+    np.testing.assert_allclose(gas._mix_ratio_array, [0.05, 0.01])

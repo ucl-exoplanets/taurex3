@@ -77,7 +77,7 @@ class PowerGas(Gas):
         else:
             self._profile_type = profile_type
 
-        self._mix_surface = mix_ratio_surface
+        self._mix_surface = self.normalize_dimensionless(mix_ratio_surface)
         self._alpha = alpha
         self._beta = beta
         self._gamma = gamma
@@ -115,7 +115,7 @@ class PowerGas(Gas):
     @mixRatioSurface.setter
     def mixRatioSurface(self, value: float):  # noqa: N802
         """Set the abundance on the planets surface."""
-        self._mix_surface = value
+        self._mix_surface = self.normalize_dimensionless(value)
 
     @alpha.setter
     def alpha(self, value: float):

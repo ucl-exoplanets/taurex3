@@ -1,6 +1,7 @@
 """Tests for constant gas."""
 
 import numpy as np
+from astropy import units as u
 from hypothesis import given
 from hypothesis.strategies import floats
 from hypothesis.strategies import integers
@@ -39,3 +40,13 @@ def test_constant_gas(molecule, nlayers, new_value):
     cg.initialize_profile(nlayers=nlayers)
     mix_profile = cg.mixProfile
     assert np.all(mix_profile == new_value)
+
+
+def test_constant_gas_quantity_input():
+    """Dimensionless quantities should be normalized to plain numeric VMR data."""
+    cg = ConstantGas("H2O", mix_ratio=5 * u.percent)
+
+    assert not isinstance(cg._mix_ratio, u.Quantity)
+    assert np.isclose(cg._mix_ratio, 0.05)
+    cg.initialize_profile(nlayers=3)
+    assert np.allclose(cg.mixProfile, 0.05)

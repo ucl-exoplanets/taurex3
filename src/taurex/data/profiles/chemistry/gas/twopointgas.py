@@ -43,8 +43,8 @@ class TwoPointGas(Gas):
 
         """
         super().__init__("TwoPointGas", molecule_name)
-        self._mix_surface = mix_ratio_surface
-        self._mix_top = mix_ratio_top
+        self._mix_surface = self.normalize_dimensionless(mix_ratio_surface)
+        self._mix_top = self.normalize_dimensionless(mix_ratio_top)
         self.add_surface_param()
         self.add_top_param()
         self._mix_profile = None
@@ -73,12 +73,12 @@ class TwoPointGas(Gas):
     @mixRatioSurface.setter
     def mixRatioSurface(self, value: float) -> None:  # noqa: N802
         """Set abundance on the planets surface."""
-        self._mix_surface = value
+        self._mix_surface = self.normalize_dimensionless(value)
 
     @mixRatioTop.setter
     def mixRatioTop(self, value: float) -> None:  # noqa: N802
         """Set abundance on the top of atmosphere."""
-        self._mix_top = value
+        self._mix_top = self.normalize_dimensionless(value)
 
     def add_surface_param(self) -> None:
         """Add surface parameter.

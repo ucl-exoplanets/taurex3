@@ -396,7 +396,7 @@ Keywords
 +--------------------+--------------+----------------------------------+
 | Variable           | Type         | Description                      |
 +--------------------+--------------+----------------------------------+
-| ``flat_mix_ratio`` | :obj:`float` | Opacity value                    |
+| ``flat_mix_ratio`` | :obj:`float` | Effective opacity in m2          |
 +--------------------+--------------+----------------------------------+
 | ``flat_bottomP``   | :obj:`float` | Bottom of absorbing region in Pa |
 +--------------------+--------------+----------------------------------+
@@ -410,7 +410,7 @@ Fitting Parameters
 +--------------------+--------------+----------------------------------+
 | Parameter          | Type         | Description                      |
 +--------------------+--------------+----------------------------------+
-| ``flat_mix_ratio`` | :obj:`float` | Opacity value                    |
+| ``flat_mix_ratio`` | :obj:`float` | Effective opacity in m2          |
 +--------------------+--------------+----------------------------------+
 | ``flat_bottomP``   | :obj:`float` | Bottom of absorbing region in Pa |
 +--------------------+--------------+----------------------------------+

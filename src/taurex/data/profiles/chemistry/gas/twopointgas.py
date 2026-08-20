@@ -100,7 +100,7 @@ class TwoPointGas(Gas):
             return self._mix_surface
 
         def write_surf(self, value):
-            self._mix_surface = value
+            self._mix_surface = self.normalize_dimensionless(value)
 
         read_surf.__doc__ = f"Abundance of {param_name} on the planets surface"
 
@@ -137,7 +137,7 @@ class TwoPointGas(Gas):
             return self._mix_top
 
         def write_top(self, value):
-            self._mix_top = value
+            self._mix_top = self.normalize_dimensionless(value)
 
         read_top.__doc__ = f"Abundance of {param_name} on the top of atmosphere"
 

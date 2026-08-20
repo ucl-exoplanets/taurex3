@@ -197,7 +197,7 @@ Keywords
 +-----------------------+--------------+----------------------------+
 | ``lee_mie_q``         | :obj:`float` | Extinction coefficient     |
 +-----------------------+--------------+----------------------------+
-| ``lee_mie_mix_ratio`` | :obj:`float` | Mixing ratio in atmosphere |
+| ``lee_mie_mix_ratio`` | :obj:`float` | Number density (m^-3)      |
 +-----------------------+--------------+----------------------------+
 | ``lee_mie_bottomP``   | :obj:`float` | Bottom of cloud deck in Pa |
 +-----------------------+--------------+----------------------------+
@@ -215,7 +215,7 @@ Fitting Parameters
 +-----------------------+--------------+----------------------------+
 | ``lee_mie_q``         | :obj:`float` | Extinction coefficient     |
 +-----------------------+--------------+----------------------------+
-| ``lee_mie_mix_ratio`` | :obj:`float` | Mixing ratio in atmosphere |
+| ``lee_mie_mix_ratio`` | :obj:`float` | Number density (m^-3)      |
 +-----------------------+--------------+----------------------------+
 | ``lee_mie_bottomP``   | :obj:`float` | Bottom of cloud deck in Pa |
 +-----------------------+--------------+----------------------------+

@@ -4,6 +4,7 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.constants import MSOL
 from taurex.constants import RSOL
@@ -12,6 +13,7 @@ from taurex.data.fittable import fitparam
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output import Writeable
+from taurex.util import convert_to_unit_value
 from taurex.util.emission import black_body
 
 from ..citation import Citable
@@ -26,31 +28,31 @@ class Star(Fittable, Logger, Writeable, Citable):
 
     def __init__(
         self,
-        temperature: t.Optional[float] = 5000,
-        radius: t.Optional[float] = 1.0,
-        distance: t.Optional[float] = 1,
+        temperature: t.Optional[t.Union[float, u.Quantity]] = 5000,
+        radius: t.Optional[t.Union[float, u.Quantity]] = 1.0,
+        distance: t.Optional[t.Union[float, u.Quantity]] = 1,
         magnitudeK: t.Optional[float] = 10.0,  # noqa: N803
-        mass: t.Optional[float] = 1.0,
-        metallicity: t.Optional[float] = 1.0,
+        mass: t.Optional[t.Union[float, u.Quantity]] = 1.0,
+        metallicity: t.Optional[t.Union[float, u.Quantity]] = 1.0,
     ):
         """Initialize a star.
 
         Parameters
         ----------
-        temperature: float, optional
-            Stellar temperature in Kelvin
+        temperature: float or astropy.units.Quantity, optional
+            Stellar temperature in K when unitless.
 
-        radius: float, optional
-            Stellar radius in Solar radius
+        radius: float or astropy.units.Quantity, optional
+            Stellar radius in Solar radii when unitless.
 
-        metallicity: float, optional
-            Metallicity in solar values
+        metallicity: float or astropy.units.Quantity, optional
+            Metallicity in solar values when unitless.
 
-        mass: float, optional
-            Stellar mass in solar mass
+        mass: float or astropy.units.Quantity, optional
+            Stellar mass in Solar masses when unitless.
 
-        distance: float, optional
-            Distance from Earth in pc
+        distance: float or astropy.units.Quantity, optional
+            Distance from Earth in pc when unitless.
 
         magnitudeK: float, optional
             Maginitude in K band
@@ -58,14 +60,35 @@ class Star(Fittable, Logger, Writeable, Citable):
         """
         Logger.__init__(self, self.__class__.__name__)
         Fittable.__init__(self)
-        self._temperature = temperature
-        self._radius = radius * RSOL
-        self._mass = mass * MSOL
+        self._temperature = self._normalize_temperature(temperature)
+        self._radius = convert_to_unit_value(radius, u.m, default_unit=u.R_sun)
+        self._mass = convert_to_unit_value(mass, u.kg, default_unit=u.M_sun)
         self.debug("Star mass %s", self._mass)
         self.sed = None
-        self.distance = distance
+        self.distance = self._normalize_distance(distance)
         self.magnitudeK = magnitudeK
-        self._metallicity = metallicity
+        self._metallicity = self._normalize_dimensionless(metallicity)
+
+    @staticmethod
+    def _normalize_temperature(value: t.Union[float, u.Quantity]) -> float:
+        """Convert temperature to plain numeric values in K."""
+        return convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
+
+    @staticmethod
+    def _normalize_distance(value: t.Union[float, u.Quantity]) -> float:
+        """Convert distance to plain numeric values in pc."""
+        return convert_to_unit_value(value, u.pc, default_unit=u.pc)
+
+    @staticmethod
+    def _normalize_dimensionless(value: t.Union[float, u.Quantity]) -> float:
+        """Convert a dimensionless stellar input to a plain numeric value."""
+        return convert_to_unit_value(
+            value,
+            u.dimensionless_unscaled,
+            default_unit=u.dimensionless_unscaled,
+        )
 
     @property
     def radius(self) -> float:
@@ -78,9 +101,9 @@ class Star(Fittable, Logger, Writeable, Citable):
         return self._temperature
 
     @temperature.setter
-    def temperature(self, value: float) -> None:
+    def temperature(self, value: t.Union[float, u.Quantity]) -> None:
         """Set blackbody temperature in Kelvin."""
-        self._temperature = value
+        self._temperature = self._normalize_temperature(value)
 
     @property
     def mass(self) -> float:
@@ -98,9 +121,9 @@ class Star(Fittable, Logger, Writeable, Citable):
         return self.distance
 
     @distanceSystem.setter
-    def distanceSystem(self, value: float) -> None:  # noqa: N802
+    def distanceSystem(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set distance from Earth to System (in pc)."""
-        self.distance = value
+        self.distance = self._normalize_distance(value)
 
     def initialize(self, wngrid: npt.NDArray[np.float64]) -> None:
         """Initializes the blackbody spectrum on the given wavenumber grid.

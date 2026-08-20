@@ -144,7 +144,7 @@ class PowerGas(Gas):
             return self._mix_surface
 
         def write_surf(self, value):
-            self._mix_surface = value
+            self._mix_surface = self.normalize_dimensionless(value)
 
         fget_surf = read_surf
         fset_surf = write_surf

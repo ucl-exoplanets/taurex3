@@ -133,7 +133,7 @@ class TwoLayerGas(Gas):
             return self._mix_surface
 
         def write_surf(self, value):
-            self._mix_surface = value
+            self._mix_surface = self.normalize_dimensionless(value)
 
         read_surf.__doc__ = (
             f"Mixing ratio at the surface of the planet for {param_name}"
@@ -170,7 +170,7 @@ class TwoLayerGas(Gas):
             return self._mix_top
 
         def write_top(self, value):
-            self._mix_top = value
+            self._mix_top = self.normalize_dimensionless(value)
 
         read_top.__doc__ = f"Mixing ratio at the top of the atmosphere for {param_name}"
 
@@ -205,7 +205,7 @@ class TwoLayerGas(Gas):
             return self._mix_ratio_pressure
 
         def write_p(self: "TwoLayerGas", value: float):
-            self._mix_ratio_pressure = value
+            self._mix_ratio_pressure = self.normalize_pressure(value)
 
         read_p.__doc__ = f"Pressure at which the mixing ratio changes for {mol_name}"
 

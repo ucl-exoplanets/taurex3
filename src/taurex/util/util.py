@@ -1020,6 +1020,13 @@ def convert_to_unit_value(
     if isinstance(value, u.Quantity):
         return value.to_value(target_unit, equivalencies=equivalencies or [])
 
+    if isinstance(value, (list, tuple)) and any(
+        isinstance(item, u.Quantity) for item in value
+    ):
+        return u.Quantity(value).to_value(
+            target_unit, equivalencies=equivalencies or []
+        )
+
     if default_unit is None:
         return value
 

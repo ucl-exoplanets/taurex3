@@ -43,6 +43,22 @@ def test_planet_quantity_uses_attached_unit():
     assert planet.get_planet_radius("m") == pytest.approx(1000.0)
 
 
+def test_planet_property_setters_accept_quantity_values():
+    """Public property setters normalize Quantity values at the API boundary."""
+    planet = Planet()
+
+    planet.mass = 2.0 * u.M_earth
+    planet.radius = 3.0 * u.R_earth
+    planet.distance = 1.5e6 * u.km
+
+    assert planet.get_planet_mass("kg") == pytest.approx((2.0 * u.M_earth).to_value(u.kg))
+    assert planet.get_planet_radius("m") == pytest.approx((3.0 * u.R_earth).to_value(u.m))
+    assert planet.get_planet_semimajoraxis("m") == pytest.approx((1.5e6 * u.km).to_value(u.m))
+
+    planet.semiMajorAxis = 2.0 * u.AU
+    assert planet.get_planet_semimajoraxis("AU") == pytest.approx(2.0)
+
+
 @pytest.mark.parametrize(
     "setter_name",
     ["set_planet_mass", "set_planet_radius", "set_planet_semimajoraxis"],

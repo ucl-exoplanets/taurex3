@@ -4,10 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex import OutputSize
 from taurex.util import bindown
 from taurex.util import compute_bin_edges
+from taurex.util import convert_to_unit_value
 from taurex.util import wnwidth_to_wlwidth
 
 from ..types import ModelOutputType
@@ -29,12 +31,14 @@ class SimpleBinner(Binner):
     Parameters
     ----------
     wngrid: :obj:`array`
-        Wavenumber grid
+        Wavenumber grid. Quantity values are converted to inverse centimetres;
+        wavelength quantities are also accepted.
 
     wngrid_width: :obj:`array`, optional
         Must have same shape as ``wngrid``
         Full bin widths for each wavenumber grid point
-        given in ``wngrid``. If not provided then
+        given in ``wngrid``. Quantity values are converted to inverse centimetres.
+        If not provided then
         this is automatically computed from ``wngrid``.
 
     """
@@ -58,8 +62,14 @@ class SimpleBinner(Binner):
             this is automatically computed from ``wngrid``.
 
         """
-        self._wngrid = wngrid
-        self._wn_width = wngrid_width
+        self._wngrid = np.asarray(
+            convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral())
+        )
+        self._wn_width = (
+            None
+            if wngrid_width is None
+            else np.asarray(convert_to_unit_value(wngrid_width, u.k))
+        )
         if self._wn_width is None:
             self._wn_width = compute_bin_edges(self._wngrid)[-1]
 

@@ -4,10 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex import OutputSize
 from taurex.types import get_float_dtype
 from taurex.util import compute_bin_edges
+from taurex.util import convert_to_unit_value
 
 from ..types import ModelOutputType
 from .binner import BinDownType
@@ -243,21 +245,25 @@ class FluxBinner(Binner):
         Parameters
         ----------
         wngrid: :obj:`array`, optional
-            Wavenumber grid. If not set, then ``wlgrid`` must be.
+            Wavenumber grid. Quantity values are converted to inverse centimetres.
+            If not set, then ``wlgrid`` must be.
 
         wngrid_width: :obj:`array`, optional
             Must have same shape as ``wngrid``
             Full bin widths for each wavenumber grid point
-            given in ``wngrid``. If not provided then
+            given in ``wngrid``. Quantity values are converted to inverse centimetres.
+            If not provided then
             this is automatically computed from ``wngrid``.
 
         wlgrid: :obj:`array`, optional
-            Wavelength grid. If not set, then ``wngrid`` must be.
+            Wavelength grid. Quantity values are converted to microns.
+            If not set, then ``wngrid`` must be.
 
         wlgrid_width: :obj:`array`, optional
             Must have same shape as ``wlgrid``
             Full bin widths for each wavelength grid point
-            given in ``wlgrid``. If not provided then
+            given in ``wlgrid``. Quantity values are converted to microns.
+            If not provided then
             this is automatically computed from ``wlgrid``.
         """
         super().__init__()
@@ -272,11 +278,25 @@ class FluxBinner(Binner):
             raise ValueError("You cannot use wngrid_width with wlgrid")
 
         if wngrid is not None:
+            wngrid = np.asarray(
+                convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral())
+            )
+            if wngrid_width is not None:
+                wngrid_width = np.asarray(
+                    convert_to_unit_value(wngrid_width, u.k)
+                )
             sort_grid = wngrid.argsort()
             self._bin_centers = wngrid[sort_grid]
             self._bin_widths = wngrid_width
             self._in_wl = False
         else:
+            wlgrid = np.asarray(
+                convert_to_unit_value(wlgrid, u.micron, equivalencies=u.spectral())
+            )
+            if wlgrid_width is not None:
+                wlgrid_width = np.asarray(
+                    convert_to_unit_value(wlgrid_width, u.micron)
+                )
             sort_grid = wlgrid.argsort()
             self._bin_centers = wlgrid[sort_grid]
             self._bin_widths = wlgrid_width

@@ -602,6 +602,11 @@ archivePrefix = {arXiv},
         t.Optional[t.Any],
     ]:
         """Run model."""
+        if wngrid is not None:
+            wngrid = np.asarray(
+                convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral())
+            )
+
         native_grid = self.nativeWavenumberGrid
         if wngrid is not None and cutoff_grid:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)

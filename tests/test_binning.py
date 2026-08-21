@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from astropy import units as u
 
 from taurex.binning import Binner
 from taurex.binning import FluxBinner
@@ -81,6 +82,51 @@ def test_simplebinner(spectra):
     assert wngrid.shape[0] == wn.shape[0]
 
     assert np.mean(sp) == pytest.approx(np.mean(spectra[1]), rel=0.1)
+
+
+def test_simplebinner_normalizes_spectral_quantities():
+    """The wavenumber grid and widths are stored in inverse centimetres."""
+    binner = SimpleBinner(
+        np.array([2.0, 1.0]) * u.micron,
+        wngrid_width=np.array([20.0, 10.0]) / u.m,
+    )
+
+    np.testing.assert_allclose(binner._wngrid, [5000.0, 10000.0])
+    np.testing.assert_allclose(binner._wn_width, [0.2, 0.1])
+    assert not isinstance(binner._wngrid, u.Quantity)
+    assert not isinstance(binner._wn_width, u.Quantity)
+
+
+def test_simplebinner_rejects_incompatible_quantity():
+    """Non-spectral grid quantities fail at the public boundary."""
+    with pytest.raises(u.UnitConversionError):
+        SimpleBinner(np.array([1.0, 2.0]) * u.kg)
+
+
+def test_fluxbinner_normalizes_wavenumber_quantities():
+    """Wavenumber centers and widths use inverse centimetres internally."""
+    binner = FluxBinner(
+        wngrid=np.array([2.0, 1.0]) / u.m,
+        wngrid_width=np.array([20.0, 10.0]) / u.m,
+    )
+
+    np.testing.assert_allclose(binner._bin_centers, [0.01, 0.02])
+    np.testing.assert_allclose(binner._bin_widths, [0.1, 0.2])
+    assert not isinstance(binner._bin_centers, u.Quantity)
+    assert not isinstance(binner._bin_widths, u.Quantity)
+
+
+def test_fluxbinner_normalizes_wavelength_quantities():
+    """Wavelength centers and widths use microns internally."""
+    binner = FluxBinner(
+        wlgrid=np.array([2000.0, 1000.0]) * u.nm,
+        wlgrid_width=np.array([200.0, 100.0]) * u.nm,
+    )
+
+    np.testing.assert_allclose(binner._bin_centers, [1.0, 2.0])
+    np.testing.assert_allclose(binner._bin_widths, [0.1, 0.2])
+    assert not isinstance(binner._bin_centers, u.Quantity)
+    assert not isinstance(binner._bin_widths, u.Quantity)
 
 
 def test_native_binner():

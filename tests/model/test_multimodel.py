@@ -1,6 +1,24 @@
 """Test MultiModel."""
 
+import numpy as np
 import pytest
+from astropy import units as u
+
+
+def test_multitransit_pressure_quantity_inputs():
+    """Pressure bounds should accept Quantity values and normalize to Pa."""
+    from taurex.model import MultiTransitModel
+
+    model = MultiTransitModel(
+        temperature_profiles=[None, None],
+        chemistry=[None, None],
+        pressure_min=[1e-6 * u.bar, 2e-6 * u.bar],
+        pressure_max=[1e3 * u.Pa, 2e3 * u.Pa],
+        fractions=[0.5],
+    )
+
+    np.testing.assert_allclose(model._pressure_min, [0.1, 0.2])
+    np.testing.assert_allclose(model._pressure_max, [1000.0, 2000.0])
 
 
 def test_multitransit_autofraction_completion():

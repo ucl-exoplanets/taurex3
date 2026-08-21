@@ -4,6 +4,7 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.binning import Binner
 from taurex.chemistry import Chemistry
@@ -18,6 +19,7 @@ from taurex.stellar import BlackbodyStar
 from taurex.stellar import Star
 from taurex.temperature import TemperatureProfile
 from taurex.util import clip_native_to_wngrid
+from taurex.util import convert_to_unit_value
 from taurex.util.emission import black_body
 
 from .directimage import DirectImageModel
@@ -178,10 +180,10 @@ archivePrefix = {arXiv},
         self._pressure_profiles = self._normalize_sequence(
             pressure_profile, region_count, None
         )
-        self._pressure_min = self._normalize_scalar_or_sequence(
+        self._pressure_min = self._normalize_pressure_scalar_or_sequence(
             pressure_min, region_count, 1e-6
         )
-        self._pressure_max = self._normalize_scalar_or_sequence(
+        self._pressure_max = self._normalize_pressure_scalar_or_sequence(
             pressure_max, region_count, 1e6
         )
         self._nlayers = self._normalize_scalar_or_sequence(nlayers, region_count, 100)
@@ -243,6 +245,42 @@ archivePrefix = {arXiv},
         if isinstance(value, (int, float)):
             return [value] * count
         normalized = list(value)
+        if len(normalized) != count:
+            raise ValueError(
+                "Multimodel scalar inputs must match " "the number of regions"
+            )
+        return normalized
+
+    @staticmethod
+    def _normalize_pressure_scalar_or_sequence(
+        value: t.Optional[
+            t.Union[
+                float,
+                int,
+                u.Quantity,
+                t.Sequence[t.Union[float, int, u.Quantity]],
+            ]
+        ],
+        count: int,
+        default: t.Union[int, float],
+    ) -> t.List[float]:
+        """Normalize pressure bounds to plain numeric values in Pa."""
+        if value is None:
+            default_value = convert_to_unit_value(default, u.Pa, default_unit=u.Pa)
+            return [float(default_value)] * count
+
+        if isinstance(value, (int, float)):
+            converted = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
+            return [float(converted)] * count
+
+        if isinstance(value, u.Quantity):
+            converted = convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
+            return [float(converted)] * count
+
+        normalized = [
+            float(convert_to_unit_value(item, u.Pa, default_unit=u.Pa))
+            for item in list(value)
+        ]
         if len(normalized) != count:
             raise ValueError(
                 "Multimodel scalar inputs must match " "the number of regions"

@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from astropy import units as u
 from hypothesis import given
 from hypothesis import note
 from hypothesis import settings
@@ -39,6 +40,40 @@ def test_fill_gas_pair_ratio(ratio, tp):
     assert computed_ratio[0] == pytest.approx(ratio)
     assert tc.mixProfile.shape[0] == 2
     assert tc.mixProfile.shape[1] == n
+
+
+def test_bulk_chemistry_accepts_dimensionless_quantities():
+    """Fill ratios and base metallicity are stored as plain fractions."""
+    chemistry = TaurexChemistry(
+        fill_gases=["H2", "He", "N2"],
+        ratio=[10.0 * u.percent, 5.0 * u.percent],
+        base_metallicity=1.3 * u.percent,
+    )
+
+    np.testing.assert_allclose(chemistry._fill_ratio, [0.1, 0.05])
+    assert chemistry._base_metallicity == pytest.approx(0.013)
+    assert not any(isinstance(value, u.Quantity) for value in chemistry._fill_ratio)
+    assert not isinstance(chemistry._base_metallicity, u.Quantity)
+
+
+def test_bulk_chemistry_fill_ratio_setter_accepts_quantity():
+    """Generated fitting setters normalize dimensionless quantities."""
+    chemistry = TaurexChemistry()
+
+    chemistry.fitting_parameters()["He_H2"][3](20.0 * u.percent)
+
+    assert chemistry._fill_ratio[0] == pytest.approx(0.2)
+    assert not isinstance(chemistry._fill_ratio[0], u.Quantity)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "quantity"),
+    [("ratio", 1.0 * u.Pa), ("base_metallicity", 1.0 * u.kg)],
+)
+def test_bulk_chemistry_rejects_physical_quantities(parameter, quantity):
+    """Bulk chemistry fractions reject physical dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        TaurexChemistry(**{parameter: quantity})
 
 
 @given(

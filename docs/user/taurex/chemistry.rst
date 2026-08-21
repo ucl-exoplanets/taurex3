@@ -89,6 +89,10 @@ Keywords
 |                |                             | gas                       |         |
 +----------------+-----------------------------+---------------------------+---------+
 
+``ratio`` and ``base_metallicity`` accept dimensionless Astropy quantities.
+For example, ``10 * u.percent`` is stored internally as ``0.1``. The generated
+fill-gas fitting parameters use the same dimensionless contract.
+
 ------------------
 Fitting Parameters
 ------------------

@@ -4,12 +4,14 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.core import FittingType
 from taurex.core import derivedparam
 from taurex.exceptions import InvalidModelException
 from taurex.output import OutputGroup
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 from taurex.util import has_duplicates
 from taurex.util import molecule_texlabel
 
@@ -67,9 +69,9 @@ class TaurexChemistry(AutoChemistry):
     def __init__(
         self,
         fill_gases: t.Optional[t.List[str]] = None,
-        ratio: t.Union[float, t.List[float]] = 0.17567,
+        ratio: t.Union[float, t.List[float], u.Quantity] = 0.17567,
         derived_ratios: t.List[str] = None,
-        base_metallicity: float = 0.013,
+        base_metallicity: t.Union[float, u.Quantity] = 0.013,
     ) -> None:
         """Initialize free chemistry.
 
@@ -79,7 +81,7 @@ class TaurexChemistry(AutoChemistry):
             Either a single gas or list of gases to fill the atmosphere with
             default: ``['H2','He']``
 
-        ratio : float or :obj:`list`
+        ratio : float, :obj:`list`, or astropy.units.Quantity
             If a bunch of molecules are used to fill an atmosphere, whats the
             ratio between them?
             The first fill gas is considered the main one with others defined
@@ -91,7 +93,7 @@ class TaurexChemistry(AutoChemistry):
             List of element ratios to compute as derived parameters
             (e.g. ``C/O``)
 
-        base_metallicity : float
+        base_metallicity : float or astropy.units.Quantity
             What to consider the base metallicity of the atmosphere
             (default: 0.013)
 
@@ -106,8 +108,11 @@ class TaurexChemistry(AutoChemistry):
         if isinstance(fill_gases, str):
             fill_gases = [fill_gases]
 
-        if isinstance(ratio, float):
-            ratio = [ratio]
+        ratio = convert_to_unit_value(ratio, u.dimensionless_unscaled)
+        ratio = np.atleast_1d(ratio).tolist()
+        base_metallicity = convert_to_unit_value(
+            base_metallicity, u.dimensionless_unscaled
+        )
 
         if has_duplicates(fill_gases):
             self.error("Fill gasses has duplicate molecules")
@@ -156,7 +161,9 @@ class TaurexChemistry(AutoChemistry):
                 return self._fill_ratio[idx]
 
             def write_mol(self, value, idx=idx):
-                self._fill_ratio[idx] = value
+                self._fill_ratio[idx] = convert_to_unit_value(
+                    value, u.dimensionless_unscaled
+                )
 
             fget = read_mol
             fset = write_mol

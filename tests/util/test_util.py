@@ -216,6 +216,7 @@ def test_convert_to_unit_value_converts_quantity_sequence():
 
     np.testing.assert_allclose(converted, [0.05, 0.01])
     assert not isinstance(converted, u.Quantity)
+    assert not any(isinstance(value, u.Quantity) for value in converted)
 
 
 def test_convert_to_unit_value_supports_equivalencies():

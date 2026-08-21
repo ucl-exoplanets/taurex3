@@ -25,10 +25,10 @@ class Guillot2010(TemperatureProfile):
     def __init__(
         self,
         T_irr: t.Optional[t.Union[float, u.Quantity]] = 1500,  # noqa: N803
-        kappa_irr: t.Optional[float] = 0.01,
-        kappa_v1: t.Optional[float] = 0.005,
-        kappa_v2: t.Optional[float] = 0.005,
-        alpha: t.Optional[float] = 0.5,
+        kappa_irr: t.Optional[t.Union[float, u.Quantity]] = 0.01,
+        kappa_v1: t.Optional[t.Union[float, u.Quantity]] = 0.005,
+        kappa_v2: t.Optional[t.Union[float, u.Quantity]] = 0.005,
+        alpha: t.Optional[t.Union[float, u.Quantity]] = 0.5,
         T_int: t.Optional[t.Union[float, u.Quantity]] = 100,  # noqa: N803
     ):
         """Initialize guillot temperature profile.
@@ -38,14 +38,15 @@ class Guillot2010(TemperatureProfile):
         T_irr: float or astropy.units.Quantity
             Planet equilibrium temperature in K when unitless.
             (Line fixes this but we keep as free parameter)
-        kappa_irr: float
-            mean infra-red opacity
-        kappa_v1: float
-            mean optical opacity one
-        kappa_v2: float
-            mean optical opacity two
-        alpha: float
-            ratio between kappa_v1 and kappa_v2 downwards radiation stream
+        kappa_irr: float or astropy.units.Quantity
+            Mean infra-red opacity in m^2/kg when unitless.
+        kappa_v1: float or astropy.units.Quantity
+            Mean optical opacity one in m^2/kg when unitless.
+        kappa_v2: float or astropy.units.Quantity
+            Mean optical opacity two in m^2/kg when unitless.
+        alpha: float or astropy.units.Quantity
+            Dimensionless ratio between kappa_v1 and kappa_v2 downwards
+            radiation stream.
         T_int: float or astropy.units.Quantity
             Internal heating parameter in K when unitless.
 
@@ -54,10 +55,10 @@ class Guillot2010(TemperatureProfile):
 
         self.equilTemperature = T_irr
 
-        self.kappa_ir = kappa_irr
-        self.kappa_v1 = kappa_v1
-        self.kappa_v2 = kappa_v2
-        self.alpha = alpha
+        self.meanInfraOpacity = kappa_irr
+        self.meanOpticalOpacity1 = kappa_v1
+        self.meanOpticalOpacity2 = kappa_v2
+        self.opticalRatio = alpha
         self.internalTemperature = T_int
         self._check_values()
 
@@ -97,16 +98,20 @@ class Guillot2010(TemperatureProfile):
         return self.kappa_ir
 
     @meanInfraOpacity.setter
-    def meanInfraOpacity(self, value: float) -> None:  # noqa: N802
+    def meanInfraOpacity(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set mean infra-red opacity.
 
         Parameters
         ----------
-        value : float
-            Mean infra-red opacity.
+        value : float or astropy.units.Quantity
+            Mean infra-red opacity in m^2/kg when unitless.
 
         """
-        self.kappa_ir = value
+        self.kappa_ir = convert_to_unit_value(
+            value, u.m**2 / u.kg, default_unit=u.m**2 / u.kg
+        )
 
     @fitparam(
         param_name="kappa_v1",
@@ -120,16 +125,20 @@ class Guillot2010(TemperatureProfile):
         return self.kappa_v1
 
     @meanOpticalOpacity1.setter
-    def meanOpticalOpacity1(self, value: float) -> None:  # noqa: N802
+    def meanOpticalOpacity1(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set mean optical opacity one.
 
         Parameters
         ----------
-        value : float
-            Mean optical opacity one.
+        value : float or astropy.units.Quantity
+            Mean optical opacity one in m^2/kg when unitless.
 
         """
-        self.kappa_v1 = value
+        self.kappa_v1 = convert_to_unit_value(
+            value, u.m**2 / u.kg, default_unit=u.m**2 / u.kg
+        )
 
     @fitparam(
         param_name="kappa_v2",
@@ -143,16 +152,20 @@ class Guillot2010(TemperatureProfile):
         return self.kappa_v2
 
     @meanOpticalOpacity2.setter
-    def meanOpticalOpacity2(self, value: float) -> None:  # noqa: N802
+    def meanOpticalOpacity2(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set mean optical opacity two.
 
         Parameters
         ----------
-        value : float
-            Mean optical opacity two.
+        value : float or astropy.units.Quantity
+            Mean optical opacity two in m^2/kg when unitless.
 
         """
-        self.kappa_v2 = value
+        self.kappa_v2 = convert_to_unit_value(
+            value, u.m**2 / u.kg, default_unit=u.m**2 / u.kg
+        )
 
     @fitparam(
         param_name="alpha",
@@ -165,16 +178,18 @@ class Guillot2010(TemperatureProfile):
         return self.alpha
 
     @opticalRatio.setter
-    def opticalRatio(self, value: float) -> None:  # noqa: N802
+    def opticalRatio(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set ratio between kappa_v1 and kappa_v2.
 
         Parameters
         ----------
-        value : float
-            Ratio between kappa_v1 and kappa_v2.
+        value : float or astropy.units.Quantity
+            Dimensionless ratio between kappa_v1 and kappa_v2.
 
         """
-        self.alpha = value
+        self.alpha = convert_to_unit_value(value, u.dimensionless_unscaled)
 
     @fitparam(
         param_name="T_int_guillot",

@@ -59,6 +59,36 @@ def test_planet_property_setters_accept_quantity_values():
     assert planet.get_planet_semimajoraxis("AU") == pytest.approx(2.0)
 
 
+def test_planet_normalizes_orbital_quantity_inputs():
+    """Orbital times and dimensionless inputs use their documented units."""
+    planet = Planet(
+        impact_param=50.0 * u.percent,
+        orbital_period=48.0 * u.hour,
+        albedo=30.0 * u.percent,
+        transit_time=50.0 * u.min,
+    )
+
+    assert planet.impactParameter == pytest.approx(0.5)
+    assert planet.orbitalPeriod == pytest.approx(2.0)
+    assert planet.albedo == pytest.approx(0.3)
+    assert planet.transitTime == pytest.approx(3000.0)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "quantity"),
+    [
+        ("impact_param", 1.0 * u.m),
+        ("orbital_period", 1.0 * u.kg),
+        ("albedo", 1.0 * u.Pa),
+        ("transit_time", 1.0 * u.K),
+    ],
+)
+def test_planet_rejects_incompatible_orbital_quantities(parameter, quantity):
+    """Orbital parameters reject quantities with incompatible dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        Planet(**{parameter: quantity})
+
+
 @pytest.mark.parametrize(
     "setter_name",
     ["set_planet_mass", "set_planet_radius", "set_planet_semimajoraxis"],

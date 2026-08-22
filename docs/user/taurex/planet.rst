@@ -31,6 +31,11 @@ Keywords
 | ``transit_time``    | :obj:`float` | Transit time in seconds  | 3000.0  |
 +---------------------+--------------+--------------------------+---------+
 
+Physical quantities are normalized to the documented units. For example,
+``48 * u.hour`` is stored as an orbital period of two days and
+``50 * u.min`` as a transit time of 3000 seconds. Impact parameter and albedo
+accept dimensionless quantities such as percentages.
+
 ------------------
 Fitting Parameters
 ------------------

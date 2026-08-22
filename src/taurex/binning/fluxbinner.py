@@ -282,9 +282,7 @@ class FluxBinner(Binner):
                 convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral())
             )
             if wngrid_width is not None:
-                wngrid_width = np.asarray(
-                    convert_to_unit_value(wngrid_width, u.k)
-                )
+                wngrid_width = np.asarray(convert_to_unit_value(wngrid_width, u.k))
             sort_grid = wngrid.argsort()
             self._bin_centers = wngrid[sort_grid]
             self._bin_widths = wngrid_width
@@ -294,9 +292,7 @@ class FluxBinner(Binner):
                 convert_to_unit_value(wlgrid, u.micron, equivalencies=u.spectral())
             )
             if wlgrid_width is not None:
-                wlgrid_width = np.asarray(
-                    convert_to_unit_value(wlgrid_width, u.micron)
-                )
+                wlgrid_width = np.asarray(convert_to_unit_value(wlgrid_width, u.micron))
             sort_grid = wlgrid.argsort()
             self._bin_centers = wlgrid[sort_grid]
             self._bin_widths = wlgrid_width

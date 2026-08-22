@@ -4,6 +4,7 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.cache import GlobalCache
 from taurex.cache import OpacityCache
@@ -16,6 +17,7 @@ from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
 from taurex.planet import Planet
 from taurex.stellar import Star
+from taurex.util import convert_to_unit_value
 
 
 class Chemistry(Fittable, Logger, Writeable, Citable):
@@ -316,6 +318,24 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
         else:
             raise NotImplementedError
 
+    @property
+    def condensateNumberDensityProfile(  # noqa: N802
+        self,
+    ) -> t.Optional[npt.NDArray[np.float64]]:
+        """Return condensate particle number densities in m^-3.
+
+        Chemistry implementations using number-density representations should
+        return plain numeric profiles with shape ``(ncondensates, nlayers)``.
+        This is deliberately separate from the dimensionless
+        :attr:`condensateMixProfile` representation.
+        """
+        return None
+
+    @staticmethod
+    def normalize_condensate_number_density(value: t.Any) -> t.Any:
+        """Normalize condensate particle number density to plain values in m^-3."""
+        return convert_to_unit_value(value, u.m**-3, default_unit=u.m**-3)
+
     def get_condensate_mix_profile(
         self, condensate_name: str
     ) -> npt.NDArray[np.float64]:
@@ -337,6 +357,19 @@ class Chemistry(Fittable, Logger, Writeable, Citable):
             return self.condensateMixProfile[index]
         else:
             raise KeyError(f"Condensate {condensate_name} not found in chemistry")
+
+    def get_condensate_number_density_profile(
+        self, condensate_name: str
+    ) -> npt.NDArray[np.float64]:
+        """Return one condensate particle number-density profile in m^-3."""
+        if condensate_name not in self.condensates:
+            raise KeyError(f"Condensate {condensate_name} not found in chemistry")
+
+        profiles = self.condensateNumberDensityProfile
+        if profiles is None:
+            raise ValueError("Chemistry does not provide condensate number densities")
+
+        return profiles[self.condensates.index(condensate_name)]
 
     def get_molecular_mass(self, molecule: str) -> float:
         """Returns the molecular mass of a molecule.

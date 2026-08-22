@@ -98,9 +98,7 @@ class Guillot2010(TemperatureProfile):
         return self.kappa_ir
 
     @meanInfraOpacity.setter
-    def meanInfraOpacity(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def meanInfraOpacity(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set mean infra-red opacity.
 
         Parameters
@@ -178,9 +176,7 @@ class Guillot2010(TemperatureProfile):
         return self.alpha
 
     @opticalRatio.setter
-    def opticalRatio(  # noqa: N802
-        self, value: t.Union[float, u.Quantity]
-    ) -> None:
+    def opticalRatio(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set ratio between kappa_v1 and kappa_v2.
 
         Parameters

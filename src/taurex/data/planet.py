@@ -85,9 +85,7 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
             orbital_period, u.day, default_unit=u.day
         )
         self._albedo = convert_to_unit_value(albedo, u.dimensionless_unscaled)
-        self._transit_time = convert_to_unit_value(
-            transit_time, u.s, default_unit=u.s
-        )
+        self._transit_time = convert_to_unit_value(transit_time, u.s, default_unit=u.s)
 
     def set_planet_radius(
         self,

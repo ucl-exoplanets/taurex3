@@ -117,7 +117,7 @@ class FlatMieContribution(Contribution):
 
         pressure_levels = np.log10(model.pressure.pressure_profile_levels[::-1])
 
-        bottom_pressure = self.mieBottomPressure
+        bottom_pressure = np.log10(self.mieBottomPressure)
         if bottom_pressure < 0:
             bottom_pressure = pressure_levels.max()
 

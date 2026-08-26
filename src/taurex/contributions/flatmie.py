@@ -115,15 +115,16 @@ class FlatMieContribution(Contribution):
         self._nlayers = model.nLayers
         self._ngrid = wngrid.shape[0]
 
-        pressure_levels = np.log10(model.pressure.pressure_profile_levels[::-1])
-
-        bottom_pressure = np.log10(self.mieBottomPressure)
-        if bottom_pressure < 0:
-            bottom_pressure = pressure_levels.max()
-
-        top_pressure = np.log10(self.mieTopPressure)
-        if top_pressure < 0:
-            top_pressure = pressure_levels.min()
+        pressure_levels = model.pressure.pressure_profile_levels[::-1]
+        if self.mieBottomPressure < 0:
+            bottom_pressure = np.log10(pressure_levels.max())
+        else:
+            bottom_pressure = np.log10(self.mieBottomPressure)
+        if self.mieTopPressure < 0:
+            top_pressure = np.log10(pressure_levels.min())
+        else:
+            top_pressure = np.log10(self.mieTopPressure)   
+        pressure_levels = np.log10(pressure_levels)
 
         p_left = pressure_levels[:-1]
         p_right = pressure_levels[1:]

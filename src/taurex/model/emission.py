@@ -180,7 +180,8 @@ class EmissionModel(OneDForwardModel):
         Reuses existing arrays when wngrid_size hasn't changed, avoiding
         repeated large allocations in parallel MPI contexts.
         """
-        if self._cached_wngrid_size != wngrid_size:
+        grid_changed = self._cached_wngrid_size != wngrid_size      # capture BEFORE updating
+        if grid_changed:
             dtype = get_float_dtype()
             self._cached_tau = np.empty((nlayers, wngrid_size), dtype=dtype)
             self._cached_surface_tau = np.empty((1, wngrid_size), dtype=dtype)
@@ -188,7 +189,7 @@ class EmissionModel(OneDForwardModel):
             self._cached_dtau = np.empty((1, wngrid_size), dtype=dtype)
             self._cached_tmp_tau = np.empty((1, wngrid_size), dtype=dtype)
             self._cached_wngrid_size = wngrid_size
-        if self._cached_ngauss != self._ngauss:
+        if grid_changed or self._cached_ngauss != self._ngauss:     # <-- the fix
             dtype = get_float_dtype()
             self._cached_exp_mu = np.empty((self._ngauss, wngrid_size), dtype=dtype)
             self._cached_exp_mu2 = np.empty((self._ngauss, wngrid_size), dtype=dtype)

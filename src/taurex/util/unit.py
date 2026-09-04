@@ -6,7 +6,6 @@ from typing import ParamSpec
 from typing import TypedDict
 from typing import TypeVar
 from typing import Union
-from typing import str
 
 from astropy import units as u
 
@@ -17,6 +16,7 @@ Param = ParamSpec("Param")
 RetType = TypeVar("RetType")
 
 
+# using same as conver_to_unit_value
 class UnitArgs(TypedDict):
     """Arguments for unit definitions."""
 
@@ -80,3 +80,23 @@ def validate_arg_units(
         return wrapper
 
     return decorator
+
+
+# Some default TauREX unit constants
+
+DEFAULT_TEMPERATURE: UnitArgs = {
+    "default_unit": u.K,
+    "target_unit": u.K,
+    "equivalencies": u.temperature(),
+}
+
+DEFAULT_PRESSURE: UnitArgs = {
+    "default_unit": u.Pa,
+    "target_unit": u.Pa,
+}
+
+DEFAULT_SPECTRUM: UnitArgs = {
+    "default_unit": u.k,
+    "target_unit": u.k,
+    "equivalencies": u.spectral(),
+}

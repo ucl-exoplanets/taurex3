@@ -4,9 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .tprofile import TemperatureProfile
 
@@ -23,7 +26,7 @@ class Rodgers2000(TemperatureProfile):
 
     def __init__(
         self,
-        temperature_layers: t.Optional[npt.ArrayLike] = None,
+        temperature_layers: t.Optional[t.Union[npt.ArrayLike, u.Quantity]] = None,
         correlation_length: t.Optional[float] = 5.0,
         covariance_matrix: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
@@ -31,8 +34,8 @@ class Rodgers2000(TemperatureProfile):
 
         Parameters
         ----------
-        temperature_layers : :obj:`list`
-            Temperature in Kelvin per layer of pressure
+        temperature_layers : array-like or astropy.units.Quantity
+            Temperature in K per pressure layer when unitless.
 
         correlation_length : float
             In scaleheights, Line et al. 2013 sets this to 7, Irwin et al
@@ -47,7 +50,15 @@ class Rodgers2000(TemperatureProfile):
 
         self._tp_corr_length = correlation_length
         self._covariance = covariance_matrix
-        self.temperature_layers = np.array(temperature_layers)
+        temperature_layers = convert_to_unit_value(
+            temperature_layers,
+            u.K,
+            default_unit=u.K,
+            equivalencies=u.temperature(),
+        )
+        self.temperature_layers = np.asarray(
+            temperature_layers, dtype=get_float_dtype()
+        )
         self.generate_temperature_fitting_params()
 
     def gen_covariance(self) -> npt.NDArray[np.float64]:
@@ -125,7 +136,9 @@ class Rodgers2000(TemperatureProfile):
                 return self.temperature_layers[idx]
 
             def write_point(self, value, idx=idx):
-                self.temperature_layers[idx] = value
+                self.temperature_layers[idx] = convert_to_unit_value(
+                    value, u.K, default_unit=u.K, equivalencies=u.temperature()
+                )
 
             read_point.__doc__ = f"Temperature at layer {point_num} in Kelvin"
 

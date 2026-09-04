@@ -16,6 +16,7 @@ from taurex.temperature import TemperatureProfile
 from taurex.types import ModelOutputType
 from taurex.types import get_float_dtype
 from taurex.util import clip_native_to_wngrid
+from taurex.util import convert_to_unit_value
 
 from .model import ForwardModel
 
@@ -406,10 +407,8 @@ class SimpleForwardModel(ForwardModel):
         spectral_grid:
             Wavenumber grid
         """
-        if isinstance(spectral_grid, u.Quantity):
-            wngrid = spectral_grid.to(u.k, equivalencies=u.spectral()).value
-
-        wngrid = np.array(wngrid, dtype=get_float_dtype())
+        wngrid = convert_to_unit_value(spectral_grid, u.k, equivalencies=u.spectral())
+        wngrid = np.asarray(wngrid, dtype=get_float_dtype())
         # Sort the grid
         wngrid = np.sort(wngrid)
 

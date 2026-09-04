@@ -4,10 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.exceptions import InvalidModelException
 from taurex.output import OutputGroup
+from taurex.util import convert_to_unit_value
 
 from .tprofile import TemperatureProfile
 
@@ -22,19 +24,19 @@ class Guillot2010(TemperatureProfile):
 
     def __init__(
         self,
-        T_irr: t.Optional[float] = 1500,  # noqa: N803
+        T_irr: t.Optional[t.Union[float, u.Quantity]] = 1500,  # noqa: N803
         kappa_irr: t.Optional[float] = 0.01,
         kappa_v1: t.Optional[float] = 0.005,
         kappa_v2: t.Optional[float] = 0.005,
         alpha: t.Optional[float] = 0.5,
-        T_int: t.Optional[float] = 100,  # noqa: N803
+        T_int: t.Optional[t.Union[float, u.Quantity]] = 100,  # noqa: N803
     ):
         """Initialize guillot temperature profile.
 
         Parameters
         ----------
-        T_irr: float
-            planet equilibrium temperature
+        T_irr: float or astropy.units.Quantity
+            Planet equilibrium temperature in K when unitless.
             (Line fixes this but we keep as free parameter)
         kappa_irr: float
             mean infra-red opacity
@@ -44,19 +46,19 @@ class Guillot2010(TemperatureProfile):
             mean optical opacity two
         alpha: float
             ratio between kappa_v1 and kappa_v2 downwards radiation stream
-        T_int: float
-            Internal heating parameter (K)
+        T_int: float or astropy.units.Quantity
+            Internal heating parameter in K when unitless.
 
         """
         super().__init__("Guillot")
 
-        self.T_irr = T_irr
+        self.equilTemperature = T_irr
 
         self.kappa_ir = kappa_irr
         self.kappa_v1 = kappa_v1
         self.kappa_v2 = kappa_v2
         self.alpha = alpha
-        self.T_int = T_int
+        self.internalTemperature = T_int
         self._check_values()
 
     @fitparam(
@@ -70,16 +72,18 @@ class Guillot2010(TemperatureProfile):
         return self.T_irr
 
     @equilTemperature.setter
-    def equilTemperature(self, value: float) -> None:  # noqa: N802
+    def equilTemperature(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set planet equilibrium temperature.
 
         Parameters
         ----------
-        value : float
-            Equilibrium temperature in Kelvin.
+        value : float or astropy.units.Quantity
+            Equilibrium temperature in K when unitless.
 
         """
-        self.T_irr = value
+        self.T_irr = convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     @fitparam(
         param_name="kappa_irr",
@@ -183,16 +187,20 @@ class Guillot2010(TemperatureProfile):
         return self.T_int
 
     @internalTemperature.setter
-    def internalTemperature(self, value: float) -> None:  # noqa: N802
+    def internalTemperature(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Set internal temperature parameter.
 
         Parameters
         ----------
-        value : float
-            Internal temperature in Kelvin.
+        value : float or astropy.units.Quantity
+            Internal temperature in K when unitless.
 
         """
-        self.T_int = value
+        self.T_int = convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     def _check_values(self) -> None:
         """Ensures kappa values are valid.

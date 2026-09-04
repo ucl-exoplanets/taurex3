@@ -85,6 +85,10 @@ Guillot 2010 Profile
 TP profile from Guillot 2010, A&A, 520, A27 (equation 49)
 Using modified 2stream approx. from Line et al. 2012, ApJ, 749,93 (equation 19)
 
+Temperature quantities are converted to K, opacity quantities to m²/kg, and
+``alpha`` quantities to a dimensionless fraction. Unitless values retain these
+documented internal units.
+
 .. figure::  _static/guillot.png
    :align:   left
    :width: 80%
@@ -99,11 +103,11 @@ Keywords
 +--------------+--------------+---------------------------------------------+---------+
 | ``T_irr``    | :obj:`float` | Planet equilibrium temperature (K)          | 1500    |
 +--------------+--------------+---------------------------------------------+---------+
-| ``kappa_ir`` | :obj:`float` | mean infra-red opacity                      | 0.01    |
+| ``kappa_ir`` | :obj:`float` | mean infra-red opacity (m²/kg)              | 0.01    |
 +--------------+--------------+---------------------------------------------+---------+
-| ``kappa_v1`` | :obj:`float` | mean optical opacity one                    | 0.005   |
+| ``kappa_v1`` | :obj:`float` | mean optical opacity one (m²/kg)            | 0.005   |
 +--------------+--------------+---------------------------------------------+---------+
-| ``kappa_v2`` | :obj:`float` | mean optical opacity two                    | 0.005   |
+| ``kappa_v2`` | :obj:`float` | mean optical opacity two (m²/kg)            | 0.005   |
 +--------------+--------------+---------------------------------------------+---------+
 | ``alpha``    | :obj:`float` | ratio between ``kappa_v1`` and ``kappa_v2`` | 0.5     |
 +--------------+--------------+---------------------------------------------+---------+
@@ -117,11 +121,11 @@ Fitting Parameters
 +--------------+--------------+---------------------------------------------+
 | ``T_irr``    | :obj:`float` | Planet equilibrium temperature (K)          |
 +--------------+--------------+---------------------------------------------+
-| ``kappa_ir`` | :obj:`float` | mean infra-red opacity                      |
+| ``kappa_ir`` | :obj:`float` | mean infra-red opacity (m²/kg)              |
 +--------------+--------------+---------------------------------------------+
-| ``kappa_v1`` | :obj:`float` | mean optical opacity one                    |
+| ``kappa_v1`` | :obj:`float` | mean optical opacity one (m²/kg)            |
 +--------------+--------------+---------------------------------------------+
-| ``kappa_v2`` | :obj:`float` | mean optical opacity two                    |
+| ``kappa_v2`` | :obj:`float` | mean optical opacity two (m²/kg)            |
 +--------------+--------------+---------------------------------------------+
 | ``alpha``    | :obj:`float` | ratio between ``kappa_v1`` and ``kappa_v2`` |
 +--------------+--------------+---------------------------------------------+

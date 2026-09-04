@@ -309,6 +309,8 @@ class EmissionModel(OneDForwardModel):
         """
         from taurex.util import clip_native_to_wngrid
 
+        wngrid = self._normalize_wngrid(wngrid)
+
         self.initialize_profiles()
 
         native_grid = self.nativeWavenumberGrid

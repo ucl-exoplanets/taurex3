@@ -37,7 +37,7 @@ class CustomGas(Gas):
 
         """
         super().__init__("CustomGas", molecule_name)
-        self._mix_ratio = mix_ratio
+        self._mix_ratio = self.normalize_dimensionless(mix_ratio)
         self.add_active_gas_param()
 
     @property
@@ -92,7 +92,7 @@ class CustomGas(Gas):
             return self._mix_ratio
 
         def write_mol(self, value):
-            self._mix_ratio = value
+            self._mix_ratio = self.normalize_dimensionless(value)
 
         read_mol.__doc__ = f"{mol_name} custom mix ratio (VMR)"
 

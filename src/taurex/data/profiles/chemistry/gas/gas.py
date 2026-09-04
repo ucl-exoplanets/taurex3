@@ -4,12 +4,14 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.citation import Citable
 from taurex.data.fittable import Fittable
 from taurex.log import Logger
 from taurex.output import OutputGroup
 from taurex.output.writeable import Writeable
+from taurex.util import convert_to_unit_value
 
 
 class Gas(Fittable, Logger, Writeable, Citable):
@@ -96,6 +98,20 @@ class Gas(Fittable, Logger, Writeable, Citable):
 
         """
         pass
+
+    @staticmethod
+    def normalize_dimensionless(value: t.Union[float, u.Quantity]) -> float:
+        """Convert a dimensionless quantity to plain numeric form."""
+        return convert_to_unit_value(
+            value,
+            u.dimensionless_unscaled,
+            default_unit=u.dimensionless_unscaled,
+        )
+
+    @staticmethod
+    def normalize_pressure(value: t.Union[float, u.Quantity]) -> float:
+        """Convert a pressure-like quantity to Pascals."""
+        return convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     def write(self, output: OutputGroup) -> OutputGroup:
         """Writes class and arguments to file.

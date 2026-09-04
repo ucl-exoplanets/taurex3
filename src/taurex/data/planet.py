@@ -39,10 +39,10 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         planet_radius: t.Optional[t.Union[float, u.Quantity]] = 1.0,
         planet_sma: t.Optional[t.Union[float, u.Quantity]] = None,
         planet_distance: t.Optional[t.Union[float, u.Quantity]] = 1.0,
-        impact_param: t.Optional[float] = 0.5,
-        orbital_period: t.Optional[float] = 2.0,
-        albedo: t.Optional[float] = 0.3,
-        transit_time: t.Optional[float] = 3000.0,
+        impact_param: t.Optional[t.Union[float, u.Quantity]] = 0.5,
+        orbital_period: t.Optional[t.Union[float, u.Quantity]] = 2.0,
+        albedo: t.Optional[t.Union[float, u.Quantity]] = 0.3,
+        transit_time: t.Optional[t.Union[float, u.Quantity]] = 3000.0,
     ) -> None:
         """Initialise a planet.
 
@@ -60,17 +60,17 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         planet_distance: float or astropy.units.Quantity, optional
             Semi-major axis in AU when unitless (deprecated).
 
-        impact_param: float, optional
-            Impact parameter
+        impact_param: float or astropy.units.Quantity, optional
+            Dimensionless impact parameter.
 
-        orbital_period: float, optional
-            Orbital period in days
+        orbital_period: float or astropy.units.Quantity, optional
+            Orbital period in days when unitless.
 
-        albedo: float, optional
-            Planetary albedo
+        albedo: float or astropy.units.Quantity, optional
+            Dimensionless planetary albedo.
 
-        transit_time: float, optional
-            Transit time in seconds
+        transit_time: float or astropy.units.Quantity, optional
+            Transit time in seconds when unitless.
 
         """
         Logger.__init__(self, "Planet")
@@ -80,10 +80,12 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         self.set_planet_semimajoraxis(
             planet_distance if planet_sma is None else planet_sma
         )
-        self._impact = impact_param
-        self._orbit_period = orbital_period
-        self._albedo = albedo
-        self._transit_time = transit_time
+        self._impact = convert_to_unit_value(impact_param, u.dimensionless_unscaled)
+        self._orbit_period = convert_to_unit_value(
+            orbital_period, u.day, default_unit=u.day
+        )
+        self._albedo = convert_to_unit_value(albedo, u.dimensionless_unscaled)
+        self._transit_time = convert_to_unit_value(transit_time, u.s, default_unit=u.s)
 
     def set_planet_radius(
         self,
@@ -204,13 +206,13 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         return self.get_planet_mass(unit="Mjup")
 
     @mass.setter
-    def mass(self, value: float) -> None:
+    def mass(self, value: t.Union[float, u.Quantity]) -> None:
         """Set planet mass in Jupiter mass.
 
         Parameters
         ----------
-        value : float
-            Planet mass in Jupiter mass
+        value : float or astropy.units.Quantity
+            Planet mass in Jupiter mass. A Quantity uses its attached unit.
 
         """
         self.set_planet_mass(value, unit="Mjup")
@@ -226,13 +228,13 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         return self.get_planet_radius(unit="Rjup")
 
     @radius.setter
-    def radius(self, value: float) -> None:
+    def radius(self, value: t.Union[float, u.Quantity]) -> None:
         """Set planet radius in Jupiter radii.
 
         Parameters
         ----------
-        value : float
-            Planet radius in Jupiter radii
+        value : float or astropy.units.Quantity
+            Planet radius in Jupiter radii. A Quantity uses its attached unit.
 
         """
         self.set_planet_radius(value, unit="Rjup")
@@ -294,13 +296,13 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         return self.get_planet_semimajoraxis(unit="AU")
 
     @distance.setter
-    def distance(self, value: float) -> None:
+    def distance(self, value: t.Union[float, u.Quantity]) -> None:
         """Set planet semi major axis from parent star (AU).
 
         Parameters
         ----------
-        value : float
-            Semi-major axis in AU
+        value : float or astropy.units.Quantity
+            Semi-major axis in AU. A Quantity uses its attached unit.
 
         """
         self.set_planet_semimajoraxis(value, unit="AU")
@@ -316,13 +318,13 @@ class BasePlanet(Fittable, Logger, Writeable, Citable):
         return self.get_planet_semimajoraxis(unit="AU")
 
     @semiMajorAxis.setter
-    def semiMajorAxis(self, value: float) -> None:  # noqa: N802
+    def semiMajorAxis(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Set planet semi major axis from parent star (AU) (ALIAS).
 
         Parameters
         ----------
-        value : float
-            Semi-major axis in AU
+        value : float or astropy.units.Quantity
+            Semi-major axis in AU. A Quantity uses its attached unit.
 
         """
         self.set_planet_semimajoraxis(value, unit="AU")

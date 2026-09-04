@@ -204,6 +204,21 @@ def test_convert_to_unit_value_converts_quantity():
     assert not isinstance(converted, u.Quantity)
 
 
+def test_convert_to_unit_value_converts_quantity_sequence():
+    """A list-like sequence of quantities should also normalize to plain values."""
+    import astropy.units as u
+
+    from taurex.util import convert_to_unit_value
+
+    values = [5 * u.percent, 1 * u.percent]
+
+    converted = convert_to_unit_value(values, u.dimensionless_unscaled)
+
+    np.testing.assert_allclose(converted, [0.05, 0.01])
+    assert not isinstance(converted, u.Quantity)
+    assert not any(isinstance(value, u.Quantity) for value in converted)
+
+
 def test_convert_to_unit_value_supports_equivalencies():
     """Conversions can use Astropy equivalencies such as spectral units."""
     import astropy.units as u

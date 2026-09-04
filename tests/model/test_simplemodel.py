@@ -47,3 +47,17 @@ def test_set_native_grid_rejects_incompatible_quantity(model):
     """Quantities that are not spectral coordinates are rejected."""
     with pytest.raises(u.UnitConversionError):
         model.set_native_grid(np.array([1.0, 2.0, 3.0]) * u.kg)
+
+
+def test_normalize_model_wngrid_converts_wavelength_quantity(model):
+    """Public model grids are normalized to inverse centimetres."""
+    normalized = model._normalize_wngrid(np.array([1.0, 2.0]) * u.micron)
+
+    np.testing.assert_allclose(normalized, [10000.0, 5000.0])
+    assert normalized.dtype == get_float_dtype()
+    assert not isinstance(normalized, u.Quantity)
+
+
+def test_normalize_model_wngrid_preserves_none(model):
+    """An omitted model grid continues to select the native grid."""
+    assert model._normalize_wngrid(None) is None

@@ -28,7 +28,7 @@
 You can install _TauREx3_ via [pip] from [PyPI]:
 
 ```console
-$ pip install taurex3
+$ pip install "taurex[full]"
 ```
 
 ## Usage

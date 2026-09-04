@@ -62,6 +62,7 @@ numba = { version = ">=0.60.0", optional = true}
 pybtex = { version = "^0.24.0", optional = true}
 pylightcurve = {version = "^4.0.1", optional = true}
 pymultinest = {version = "^2.12", optional = true}
+acepython = {version = "^0.0.21", optional = true}
 
 [tool.poetry.extras]
 lint = ["black", "darglint", "flake8", "flake8-bandit", "flake8-bugbear", "flake8-docstrings", "flake8-rst-docstrings", "isort", "pep8-naming", "pre-commit", "pre-commit-hooks", "pyupgrade"]
@@ -69,6 +70,7 @@ test = ["coverage", "hypothesis", "pygments", "pytest"]
 numba = ["numba"]
 biblio = ["pybtex"]
 multinest = ["pymultinest"]
+full = ["numba", "acepython"]
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"

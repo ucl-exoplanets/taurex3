@@ -5,12 +5,12 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 from astropy.io import fits
+from numpy.polynomial import chebyshev
 
 from taurex import OutputSize
 from taurex.util import compute_bin_edges
 from taurex.util import create_grid_res
 from taurex.util import wnwidth_to_wlwidth
-from numpy.polynomial import chebyshev
 
 from ..types import ModelOutputType
 from .binner import BinDownType
@@ -79,13 +79,17 @@ class FluxBinnerConv(Binner):
             )
         elif self._profile_type == "polynomial":
             if self._max_wlbroadening is None:
-                raise ValueError("max_wlbroadening is required when broadening_type='polynomial'")
+                raise ValueError(
+                    "max_wlbroadening is required when broadening_type='polynomial'"
+                )
             for wlgrid in self._wlgrids:
                 pad = self._factor_cut * self._max_wlbroadening
                 native = create_grid_res(self._wlres, wlgrid[0] - pad, wlgrid[-1] + pad)
                 self._grid_fbs.append(
-                    FluxBinner(wngrid=10000.0 / native[:, 0],
-                               wngrid_width=10000.0 * native[:, 1] / native[:, 0] ** 2)
+                    FluxBinner(
+                        wngrid=10000.0 / native[:, 0],
+                        wngrid_width=10000.0 * native[:, 1] / native[:, 0] ** 2,
+                    )
                 )
 
     @staticmethod
@@ -105,9 +109,9 @@ class FluxBinnerConv(Binner):
         return [float(wlshift)] * grid_count
 
     def sigma(self, index):
-        """Gaussian sigma (microns) on the convolution grid of instrument `index`."""
+        """Gaussian broadening sigma on the convolution grid of instrument `index`."""
         if self._broadening_coeffs is None:
-            return self._profiles[index]                    
+            return self._profiles[index]
 
         wl = 10000.0 / self._grid_fbs[index]._bin_centers[::-1]
         coeffs = self._broadening_coeffs[index]
@@ -116,9 +120,9 @@ class FluxBinnerConv(Binner):
             # legacy in sigma directly
             poly = np.polynomial.polynomial.polyval(wl, coeffs)
             if self._profiles:
-                sigma = self._profiles[index] + poly 
+                sigma = self._profiles[index] + poly
             else:
-                sigma = poly 
+                sigma = poly
             return np.clip(sigma, 1e-20, self._max_wlbroadening)
 
         if self._broadening_basis == "resolution_poly":
@@ -141,9 +145,11 @@ class FluxBinnerConv(Binner):
                 sigma = 0.5 * wl / np.maximum(poly, 1.0)
         else:
             if self._profiles:
-                sigma = self._profiles[index] * poly              # this handles departure from calibration
+                sigma = (
+                    self._profiles[index] * poly
+                )  # this handles departure from calibration
             else:
-                sigma = 0.5 * wl / poly                           # this handles direct fitting of resolution
+                sigma = 0.5 * wl / poly  # this handles direct fitting of resolution
         return np.clip(sigma, 0.5 * np.gradient(wl), self._max_wlbroadening)
 
     def load_stsci_profiles(
@@ -170,7 +176,8 @@ class FluxBinnerConv(Binner):
                 wlgrid[0] - 10.0 * std[0],
                 wlgrid[-1] + 10.0 * std[-1],
             )
-            ##grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], native_grid[:, 1])) # It was this beofr, must be a forgotten error!
+            # grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0],
+            #     native_grid[:, 1]))  # It was this before, must be a forgotten error!
             ww = wnwidth_to_wlwidth(native_grid[:, 0], native_grid[:, 1])
             grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], ww))
 
@@ -206,11 +213,11 @@ class FluxBinnerConv(Binner):
         """Convolve a binned spectrum with a wavelength-dependent profile."""
         grid, flux, error, widths = binned_output
         convolved_flux = np.zeros(flux.shape, dtype=np.float64)
-    
+
         dwl = np.gradient(grid)
         lo = np.searchsorted(grid, grid - self._factor_cut * profile, side="left")
         hi = np.searchsorted(grid, grid + self._factor_cut * profile, side="right")
-    
+
         for index, centre in enumerate(grid):
             start = int(lo[index])
             stop = max(int(hi[index]), start + 1)
@@ -252,10 +259,10 @@ class FluxBinnerConv(Binner):
         spectra = []
         errors = []
         widths = []
- 
+
         for index, binner in enumerate(self.binners):
             wn, flux, err, wnwidth = wngrid, spectrum, error, grid_width
- 
+
             if self._grid_fbs:
                 wn, flux, err, wnwidth = self._grid_fbs[index].bindown(
                     wn, flux, grid_width=wnwidth, error=err
@@ -264,21 +271,19 @@ class FluxBinnerConv(Binner):
                 flux = self.low_res_convolved(
                     (conv_wl, flux[..., ::-1], None, None), self.sigma(index)
                 )[1][..., ::-1]
- 
-            binned_output = binner.bindown(
-                wn, flux, grid_width=wnwidth, error=err
-            )
+
+            binned_output = binner.bindown(wn, flux, grid_width=wnwidth, error=err)
             wlgrids.append(binned_output[0])
             spectra.append(binned_output[1])
             widths.append(binned_output[3])
             if binned_output[2] is not None:
                 errors.append(binned_output[2])
- 
+
         merged_wlgrid = np.concatenate(wlgrids)
         merged_spectrum = np.concatenate(spectra, axis=-1)
         merged_error = np.concatenate(errors, axis=-1) if error is not None else None
         merged_widths = np.concatenate(widths)
- 
+
         return merged_wlgrid, merged_spectrum, merged_error, merged_widths
 
     def bindown_old(
@@ -344,7 +349,11 @@ class FluxBinnerConv(Binner):
 
         merged_wlgrid = np.concatenate(wlgrids)
         merged_spectrum = np.concatenate(spectra, axis=-1)
-        merged_error = (None if not errors or any(e is None for e in errors) else np.concatenate(errors, axis=-1))
+        merged_error = (
+            None
+            if not errors or any(e is None for e in errors)
+            else np.concatenate(errors, axis=-1)
+        )
         merged_widths = np.concatenate(widths)
 
         return merged_wlgrid, merged_spectrum, merged_error, merged_widths

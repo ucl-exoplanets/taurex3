@@ -246,7 +246,11 @@ class _OffsetSpectrumBase(BaseSpectrum):
                 self.add_fittable_param(
                     f"Broadening_{index + 1}_{k}",
                     rf"$b_{{{index + 1},{k}}}$",
-                    read_coeff, write_coeff, "linear", False, bounds,
+                    read_coeff,
+                    write_coeff,
+                    "linear",
+                    False,
+                    bounds,
                 )
 
     def _create_convolution_binner(
@@ -259,7 +263,6 @@ class _OffsetSpectrumBase(BaseSpectrum):
         wlres: float = 15000,
         broadening_coeffs: t.Optional[t.Sequence[t.Sequence[float]]] = None,
         broadening_basis="chebyshev",
-        
     ) -> FluxBinnerConv:
         return FluxBinnerConv(
             wlgrids=[spectrum[:, 0] for spectrum in self._raw],

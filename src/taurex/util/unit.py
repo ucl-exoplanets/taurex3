@@ -1,5 +1,7 @@
 """Unit related utility functions."""
 
+import inspect
+from functools import wraps
 from typing import Callable
 from typing import Optional
 from typing import ParamSpec
@@ -10,7 +12,6 @@ from typing import Union
 from astropy import units as u
 
 from .util import convert_to_unit_value
-
 
 Param = ParamSpec("Param")
 RetType = TypeVar("RetType")
@@ -25,57 +26,56 @@ class UnitArgs(TypedDict):
     equivalencies: Optional[u.Equivalency]
 
 
-# Need a decorator of decorator to add args
-# Does not support var_args or var_kwargs, neet to test methods
-# make sure self doesnt break this.
 def validate_arg_units(
-    unit_def: dict[str, UnitArgs]
+    unit_def: dict[str, UnitArgs],
 ) -> Callable[[Callable[Param, RetType]], Callable[Param, RetType]]:
-    """Evaluate emission flux and integrate quadratures for flux.
+    """Convert supplied function arguments to the specified units.
 
     Parameters
     ----------
     unit_def
-        Define units in function arguments / kwargs
+        Map parameter names to unit definitions. A definition for ``*args``
+        applies to each element, and one for ``**kwargs`` applies to each value.
+        Definitions for individual keyword names override the ``**kwargs``
+        definition. Omitted arguments retain their function defaults unchanged.
 
     Returns
     -------
-    decorator for function.
-
+    Callable
+        Decorator that converts arguments before calling the function.
     """
-    import inspect
+
+    def convert(value, definition):
+        if definition is None:
+            return value
+        return convert_to_unit_value(
+            value,
+            definition["target_unit"],
+            definition.get("default_unit"),
+            definition.get("equivalencies"),
+        )
 
     def decorator(func: Callable[Param, RetType]) -> Callable[Param, RetType]:
+        sig = inspect.signature(func)
+
+        @wraps(func)
         def wrapper(*args: Param.args, **kwargs: Param.kwargs) -> RetType:
-            new_args = []
-            new_kwargs = {}
-            # Handle args
-            sig = inspect.signature(func)
-            for p, value in zip(sig.parameters, args, strict=False):
+            bound = sig.bind(*args, **kwargs)
+            for name, value in bound.arguments.items():
+                definition = unit_def.get(name)
+                kind = sig.parameters[name].kind
+                if kind == inspect.Parameter.VAR_POSITIONAL:
+                    value = tuple(convert(item, definition) for item in value)
+                elif kind == inspect.Parameter.VAR_KEYWORD:
+                    value = {
+                        key: convert(item, unit_def.get(key, definition))
+                        for key, item in value.items()
+                    }
+                else:
+                    value = convert(value, definition)
+                bound.arguments[name] = value
 
-                if p in unit_def:
-                    value = convert_to_unit_value(
-                        value,
-                        unit_def[p]["target_unit"],
-                        unit_def[p].get("default_unit"),
-                        unit_def[p].get("equivalencies"),
-                    )
-
-                new_args.append(value)
-
-            # Handle kwargs
-            for k, v in kwargs.items():
-                if k in unit_def:
-                    v = convert_to_unit_value(
-                        v,
-                        unit_def[k]["target_unit"],
-                        unit_def[k].get("default_unit"),
-                        unit_def[k].get("equivalencies"),
-                    )
-
-                new_kwargs[k] = v
-
-            return func(*new_args, **new_kwargs)
+            return func(*bound.args, **bound.kwargs)
 
         return wrapper
 

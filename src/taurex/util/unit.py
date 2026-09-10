@@ -13,6 +13,7 @@ from astropy import units as u
 
 from .util import convert_to_unit_value
 
+
 Param = ParamSpec("Param")
 RetType = TypeVar("RetType")
 

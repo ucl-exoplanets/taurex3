@@ -172,3 +172,51 @@ def test_guillot_rejects_quantity_below_absolute_zero():
     """Validation occurs after conversion to the internal Kelvin unit."""
     with pytest.raises(InvalidModelException, match="Negative temperature"):
         Guillot2010(T_int=u.Quantity(-300.0, u.deg_C))
+
+
+def test_guillot_accepts_opacity_and_ratio_quantities():
+    """Opacity and ratio inputs are normalized to their internal units."""
+    profile = Guillot2010(
+        kappa_irr=100.0 * u.cm**2 / u.g,
+        kappa_v1=50.0 * u.cm**2 / u.g,
+        kappa_v2=25.0 * u.cm**2 / u.g,
+        alpha=50.0 * u.percent,
+    )
+
+    assert profile.meanInfraOpacity == pytest.approx(10.0)
+    assert profile.meanOpticalOpacity1 == pytest.approx(5.0)
+    assert profile.meanOpticalOpacity2 == pytest.approx(2.5)
+    assert profile.opticalRatio == pytest.approx(0.5)
+    assert not isinstance(profile.kappa_ir, u.Quantity)
+    assert not isinstance(profile.alpha, u.Quantity)
+
+
+def test_guillot_opacity_and_ratio_setters_accept_quantities():
+    """Fittable opacity and ratio setters normalize Quantity values."""
+    profile = Guillot2010()
+    parameters = profile.fitting_parameters()
+
+    parameters["kappa_irr"][3](20.0 * u.cm**2 / u.g)
+    parameters["kappa_v1"][3](30.0 * u.cm**2 / u.g)
+    parameters["kappa_v2"][3](40.0 * u.cm**2 / u.g)
+    parameters["alpha"][3](25.0 * u.percent)
+
+    assert profile.meanInfraOpacity == pytest.approx(2.0)
+    assert profile.meanOpticalOpacity1 == pytest.approx(3.0)
+    assert profile.meanOpticalOpacity2 == pytest.approx(4.0)
+    assert profile.opticalRatio == pytest.approx(0.25)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "quantity"),
+    [
+        ("kappa_irr", 1.0 * u.K),
+        ("kappa_v1", 1.0 * u.m),
+        ("kappa_v2", 1.0 * u.kg),
+        ("alpha", 1.0 * u.Pa),
+    ],
+)
+def test_guillot_rejects_incompatible_physical_quantities(parameter, quantity):
+    """Opacity and ratio parameters reject incompatible dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        Guillot2010(**{parameter: quantity})

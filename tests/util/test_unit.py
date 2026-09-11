@@ -293,3 +293,99 @@ def test_prefined_units():
         return wngrid
 
     assert check_spectrum(10000 << u.um) == 1.0
+
+
+def test_variadic_arguments_preserved():
+    """Preserve all extra arguments when no conversion is requested."""
+
+    @validate_arg_units({})
+    def collect(first, *values, **options):
+        return first, values, options
+
+    assert collect(1, 2, 3, 4, label="test") == (1, (2, 3, 4), {"label": "test"})
+
+
+def test_variadic_conversion_on_method():
+    """Convert each variadic value alongside positional and keyword parameters."""
+
+    class Collector:
+        @validate_arg_units(
+            {
+                "first": {"target_unit": u.m},
+                "values": {"target_unit": u.m},
+                "height": {"target_unit": u.m},
+                "options": {"target_unit": u.m},
+                "mass": {"target_unit": u.kg},
+            }
+        )
+        def collect(self, first, /, *values, height, **options):
+            return first, values, height, options
+
+    result = Collector().collect(
+        1 * u.km,
+        2 * u.km,
+        300 * u.cm,
+        height=400 * u.cm,
+        width=5 * u.km,
+        mass=6000 * u.g,
+    )
+    assert result == (1000, (2000, 3), 4, {"width": 5000, "mass": 6})
+
+
+def test_individual_variadic_keyword_conversion():
+    """Convert named extra keywords while preserving unspecified values."""
+
+    @validate_arg_units({"distance": {"target_unit": u.m}})
+    def collect(**options):
+        return options
+
+    assert collect(distance=2 * u.km, label="test") == {
+        "distance": 2000,
+        "label": "test",
+    }
+
+
+def test_omitted_unit_default_unchanged():
+    """Leave omitted defaults untouched, including when later kwargs are bound."""
+    default = 2 * u.km
+
+    @validate_arg_units({"distance": {"target_unit": u.m}})
+    def collect(distance=default, *, label):
+        return distance, label
+
+    assert collect(label="test")[0] is default
+    assert collect(distance=default, label="test")[0] == 2000
+
+
+@pytest.mark.parametrize(
+    "args, kwargs",
+    [
+        ((1, 2), {}),
+        ((), {}),
+        ((1,), {"value": 2}),
+        ((1,), {"unknown": 2}),
+    ],
+)
+def test_invalid_calls_rejected(args, kwargs):
+    """Reject invalid calls instead of silently dropping arguments."""
+
+    @validate_arg_units({})
+    def identity(value):
+        return value
+
+    with pytest.raises(TypeError):
+        identity(*args, **kwargs)
+
+
+def test_decorator_preserves_metadata():
+    """Preserve documentation and signature for introspection."""
+    import inspect
+
+    def original(value, *args, **kwargs):
+        """Original documentation."""
+        return value
+
+    decorated = validate_arg_units({})(original)
+    assert decorated.__name__ == original.__name__
+    assert decorated.__doc__ == original.__doc__
+    assert inspect.signature(decorated) == inspect.signature(original)

@@ -123,7 +123,7 @@ class FlatMieContribution(Contribution):
         if self.mieTopPressure < 0:
             top_pressure = np.log10(pressure_levels.min())
         else:
-            top_pressure = np.log10(self.mieTopPressure)   
+            top_pressure = np.log10(self.mieTopPressure)
         pressure_levels = np.log10(pressure_levels)
 
         p_left = pressure_levels[:-1]

@@ -4,10 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.output import OutputGroup
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .tprofile import TemperatureProfile
 
@@ -15,17 +17,21 @@ from .tprofile import TemperatureProfile
 class Isothermal(TemperatureProfile):
     """An isothermal temperature-pressure profile."""
 
-    def __init__(self, T: t.Optional[float] = 1500) -> None:  # noqa: N803
+    def __init__(
+        self, T: t.Optional[t.Union[float, u.Quantity]] = 1500  # noqa: N803
+    ) -> None:
         """Initialize isothermal class.
 
         Parameters
         ----------
-        T : float
-            Isothermal Temperature to set in Kelvin
+        T : float or astropy.units.Quantity
+            Isothermal temperature in K when unitless.
         """
         super().__init__("Isothermal")
 
-        self._iso_temp = T
+        self._iso_temp = convert_to_unit_value(
+            T, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     @fitparam(
         param_name="T",
@@ -38,8 +44,11 @@ class Isothermal(TemperatureProfile):
         return self._iso_temp
 
     @isoTemperature.setter
-    def isoTemperature(self, value: float) -> None:  # noqa: N802
-        self._iso_temp = value
+    def isoTemperature(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
+        """Set the isothermal temperature in K when unitless."""
+        self._iso_temp = convert_to_unit_value(
+            value, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
 
     @property
     def profile(self) -> npt.NDArray[np.float64]:

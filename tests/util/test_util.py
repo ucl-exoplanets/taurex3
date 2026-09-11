@@ -164,6 +164,69 @@ def test_conversion_factor():
     assert conversion_factor("erg/(cm**2*s*Hz)", "Jy") == 1e23
 
 
+def test_convert_to_unit_value_preserves_unitless_input():
+    """Unitless values retain their existing internal-unit meaning."""
+    from taurex.util import convert_to_unit_value
+
+    values = np.array([1.0, 2.0, 3.0])
+
+    assert convert_to_unit_value(2.0, "m") == 2.0
+    assert convert_to_unit_value(values, "m") is values
+
+
+def test_convert_to_unit_value_uses_default_unit():
+    """A default unit can be assumed for otherwise unitless input."""
+    from taurex.util import convert_to_unit_value
+
+    np.testing.assert_allclose(convert_to_unit_value([1.0, 2.0], "m", "km"), [1e3, 2e3])
+
+
+def test_convert_to_unit_value_preserves_matching_default_unit():
+    """No conversion is needed when default and target units match."""
+    from taurex.util import convert_to_unit_value
+
+    values = np.array([1.0, 2.0, 3.0])
+
+    assert convert_to_unit_value(values, "K", "K") is values
+
+
+def test_convert_to_unit_value_converts_quantity():
+    """Quantity input is returned as plain values in the target unit."""
+    import astropy.units as u
+
+    from taurex.util import convert_to_unit_value
+
+    values = np.array([1.0, 2.0]) * u.km
+
+    converted = convert_to_unit_value(values, u.m)
+
+    np.testing.assert_allclose(converted, [1e3, 2e3])
+    assert not isinstance(converted, u.Quantity)
+
+
+def test_convert_to_unit_value_supports_equivalencies():
+    """Conversions can use Astropy equivalencies such as spectral units."""
+    import astropy.units as u
+
+    from taurex.util import convert_to_unit_value
+
+    value = 1.0 * u.micron
+
+    assert convert_to_unit_value(
+        value, u.k, equivalencies=u.spectral()
+    ) == pytest.approx(10000.0)
+
+
+def test_convert_to_unit_value_rejects_incompatible_quantity():
+    """Incompatible Quantity input retains Astropy's clear error."""
+    import astropy.units as u
+
+    from taurex.util import convert_to_unit_value
+
+    with pytest.raises(u.UnitConversionError):
+        convert_to_unit_value(1.0 * u.kg, u.m)
+
+
 def test_wngrid_clip():
     """Test clipping native grid to wavenumber grid."""
     from taurex.binning import FluxBinner

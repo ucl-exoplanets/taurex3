@@ -5,6 +5,7 @@ from .guillot import Guillot2010
 from .isothermal import Isothermal
 from .npoint import NPoint
 from .rodgers import Rodgers2000
+from .temparray import TemperatureArray
 from .tprofile import TemperatureProfile
 
 
@@ -15,4 +16,5 @@ __all__ = [
     "NPoint",
     "Rodgers2000",
     "TemperatureFile",
+    "TemperatureArray",
 ]

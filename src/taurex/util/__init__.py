@@ -8,6 +8,7 @@ from .util import clip_native_to_wngrid
 from .util import compute_bin_edges
 from .util import compute_dz
 from .util import conversion_factor
+from .util import convert_to_unit_value
 from .util import create_grid_res
 from .util import decode_string_array
 from .util import ensure_string_utf8
@@ -61,6 +62,7 @@ __all__ = [
     "class_for_name",
     "create_grid_res",
     "conversion_factor",
+    "convert_to_unit_value",
     "compute_dz",
     "has_duplicates",
     "find_closest_pair",

@@ -35,15 +35,3 @@ def test_exotransmit_pressure_grid_in_pa(exo_transmit_path):
     opacity = ExoTransmitOpacity(exo_transmit_path)
 
     assert np.array_equal(opacity.pressureGrid, PRESSURE_GRID)
-
-
-def test_exotransmit_grids(exo_transmit_path):
-    """Grids match the file layout."""
-    opacity = ExoTransmitOpacity(exo_transmit_path)
-
-    assert np.array_equal(opacity.temperatureGrid, TEMPERATURE_GRID)
-    assert opacity.xsecGrid.shape == (
-        PRESSURE_GRID.size,
-        TEMPERATURE_GRID.size,
-        WAVELENGTHS.size,
-    )

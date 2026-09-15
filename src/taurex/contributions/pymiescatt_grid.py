@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 import numpy.typing as npt
 import scipy.stats as stats
+from astropy import units as u
 
 from taurex.cache import GlobalCache
 from taurex.exceptions import InvalidModelException
@@ -14,6 +15,7 @@ from taurex.mpi import has_mpi
 from taurex.mpi import shared_rank
 from taurex.output import OutputGroup
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .contribution import Contribution
 
@@ -214,48 +216,65 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 "At least one species must be provided"
             )
 
+        mean_radius = (
+            self._default_mean_radius
+            if mie_particle_mean_radius is None
+            else mie_particle_mean_radius
+        )
         self._mie_species_path = _broadcast_param(
             mie_species_path, self._species_count, "mie_species_path"
         )
         self._mie_particle_mean_radius = _broadcast_param(
-            mie_particle_mean_radius or self._default_mean_radius,
+            self._normalize_radius(mean_radius),
             self._species_count,
             "mie_particle_mean_radius",
         )
         self._mie_particle_std_radius = _broadcast_param(
-            mie_particle_logstd_radius,
+            self._normalize_dimensionless(mie_particle_logstd_radius),
             self._species_count,
             "mie_particle_logstd_radius",
         )
         self._mie_particle_param_a = _broadcast_param(
-            mie_particle_param_a, self._species_count, "mie_particle_param_a"
+            self._normalize_dimensionless(mie_particle_param_a),
+            self._species_count,
+            "mie_particle_param_a",
         )
         self._mie_particle_param_b = _broadcast_param(
-            mie_particle_param_b, self._species_count, "mie_particle_param_b"
+            self._normalize_dimensionless(mie_particle_param_b),
+            self._species_count,
+            "mie_particle_param_b",
         )
         self._mie_particle_param_c = _broadcast_param(
-            mie_particle_param_c, self._species_count, "mie_particle_param_c"
+            self._normalize_dimensionless(mie_particle_param_c),
+            self._species_count,
+            "mie_particle_param_c",
         )
         self._mie_particle_param_d = _broadcast_param(
-            mie_particle_param_d, self._species_count, "mie_particle_param_d"
+            self._normalize_dimensionless(mie_particle_param_d),
+            self._species_count,
+            "mie_particle_param_d",
         )
         self._mie_particle_mix_ratio = _broadcast_param(
-            mie_particle_mix_ratio,
+            self._normalize_number_density(mie_particle_mix_ratio),
             self._species_count,
             "mie_particle_mix_ratio",
         )
         self._mie_porosity = _broadcast_param(
-            mie_porosity,
+            self._normalize_dimensionless(mie_porosity),
             self._species_count,
             "mie_porosity",
             allow_none=True,
         )
-        self._mie_midP = _broadcast_param(mie_midP, self._species_count, "mie_midP")
+        self._mie_midP = _broadcast_param(
+            self._normalize_pressure(mie_midP), self._species_count, "mie_midP"
+        )
         self._mie_rangeP = _broadcast_param(
-            mie_rangeP, self._species_count, "mie_rangeP"
+            self._normalize_dimensionless(mie_rangeP),
+            self._species_count,
+            "mie_rangeP",
         )
         self._particle_alt_decay = _broadcast_param(
-            mie_particle_altitude_decay,
+            self._normalize_dimensionless(mie_particle_altitude_decay),
             self._species_count,
             "mie_particle_altitude_decay",
         )
@@ -264,10 +283,12 @@ class PyMieScattGridExtinctionContribution(Contribution):
             mie_particle_radius_distribution.lower().strip()
         )
         self._particle_alt_distib = mie_particle_altitude_distrib.lower().strip()
-        self._mie_nMedium = mie_nMedium
-        self._resolution = mie_resolution
-        self._nsampling = int(mie_particle_radius_nsampling)
-        self._dsampling = mie_particle_radius_dsampling
+        self._mie_nMedium = self._normalize_dimensionless(mie_nMedium)
+        self._resolution = int(self._normalize_dimensionless(mie_resolution))
+        self._nsampling = int(
+            self._normalize_dimensionless(mie_particle_radius_nsampling)
+        )
+        self._dsampling = self._normalize_dimensionless(mie_particle_radius_dsampling)
 
         if self._mie_particle_radius_distribution not in {
             "normal",
@@ -288,6 +309,30 @@ class PyMieScattGridExtinctionContribution(Contribution):
             self._mie_species_path
         )
         self.generate_particle_fitting_params()
+
+    @staticmethod
+    def _normalize_radius(value: t.Any) -> t.Any:
+        """Convert particle radii to plain numeric microns."""
+        return convert_to_unit_value(value, u.um, default_unit=u.um)
+
+    @staticmethod
+    def _normalize_dimensionless(value: t.Any) -> t.Any:
+        """Convert dimensionless quantities to plain numeric form."""
+        return convert_to_unit_value(
+            value,
+            u.dimensionless_unscaled,
+            default_unit=u.dimensionless_unscaled,
+        )
+
+    @staticmethod
+    def _normalize_number_density(value: t.Any) -> t.Any:
+        """Convert particle number densities to plain numeric values in m^-3."""
+        return convert_to_unit_value(value, u.m**-3, default_unit=u.m**-3)
+
+    @staticmethod
+    def _normalize_pressure(value: t.Any) -> t.Any:
+        """Convert pressures to plain numeric values in Pa."""
+        return convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @staticmethod
     def _read_qext_dataset(
@@ -426,7 +471,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_particle_mean_radius)
 
         def write_rmean_share(self, value):
-            self._mie_particle_mean_radius[:] = [value] * len(
+            normalized = self._normalize_radius(value)
+            self._mie_particle_mean_radius[:] = [normalized] * len(
                 self._mie_particle_mean_radius
             )
 
@@ -448,7 +494,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return np.mean(self._mie_particle_std_radius)
 
             def write_rstd_share(self, value):
-                self._mie_particle_std_radius[:] = [value] * len(
+                normalized = self._normalize_dimensionless(value)
+                self._mie_particle_std_radius[:] = [normalized] * len(
                     self._mie_particle_std_radius
                 )
 
@@ -469,7 +516,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_particle_mix_ratio)
 
         def write_x_share(self, value):
-            self._mie_particle_mix_ratio[:] = [value] * len(
+            normalized = self._normalize_number_density(value)
+            self._mie_particle_mix_ratio[:] = [normalized] * len(
                 self._mie_particle_mix_ratio
             )
 
@@ -490,7 +538,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_midP)
 
         def write_midp_share(self, value):
-            self._mie_midP[:] = [value] * len(self._mie_midP)
+            normalized = self._normalize_pressure(value)
+            self._mie_midP[:] = [normalized] * len(self._mie_midP)
 
         self.add_fittable_param(
             param_name,
@@ -509,7 +558,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._mie_rangeP)
 
         def write_rangep_share(self, value):
-            self._mie_rangeP[:] = [value] * len(self._mie_rangeP)
+            normalized = self._normalize_dimensionless(value)
+            self._mie_rangeP[:] = [normalized] * len(self._mie_rangeP)
 
         self.add_fittable_param(
             param_name,
@@ -528,7 +578,8 @@ class PyMieScattGridExtinctionContribution(Contribution):
             return np.mean(self._particle_alt_decay)
 
         def write_decayp_share(self, value):
-            self._particle_alt_decay[:] = [value] * len(self._particle_alt_decay)
+            normalized = self._normalize_dimensionless(value)
+            self._particle_alt_decay[:] = [normalized] * len(self._particle_alt_decay)
 
         self.add_fittable_param(
             param_name,
@@ -548,7 +599,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return self._mie_particle_mean_radius[idx]
 
             def write_rmean(self, value, idx=idx):
-                self._mie_particle_mean_radius[idx] = value
+                self._mie_particle_mean_radius[idx] = self._normalize_radius(value)
 
             self.add_fittable_param(
                 param_name,
@@ -568,7 +619,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
                     return self._mie_particle_std_radius[idx]
 
                 def write_rstd(self, value, idx=idx):
-                    self._mie_particle_std_radius[idx] = value
+                    self._mie_particle_std_radius[idx] = self._normalize_dimensionless(
+                        value
+                    )
 
                 self.add_fittable_param(
                     param_name,
@@ -588,7 +641,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                     return self._mie_porosity[idx]
 
                 def write_poro(self, value, idx=idx):
-                    self._mie_porosity[idx] = value
+                    self._mie_porosity[idx] = self._normalize_dimensionless(value)
 
                 self.add_fittable_param(
                     param_name,
@@ -607,7 +660,9 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return self._mie_particle_mix_ratio[idx]
 
             def write_x(self, value, idx=idx):
-                self._mie_particle_mix_ratio[idx] = value
+                self._mie_particle_mix_ratio[idx] = self._normalize_number_density(
+                    value
+                )
 
             self.add_fittable_param(
                 param_name,
@@ -626,7 +681,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return self._mie_midP[idx]
 
             def write_midp(self, value, idx=idx):
-                self._mie_midP[idx] = value
+                self._mie_midP[idx] = self._normalize_pressure(value)
 
             self.add_fittable_param(
                 param_name,
@@ -645,7 +700,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return self._mie_rangeP[idx]
 
             def write_rangep(self, value, idx=idx):
-                self._mie_rangeP[idx] = value
+                self._mie_rangeP[idx] = self._normalize_dimensionless(value)
 
             self.add_fittable_param(
                 param_name,
@@ -664,7 +719,7 @@ class PyMieScattGridExtinctionContribution(Contribution):
                 return self._particle_alt_decay[idx]
 
             def write_decayp(self, value, idx=idx):
-                self._particle_alt_decay[idx] = value
+                self._particle_alt_decay[idx] = self._normalize_dimensionless(value)
 
             self.add_fittable_param(
                 param_name,

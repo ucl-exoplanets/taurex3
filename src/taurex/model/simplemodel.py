@@ -414,6 +414,18 @@ class SimpleForwardModel(ForwardModel):
 
         self._native_grid = wngrid
 
+    @staticmethod
+    def _normalize_wngrid(
+        wngrid: t.Optional[t.Union[u.Quantity, npt.NDArray[np.float64]]],
+    ) -> t.Optional[npt.NDArray[np.float64]]:
+        """Normalize a public spectral grid to inverse centimetres."""
+        if wngrid is None:
+            return None
+        return np.asarray(
+            convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral()),
+            dtype=get_float_dtype(),
+        )
+
     def auto_grid(self) -> None:
         """Automatically sets the native grid."""
         self._native_grid = None
@@ -495,6 +507,8 @@ class SimpleForwardModel(ForwardModel):
         extra: ``None``
             Empty
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         if not self.built:
             self.build()
         # Setup profiles
@@ -547,6 +561,8 @@ class SimpleForwardModel(ForwardModel):
             Dictionary of absorption, tau, and extra for each contribution.
 
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         # Setup profiles
         self.initialize_profiles()
 
@@ -602,6 +618,8 @@ class SimpleForwardModel(ForwardModel):
         in the atmosphere.
 
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         native_grid = self.nativeWavenumberGrid
         if wngrid is not None and cutoff_grid:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)

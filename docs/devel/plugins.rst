@@ -22,6 +22,13 @@ The plugin system can be used to add the following new components:
     - :class:`~taurex.optimizer.optimizer.Optimizer`
     - :class:`~taurex.mixin.core.Mixin`
 
+Chemistry plugins representing non-vapour species by particle number density
+should implement ``condensateNumberDensityProfile`` with shape
+``(ncondensates, nlayers)``. Values are plain numerics in :math:`m^{-3}`;
+``normalize_condensate_number_density`` converts compatible Astropy quantities
+at the plugin input boundary. This interface is separate from the
+dimensionless ``condensateMixProfile`` representation.
+
 Refer to the :ref:`Developers` on how to build each individual component.
 This guide will outline how to package your new components into a TauREx plugin.
 

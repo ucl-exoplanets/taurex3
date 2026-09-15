@@ -7,11 +7,12 @@ import warnings
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.cache import GlobalCache
-from taurex.constants import MSOL
 from taurex.output import OutputGroup
 from taurex.types import PathLike
+from taurex.util import convert_to_unit_value
 
 from .star import BlackbodyStar
 
@@ -28,20 +29,20 @@ class PhoenixStar(BlackbodyStar):
     phoenix_path: str, **required**
         Path to folder containing phoenix ``fits.gz`` files
 
-    temperature: float, optional
-        Stellar temperature in Kelvin
+    temperature: float or astropy.units.Quantity, optional
+        Stellar temperature in K when unitless.
 
-    radius: float, optional
-        Stellar radius in Solar radius
+    radius: float or astropy.units.Quantity, optional
+        Stellar radius in Solar radii when unitless.
 
     metallicity: float, optional
         Metallicity in solar values
 
-    mass: float, optional
-        Stellar mass in solar mass
+    mass: float or astropy.units.Quantity, optional
+        Stellar mass in Solar masses when unitless.
 
-    distance: float, optional
-        Distance from Earth in pc
+    distance: float or astropy.units.Quantity, optional
+        Distance from Earth in pc when unitless.
 
     magnitudeK: float, optional
         Maginitude in K band
@@ -57,11 +58,11 @@ class PhoenixStar(BlackbodyStar):
 
     def __init__(
         self,
-        temperature: t.Optional[float] = 5000,
-        radius: t.Optional[float] = 1.0,
-        metallicity: t.Optional[float] = 1.0,
-        mass: t.Optional[float] = 1.0,
-        distance: t.Optional[float] = 1,
+        temperature: t.Optional[t.Union[float, u.Quantity]] = 5000,
+        radius: t.Optional[t.Union[float, u.Quantity]] = 1.0,
+        metallicity: t.Optional[t.Union[float, u.Quantity]] = 1.0,
+        mass: t.Optional[t.Union[float, u.Quantity]] = 1.0,
+        distance: t.Optional[t.Union[float, u.Quantity]] = 1,
         magnitudeK: t.Optional[float] = 10.0,  # noqa: N803
         phoenix_path: t.Optional[PathLike] = None,
         retro_version_file: t.Optional[PathLike] = None,
@@ -181,9 +182,9 @@ class PhoenixStar(BlackbodyStar):
         return self._temperature
 
     @temperature.setter
-    def temperature(self, value: float) -> None:
+    def temperature(self, value: t.Union[float, u.Quantity]) -> None:
         """Set temperature."""
-        self._temperature = value
+        self._temperature = self._normalize_temperature(value)
         self.recompute_spectra()
 
     @property
@@ -198,9 +199,9 @@ class PhoenixStar(BlackbodyStar):
         return self._mass
 
     @mass.setter
-    def mass(self, value: float) -> None:
+    def mass(self, value: t.Union[float, u.Quantity]) -> None:
         """Set mass."""
-        self._mass = value * MSOL
+        self._mass = convert_to_unit_value(value, u.kg, default_unit=u.M_sun)
         self.recompute_spectra()
 
     def find_nearest_file(self) -> str:

@@ -23,10 +23,16 @@ Using Plugins
 
 .. note::
 
-    The former ``taurex-PCQ`` plugin is also now integrated into TauREx. Its
-    precomputed-grid cloud contribution is available as the built-in
-    ``PyMieScattGridExtinction`` model contribution documented in
-    :ref:`usermodel`.
+        Some former plugins are now built into TauREx itself:
+
+        - ``Phoenix4All`` is available through the built-in
+          ``phoenix4all`` star type documented in :ref:`userstar`.
+        - ``taurex-catalogue`` is available through the built-in
+          catalogue mixins documented in :ref:`mixin` and
+          :doc:`../api/taurex.mixin`.
+        - ``taurex-PCQ`` is available through the built-in
+          ``PyMieScattGridExtinction`` model contribution documented in
+          :ref:`usermodel`.
 
 Consult each plugins documentation for installation and usage. Generally TauREx
 searches for entry points in ``taurex.plugins`` and adds each component into the
@@ -34,8 +40,8 @@ correct point in the pipeline
 
 Some functionality that originally shipped as standalone plugins has since been
 promoted into the main TauREx codebase. At the moment this includes the
-multimodel composite forward models, plus the PCQ precomputed-grid Mie cloud
-contribution. Those features no
+multimodel composite forward models, Phoenix4All, the taurex-catalogue mixins,
+the PCQ precomputed-grid Mie cloud contribution. Those features no
 longer require a separate plugin installation.
 
 Lets take chemistry for example. Assuming a fresh install,

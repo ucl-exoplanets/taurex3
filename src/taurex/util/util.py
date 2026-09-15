@@ -987,6 +987,50 @@ def conversion_factor(from_unit: str, to_unit: str) -> float:
     return from_conv.to(to_conv)
 
 
+def convert_to_unit_value(
+    value: t.Any,
+    target_unit: t.Union[str, u.UnitBase],
+    default_unit: t.Optional[t.Union[str, u.UnitBase]] = None,
+    equivalencies: t.Optional[t.Any] = None,
+) -> t.Any:
+    """Return plain numeric data expressed in the target unit.
+
+    Quantity input is converted directly to ``target_unit``. Unitless input
+    keeps its existing meaning unless ``default_unit`` is supplied, in which
+    case that unit is assumed before conversion.
+
+    Parameters
+    ----------
+    value:
+        Scalar, array, or :class:`astropy.units.Quantity` to normalize.
+    target_unit:
+        Unit of the returned numeric value.
+    default_unit:
+        Unit to assume for unitless input. If omitted, unitless values are
+        returned unchanged.
+    equivalencies:
+        Astropy equivalencies to use during conversion.
+
+    Returns
+    -------
+    Any
+        Plain scalar or array values without an attached unit.
+
+    """
+    if isinstance(value, u.Quantity):
+        return value.to_value(target_unit, equivalencies=equivalencies or [])
+
+    if default_unit is None:
+        return value
+
+    if u.Unit(default_unit) == u.Unit(target_unit):
+        return value
+
+    return u.Quantity(value, default_unit).to_value(
+        target_unit, equivalencies=equivalencies or []
+    )
+
+
 def compute_dz(altitude: npt.NDArray) -> npt.NDArray:
     """Compute dz from altitude.
 

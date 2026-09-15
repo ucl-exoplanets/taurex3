@@ -6,6 +6,7 @@ import typing as t
 import numpy as np
 
 from taurex.binning import BinDownType
+from taurex.binning import Binner
 from taurex.binning import FluxBinner
 from taurex.model import ForwardModel
 from taurex.types import ModelOutputType
@@ -19,10 +20,8 @@ class InstrumentFile(Instrument):
     """Loads a 2-3 column file.
 
     The first column is the wavelength grid, the second column is the noise
-    and the third column is the width of the wavelength bin. If the third
-    column is not present, the width is computed from the wavelength grid.
-
-
+    and the third column is the width of the wavelength bin. If the third column
+    is not present, the width is computed from the wavelength grid.
     """
 
     def __init__(
@@ -31,28 +30,13 @@ class InstrumentFile(Instrument):
         delimiter: t.Optional[str] = None,
         skiprows: t.Optional[int] = 0,
         use_cols: t.Optional[t.Tuple[int, ...]] = None,
+        binner: t.Optional[Binner] = None,
     ) -> None:
-        """Initialize InstrumentFile.
-
-        Parameters
-        ----------
-        filename : PathLike, optional
-            Path to instrument file.
-        delimiter : str, optional
-            Delimiter for the file.
-        skiprows : int, optional
-            Number of rows to skip.
-        use_cols : tuple of int, optional
-            Columns to use.
-
-        """
+        """Initialise with a spectrum file and optional binner."""
         super().__init__()
 
         self._spectrum = np.loadtxt(
-            filename,
-            skiprows=skiprows,
-            delimiter=delimiter,
-            usecols=use_cols,
+            filename, skiprows=skiprows, delimiter=delimiter, usecols=use_cols
         )
 
         self._wlgrid = self._spectrum[:, 0]
@@ -70,11 +54,11 @@ class InstrumentFile(Instrument):
         except IndexError:
             from taurex.util import compute_bin_edges
 
-            self._wlwidths = compute_bin_edges(self._wlgrid)[-1]
+            self._wlwidths - compute_bin_edges(self._wlgrid)[-1]
 
         self.create_wn_widths()
 
-        self._binner = FluxBinner(self._wngrid, wngrid_width=self._wnwidths)
+        self._binner = binner or FluxBinner(self._wngrid, wngrid_width=self._wnwidths)
 
     def create_wn_widths(self) -> None:
         """Covert wavelength widths to wavenumber widths."""
@@ -92,29 +76,21 @@ class InstrumentFile(Instrument):
         ----------
         model:
             Forward model to pass.
-
         model_res:
             Result from :func:`~taurex.model.model.ForwardModel.model`
-
         num_observations:
             Number of observations to simulate
-
         """
         if model_res is None:
             model_res = model.model()
 
         wngrid, spectrum, _, grid_width = self._binner.bin_model(model_res)
 
-        return (
-            wngrid,
-            spectrum,
-            self._noise / math.sqrt(num_observations),
-            grid_width,
-        )
+        return wngrid, spectrum, self._noise / math.sqrt(num_observations), grid_width
 
     @classmethod
     def input_keywords(cls) -> t.Tuple[str, ...]:
-        """Input keywords for instrument file."""
+        """Return the input keyword for the class factory."""
         return (
             "file",
             "fromfile",

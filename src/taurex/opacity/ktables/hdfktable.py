@@ -102,11 +102,13 @@ class HDF5KTable(KTable, InterpolatingOpacity):
 
         self._spec_dict = h5py.File(filename, "r")
 
-        self._wavenumber_grid: npt.NDArray[np.float64] = self._spec_dict[
-            "bin_centers"
+        self._wavenumber_grid: npt.NDArray[np.float64] = self._spec_dict["bin_centers"][
+            ()
         ].copy()
         self._ngauss: int = self._spec_dict["ngauss"][()]
-        self._temperature_grid: npt.NDArray[np.float64] = self._spec_dict["t"].copy()
+        self._temperature_grid: npt.NDArray[np.float64] = self._spec_dict["t"][
+            ()
+        ].copy()
 
         pressure_units: npt.NDArray[np.float64] = self._spec_dict["p"].attrs["units"]
         try:
@@ -115,14 +117,14 @@ class HDF5KTable(KTable, InterpolatingOpacity):
             p_conversion = u.Unit(pressure_units, format="cds").to(u.Pa)
 
         self._pressure_grid: npt.NDArray[np.float64] = (
-            self._spec_dict["p"].copy() * p_conversion
+            self._spec_dict["p"][()].copy() * p_conversion
         )
 
         if self.in_memory:
-            self._xsec_grid = self._spec_dict["kcoeff"].copy()
+            self._xsec_grid = self._spec_dict["kcoeff"][()].copy()
         else:
             self._xsec_grid = self._spec_dict["kcoeff"]
-        self._weights = self._spec_dict["weights"].copy()
+        self._weights = self._spec_dict["weights"][()].copy()
 
         self._min_pressure = self._pressure_grid.min()
         self._max_pressure = self._pressure_grid.max()

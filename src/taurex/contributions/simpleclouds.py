@@ -4,11 +4,13 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .contribution import Contribution
 
@@ -31,7 +33,10 @@ class SimpleCloudsContribution(Contribution):
 
     """
 
-    def __init__(self, clouds_pressure: t.Optional[float] = 1e3) -> None:
+    def __init__(
+        self,
+        clouds_pressure: t.Optional[t.Union[float, u.Quantity]] = 1e3,
+    ) -> None:
         """Initialize the cloud model.
 
         Parameters
@@ -42,7 +47,12 @@ class SimpleCloudsContribution(Contribution):
 
         """
         super().__init__("SimpleClouds")
-        self._cloud_pressure = clouds_pressure
+        self._cloud_pressure = self._normalize_pressure(clouds_pressure)
+
+    @staticmethod
+    def _normalize_pressure(value: t.Any) -> t.Any:
+        """Convert pressure to plain numeric values in Pa."""
+        return convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @property
     def order(self) -> int:
@@ -129,9 +139,9 @@ class SimpleCloudsContribution(Contribution):
         return self._cloud_pressure
 
     @cloudsPressure.setter
-    def cloudsPressure(self, value: float) -> None:  # noqa: N802
+    def cloudsPressure(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Cloud top pressure in Pascal."""
-        self._cloud_pressure = value
+        self._cloud_pressure = self._normalize_pressure(value)
 
     def write(self, output: OutputGroup) -> OutputGroup:
         """Write the cloud pressure to the output.

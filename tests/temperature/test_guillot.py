@@ -1,6 +1,7 @@
 """Test Guillot 2010 temperature profile."""
 
 import pytest
+from astropy import units as u
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -136,3 +137,86 @@ def test_guillot_values():
     Should be a list of inputs and outputs
     """
     pass
+
+
+def test_guillot_accepts_temperature_quantities():
+    """Physical temperature parameters are normalized to Kelvin."""
+    profile = Guillot2010(
+        T_irr=1.5 * u.kK,
+        T_int=u.Quantity(20.0, u.deg_C),
+    )
+
+    assert profile.equilTemperature == pytest.approx(1500.0)
+    assert profile.internalTemperature == pytest.approx(293.15)
+
+
+def test_guillot_temperature_setters_accept_quantities():
+    """Fittable temperature setters normalize Quantity values."""
+    profile = Guillot2010()
+
+    profile.equilTemperature = 2.0 * u.kK
+    profile.internalTemperature = 0.5 * u.kK
+
+    assert profile.equilTemperature == pytest.approx(2000.0)
+    assert profile.internalTemperature == pytest.approx(500.0)
+
+
+@pytest.mark.parametrize("parameter", ["T_irr", "T_int"])
+def test_guillot_rejects_incompatible_temperature_quantity(parameter):
+    """Temperature parameters reject incompatible physical dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        Guillot2010(**{parameter: 1.0 * u.m})
+
+
+def test_guillot_rejects_quantity_below_absolute_zero():
+    """Validation occurs after conversion to the internal Kelvin unit."""
+    with pytest.raises(InvalidModelException, match="Negative temperature"):
+        Guillot2010(T_int=u.Quantity(-300.0, u.deg_C))
+
+
+def test_guillot_accepts_opacity_and_ratio_quantities():
+    """Opacity and ratio inputs are normalized to their internal units."""
+    profile = Guillot2010(
+        kappa_irr=100.0 * u.cm**2 / u.g,
+        kappa_v1=50.0 * u.cm**2 / u.g,
+        kappa_v2=25.0 * u.cm**2 / u.g,
+        alpha=50.0 * u.percent,
+    )
+
+    assert profile.meanInfraOpacity == pytest.approx(10.0)
+    assert profile.meanOpticalOpacity1 == pytest.approx(5.0)
+    assert profile.meanOpticalOpacity2 == pytest.approx(2.5)
+    assert profile.opticalRatio == pytest.approx(0.5)
+    assert not isinstance(profile.kappa_ir, u.Quantity)
+    assert not isinstance(profile.alpha, u.Quantity)
+
+
+def test_guillot_opacity_and_ratio_setters_accept_quantities():
+    """Fittable opacity and ratio setters normalize Quantity values."""
+    profile = Guillot2010()
+    parameters = profile.fitting_parameters()
+
+    parameters["kappa_irr"][3](20.0 * u.cm**2 / u.g)
+    parameters["kappa_v1"][3](30.0 * u.cm**2 / u.g)
+    parameters["kappa_v2"][3](40.0 * u.cm**2 / u.g)
+    parameters["alpha"][3](25.0 * u.percent)
+
+    assert profile.meanInfraOpacity == pytest.approx(2.0)
+    assert profile.meanOpticalOpacity1 == pytest.approx(3.0)
+    assert profile.meanOpticalOpacity2 == pytest.approx(4.0)
+    assert profile.opticalRatio == pytest.approx(0.25)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "quantity"),
+    [
+        ("kappa_irr", 1.0 * u.K),
+        ("kappa_v1", 1.0 * u.m),
+        ("kappa_v2", 1.0 * u.kg),
+        ("alpha", 1.0 * u.Pa),
+    ],
+)
+def test_guillot_rejects_incompatible_physical_quantities(parameter, quantity):
+    """Opacity and ratio parameters reject incompatible dimensions."""
+    with pytest.raises(u.UnitConversionError):
+        Guillot2010(**{parameter: quantity})

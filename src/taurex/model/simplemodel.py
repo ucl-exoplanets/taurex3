@@ -16,6 +16,7 @@ from taurex.temperature import TemperatureProfile
 from taurex.types import ModelOutputType
 from taurex.types import get_float_dtype
 from taurex.util import clip_native_to_wngrid
+from taurex.util import convert_to_unit_value
 
 from .model import ForwardModel
 
@@ -406,14 +407,24 @@ class SimpleForwardModel(ForwardModel):
         spectral_grid:
             Wavenumber grid
         """
-        if isinstance(spectral_grid, u.Quantity):
-            wngrid = spectral_grid.to(u.k, equivalencies=u.spectral()).value
-
-        wngrid = np.array(wngrid, dtype=get_float_dtype())
+        wngrid = convert_to_unit_value(spectral_grid, u.k, equivalencies=u.spectral())
+        wngrid = np.asarray(wngrid, dtype=get_float_dtype())
         # Sort the grid
         wngrid = np.sort(wngrid)
 
         self._native_grid = wngrid
+
+    @staticmethod
+    def _normalize_wngrid(
+        wngrid: t.Optional[t.Union[u.Quantity, npt.NDArray[np.float64]]],
+    ) -> t.Optional[npt.NDArray[np.float64]]:
+        """Normalize a public spectral grid to inverse centimetres."""
+        if wngrid is None:
+            return None
+        return np.asarray(
+            convert_to_unit_value(wngrid, u.k, equivalencies=u.spectral()),
+            dtype=get_float_dtype(),
+        )
 
     def auto_grid(self) -> None:
         """Automatically sets the native grid."""
@@ -496,6 +507,8 @@ class SimpleForwardModel(ForwardModel):
         extra: ``None``
             Empty
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         if not self.built:
             self.build()
         # Setup profiles
@@ -548,6 +561,8 @@ class SimpleForwardModel(ForwardModel):
             Dictionary of absorption, tau, and extra for each contribution.
 
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         # Setup profiles
         self.initialize_profiles()
 
@@ -603,6 +618,8 @@ class SimpleForwardModel(ForwardModel):
         in the atmosphere.
 
         """
+        wngrid = self._normalize_wngrid(wngrid)
+
         native_grid = self.nativeWavenumberGrid
         if wngrid is not None and cutoff_grid:
             native_grid = clip_native_to_wngrid(native_grid, wngrid)

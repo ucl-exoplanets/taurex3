@@ -4,9 +4,12 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 from scipy.interpolate import interp1d
 
 from taurex.output import OutputGroup
+from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .tprofile import TemperatureProfile
 
@@ -16,8 +19,8 @@ class TemperatureArray(TemperatureProfile):
 
     def __init__(
         self,
-        tp_array: t.Optional[npt.ArrayLike] = None,
-        p_points: t.Optional[npt.ArrayLike] = None,
+        tp_array: t.Optional[t.Union[npt.ArrayLike, u.Quantity]] = None,
+        p_points: t.Optional[t.Union[npt.ArrayLike, u.Quantity]] = None,
         reverse: t.Optional[bool] = False,
     ):
         """Initialize the temperature profile.
@@ -25,20 +28,24 @@ class TemperatureArray(TemperatureProfile):
         Parameters
         ----------
         tp_array:
-            Temperature profile array, by default None
+            Temperature profile array in K when unitless, by default None.
         p_points:
-            Pressure profile array, by default None
+            Pressure points in Pa when unitless, by default None.
         reverse : t.Optional[bool], optional
             Reverse the temperature profile, by default False
 
         """
         super().__init__(self.__class__.__name__)
 
-        self._tp_profile = np.array(tp_array)
+        tp_array = convert_to_unit_value(
+            tp_array, u.K, default_unit=u.K, equivalencies=u.temperature()
+        )
+        self._tp_profile = np.asarray(tp_array, dtype=get_float_dtype())
         if reverse:
             self._tp_profile = self._tp_profile[::-1]
         if p_points is not None:
-            self._p_profile = np.array(p_points)
+            p_points = convert_to_unit_value(p_points, u.Pa, default_unit=u.Pa)
+            self._p_profile = np.asarray(p_points, dtype=get_float_dtype())
             if reverse:
                 self._p_profile = self._p_profile[::-1]
             self._func = interp1d(

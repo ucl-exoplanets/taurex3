@@ -64,7 +64,7 @@ class Guillot2010(TemperatureProfile):
 
     @fitparam(
         param_name="T_irr",
-        param_latex=r"$T_\\mathrm{irr}$",
+        param_latex=r"$T_\mathrm{irr}$",
         default_fit=False,
         default_bounds=[1300, 2500],
     )
@@ -88,7 +88,7 @@ class Guillot2010(TemperatureProfile):
 
     @fitparam(
         param_name="kappa_irr",
-        param_latex=r"$k_\\mathrm{irr}$",
+        param_latex=r"$k_\mathrm{irr}$",
         default_fit=False,
         default_bounds=[1e-10, 1],
         default_mode="log",
@@ -113,7 +113,7 @@ class Guillot2010(TemperatureProfile):
 
     @fitparam(
         param_name="kappa_v1",
-        param_latex=r"$k_\\mathrm{1}$",
+        param_latex=r"$k_\mathrm{1}$",
         default_fit=False,
         default_bounds=[1e-10, 1],
         default_mode="log",
@@ -140,7 +140,7 @@ class Guillot2010(TemperatureProfile):
 
     @fitparam(
         param_name="kappa_v2",
-        param_latex=r"$k_\\mathrm{2}$",
+        param_latex=r"$k_\mathrm{2}$",
         default_fit=False,
         default_bounds=[1e-10, 1],
         default_mode="log",
@@ -167,7 +167,7 @@ class Guillot2010(TemperatureProfile):
 
     @fitparam(
         param_name="alpha",
-        param_latex=r"$\\alpha$",
+        param_latex=r"$\alpha$",
         default_fit=False,
         default_bounds=[0.0, 1.0],
     )

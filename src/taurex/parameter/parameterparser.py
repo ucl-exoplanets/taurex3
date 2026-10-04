@@ -132,7 +132,14 @@ class ParameterParser(Logger):
         path = pathlib.Path(filename)
         if not path.exists():
             raise Exception(f"Input file {filename} does not exist")
-        self._raw_config = configobj.ConfigObj(filename)
+        if path.suffix.lower() in (".yaml", ".yml"):
+            from .yamlparser import read_yaml
+
+            with path.open(encoding="utf-8") as stream:
+                config = read_yaml(stream)
+            self._raw_config = configobj.ConfigObj(config)
+        else:
+            self._raw_config = configobj.ConfigObj(str(path))
         self.debug(
             "Raw Config file is {}, filename "
             "is {}".format(self._raw_config, filename)

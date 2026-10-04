@@ -136,6 +136,67 @@ The same pattern applies to ``model_type = multi_eclipse`` and
 ``model_type = multi_directimage``.
 
 
+YAML files
+----------
+
+Files ending in ``.yaml`` or ``.yml`` use YAML syntax with the same section names,
+parameters and model-building behavior as ``.par`` files. Existing ``.par``
+files continue to work unchanged. For example:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1500
+
+    Chemistry:
+      chemistry_type: taurex
+      fill_gases: [H2, He]
+      ratio: 0.17
+      H2O:
+        gas_type: constant
+        mix_ratio: 1e-4
+
+    Model:
+      model_type: transmission
+      Absorption: {}
+      CIA:
+        cia_pairs: [H2-H2, H2-He]
+
+    Fitting:
+      T:fit: true
+      T:bounds: [1000, 2000]
+      T:prior: 'Uniform(bounds=(1000, 2000))'
+
+Use indentation for subsections, YAML sequences for lists, and ``{}`` for empty
+sections such as ``Absorption``. Section and parameter names retain their case.
+Scalar values use the existing TauREx conversion rules, including scientific
+notation and boolean strings. Quoting a numeric value does not disable this
+conversion. Keys such as the molecule name ``NO`` remain strings. Duplicate
+keys are rejected.
+
+The equivalent of ``examples/parfiles/quickstart.par`` is provided in
+``examples/parfiles/quickstart.yaml``. Run it with::
+
+    taurex -i examples/parfiles/quickstart.yaml --plot
+
+Set the opacity paths first, as for the original quickstart. Relative paths are
+still resolved from the working directory, not the input file's directory.
+
+Multimodel configurations still reference separate regional files. These can
+be either format, including a mixture of YAML and ``.par``:
+
+.. code-block:: yaml
+
+    Model:
+      model_type: multi_transit
+      parfiles: [east.yaml, west.par]
+      fractions: [0.5, 0.5]
+
+This initial YAML support does not introduce inline regional models, shared
+object references, or environment-variable expansion.
+
+
 Mixins
 ------
 

@@ -1388,7 +1388,8 @@ class MultiParameterTransitModel(BaseParameterTransitModel):
         from taurex.parameter import ParameterParser
 
         parser = ParameterParser()
-        parser.read_dict(parfile)
+        # Inline values were already expanded while reading the main configuration.
+        parser.read_dict(parfile, expand_environment=False)
         return self._read_region(parser)
 
     def _region_sources(self):

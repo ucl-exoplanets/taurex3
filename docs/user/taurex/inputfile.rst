@@ -237,8 +237,46 @@ contributions, sharing their instances as with regional files. Nested multimodel
 and regional model options are not supported. Relative data paths still resolve
 from the working directory.
 
-This support does not introduce explicit shared-object references or
-environment-variable expansion.
+This support does not introduce explicit shared-object references.
+
+Environment variables
+---------------------
+
+Both YAML and PAR files support ``$NAME`` and ``${NAME}`` in parameter values.
+This lets users share a configuration while keeping data paths local:
+
+.. code-block:: yaml
+
+    Global:
+      xsec_path: ${TAUREX_DATA}/xsec
+      cia_path: ${TAUREX_DATA}/cia
+
+Set the variable in the shell before starting TauREx, for example:
+
+.. code-block:: bash
+
+    export TAUREX_DATA="/data/taurex"
+    taurex -i input.yaml --retrieval
+
+Each user can choose a different data directory without editing the shared
+configuration. The data itself must already be available there.
+
+Expansion applies to string values and list elements at all nesting levels,
+including inline regions and separately loaded regional files. Section names
+and parameter keys are not expanded. Variable names use letters, digits and
+underscores and cannot begin with a digit.
+
+A referenced variable that is not set raises an error naming the variable and
+parameter. An explicitly empty variable expands to an empty string. Use ``$$``
+for a literal dollar sign, for example ``$$HOME`` to obtain the text ``$HOME``.
+Quotes alone do not disable expansion.
+
+Expansion happens once, after parsing the file and before the existing numeric
+and boolean conversions. For example, a variable containing ``1200`` can supply
+a temperature. Replacement text is not parsed as YAML or split into list items,
+and references inside replacement text are not expanded again. Shell commands,
+shell default expressions such as ``${NAME:-default}``, and ``~`` expansion are
+not supported. Relative paths remain relative to the working directory.
 
 
 Mixins

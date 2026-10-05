@@ -267,8 +267,49 @@ def shared_rank() -> int:
     return shared_comm().Get_rank()
 
 
+def materialize(
+    arr: t.Optional[t.Any],
+) -> t.Optional[np.ndarray]:
+    """Turn a dataset-like source into a plain numpy array.
+
+    Anything that is already an array (or ``None``) is returned as-is.
+    Used on the code paths where shared memory is not used, so that
+    callers handing in e.g. an :class:`h5py.Dataset` still get an
+    in-memory array back.
+    """
+    if arr is None or isinstance(arr, np.ndarray):
+        return arr
+    return np.asarray(arr[()])
+
+
+_SHARED_FILL_CHUNK_BYTES = 32 * 1024 * 1024
+"""Maximum amount of data read at a time when filling shared memory."""
+
+
+def fill_shared(shared_array: np.ndarray, arr: t.Any) -> None:
+    """Copy ``arr`` into an already-allocated shared array.
+
+    In-memory arrays are copied in one go. Dataset-like sources are read
+    along their leading axis in bounded chunks so that the shared-memory
+    root rank never has to materialise a second full private copy of the
+    whole array just to fill the shared segment.
+    """
+    if isinstance(arr, np.ndarray):
+        np.copyto(shared_array, arr)
+        return
+
+    leading = arr.shape[0]
+    if leading == 0:
+        return
+    row_bytes = arr.size // leading * arr.dtype.itemsize
+    step = max(1, _SHARED_FILL_CHUNK_BYTES // max(row_bytes, 1))
+    for start in range(0, leading, step):
+        stop = min(start + step, leading)
+        shared_array[start:stop] = arr[start:stop]
+
+
 def allocate_as_shared(  # noqa: C901
-    arr: t.Optional[np.ndarray],
+    arr: t.Any,
     logger: t.Optional[logging.Logger] = None,
     force_shared: t.Optional[bool] = False,
 ):
@@ -290,9 +331,16 @@ def allocate_as_shared(  # noqa: C901
     private copy of the array in their local memory. The shape, dtype,
     and size are automatically broadcast from the root rank.
 
+    On the root rank ``arr`` may also be an on-disk dataset (anything
+    exposing ``shape``, ``dtype``, ``size`` and ``__getitem__``, such as
+    an :class:`h5py.Dataset`). It is then read into the shared segment in
+    bounded chunks, so the root never holds a second full private copy of
+    the data. Such sources are materialised into a plain array if sharing
+    turns out to be inactive.
+
     Parameters
     ----------
-    arr: numpy array or None
+    arr: numpy array, dataset-like or None
         Array to convert to shared memory. Can be None on non-root
         ranks of the shared communicator.
 
@@ -313,7 +361,7 @@ def allocate_as_shared(  # noqa: C901
     try:
         from mpi4py import MPI
     except ImportError:
-        return arr
+        return materialize(arr)
     from taurex.cache import GlobalCache
 
     if GlobalCache()["mpi_use_shared"] or force_shared:
@@ -341,7 +389,7 @@ def allocate_as_shared(  # noqa: C901
                     "MPI implementation supports COMM_TYPE_SHARED.",
                     sh_size,
                 )
-            return arr
+            return materialize(arr)
 
         # Determine shape, dtype, and size across ranks.
         # On non-root ranks, arr may be None to avoid private allocation.
@@ -352,7 +400,7 @@ def allocate_as_shared(  # noqa: C901
                 )
             shape = arr.shape
             dtype = arr.dtype
-            itemsize = arr.itemsize
+            itemsize = arr.dtype.itemsize
             nbytes = arr.size * itemsize
             nbytes_alloc = nbytes
         else:
@@ -383,10 +431,10 @@ def allocate_as_shared(  # noqa: C901
         shared_array = np.ndarray(buffer=buf, dtype=dtype, shape=shape)
 
         if sh_rank == 0:
-            np.copyto(shared_array, arr)
+            fill_shared(shared_array, arr)
 
         comm.Barrier()
 
         return shared_array
     else:
-        return arr
+        return materialize(arr)

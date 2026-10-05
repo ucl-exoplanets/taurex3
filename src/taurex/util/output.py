@@ -318,13 +318,33 @@ def plot_spectrum(spectrum, arg_output, observed=None):
 
 def store_contributions(binner, model, output_size=OutputSize.heavy):  # noqa: C901
     """Store contributions."""
+    contribution_dict = {}
+
+    # Model one contribution at a time. Modelling every contribution and
+    # every one of their components up front keeps all of their
+    # cross-section arrays alive simultaneously, which dominates the memory
+    # used during post-processing. Interleaving the two passes produces
+    # exactly the same dictionaries but with only a single contribution
+    # resident at a time.
+    full_contrib_list = model.contribution_list
+    for contrib in full_contrib_list:
+        model.contribution_list = [contrib]
+        for contrib_name, this_contrib_dict in _model_contribution(
+            binner, model, output_size=output_size
+        ):
+            contribution_dict[contrib_name] = this_contrib_dict
+    model.contribution_list = full_contrib_list
+
+    return contribution_dict
+
+
+def _model_contribution(binner, model, output_size=OutputSize.heavy):  # noqa: C901
+    """Yield stored dictionaries for the contribution(s) currently set."""
     native_grid, contribs = model.model_contrib()
     (
         native_grid,
         contribs_component,
     ) = model.model_full_contrib()
-
-    contribution_dict = {}
 
     for (
         contrib_name,
@@ -400,6 +420,4 @@ def store_contributions(binner, model, output_size=OutputSize.heavy):  # noqa: C
 
             this_contrib_dict[name] = component_contrib_dict
 
-        contribution_dict[contrib_name] = this_contrib_dict
-
-    return contribution_dict
+        yield contrib_name, this_contrib_dict

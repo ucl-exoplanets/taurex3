@@ -685,6 +685,14 @@ def main():  # noqa: C901
     # grid, which can use an order of magnitude more memory before the
     # retrieval even starts (issue #120).
     model.model(wngrid=wngrid)
+
+    # The model and opacities are now in place, so hand the (potentially
+    # large) temporary working set of the warm-up back to the OS before
+    # the retrieval allocates its own.
+    from taurex.util.memory import trim_memory
+
+    trim_memory()
+
     if args.retrieval is True:
         import time
 

@@ -1,6 +1,7 @@
 """Composite forward models built from multiple 1D submodels."""
 
 import typing as t
+from collections.abc import Mapping
 
 import numpy as np
 import numpy.typing as npt
@@ -1167,7 +1168,6 @@ archivePrefix = {arXiv},
     ]:
         """Read parameters from parfile."""
         from taurex.parameter import ParameterParser
-        from taurex.parameter.factory import generate_contributions
 
         if parfile is None:
             return (
@@ -1179,21 +1179,27 @@ archivePrefix = {arXiv},
 
         parser = ParameterParser()
         parser.read(parfile)
+        return self._read_region(parser)
+
+    def _read_region(self, parser):
+        """Build regional profiles and contributions with legacy fallbacks."""
+        from taurex.parameter.factory import generate_contributions
 
         temperature = parser.generate_temperature_profile() or self._default_temperature
         chemistry = parser.generate_chemistry_profile() or self._default_chemistry
         pressure = parser.generate_pressure_profile() or self._default_pressure
-        try:
-            contributions = generate_contributions(parser._raw_config["Model"])
-        except KeyError:
-            contributions = []
+        contributions = generate_contributions(parser._raw_config.get("Model", {}))
         if len(contributions) == 0:
             contributions = list(self.contribution_list)
         return temperature, chemistry, pressure, contributions
 
+    def _region_sources(self):
+        """Return regional inputs in model order."""
+        return self._parfiles
+
     def setup_keywords(self) -> t.Dict[str, t.Any]:
         """Setup keywords."""
-        regions = [self.read_parameters(parfile) for parfile in self._parfiles]
+        regions = [self.read_parameters(source) for source in self._region_sources()]
         if not regions:
             regions = [
                 (
@@ -1325,8 +1331,14 @@ class MultiParameterTransitModel(BaseParameterTransitModel):
         parfiles: t.Optional[t.Sequence[str]] = None,
         use_cuda: bool = False,
         fractions: t.Optional[t.Sequence[float]] = None,
+        regions: t.Optional[t.Mapping[str, t.Any]] = None,
     ) -> None:
         """Initialize MultiParameterTransitModel."""
+        if regions is not None:
+            if parfiles is not None:
+                raise ValueError("Model.regions and Model.parfiles cannot be combined")
+            self._validate_regions(regions)
+        self._regions = regions
         super().__init__(
             "MultiTransitParameter",
             planet=planet,
@@ -1342,6 +1354,48 @@ class MultiParameterTransitModel(BaseParameterTransitModel):
             use_cuda=use_cuda,
         )
         self._fractions = list(fractions or []) if fractions is not None else None
+
+    @staticmethod
+    def _validate_regions(regions: t.Mapping[str, t.Any]) -> None:
+        """Reject ambiguous ordering and unsupported regional settings."""
+        if not isinstance(regions, Mapping) or not regions:
+            raise ValueError("Model.regions must be a non-empty mapping")
+        if list(regions) != [f"m{i}" for i in range(1, len(regions) + 1)]:
+            raise ValueError("Model.regions keys must be m1, m2, ... in order")
+        allowed = {"Temperature", "Chemistry", "Pressure", "Model"}
+        for name, region in regions.items():
+            if not isinstance(region, Mapping):
+                raise ValueError(f"Region {name} must be a mapping of sections")
+            for section, value in region.items():
+                if section not in allowed:
+                    raise ValueError(f"Unsupported regional section {name}.{section}")
+                if not isinstance(value, Mapping):
+                    raise ValueError(
+                        f"Regional section {name}.{section} must be a mapping"
+                    )
+            for key, value in region.get("Model", {}).items():
+                if key in {"regions", "parfiles", "model_type"} or not isinstance(
+                    value, Mapping
+                ):
+                    raise ValueError(
+                        f"Regional Model {name} accepts only contribution sections"
+                    )
+
+    def read_parameters(self, parfile):
+        """Read a regional file or an inline mapping through the same builder."""
+        if not isinstance(parfile, Mapping):
+            return super().read_parameters(parfile)
+        from taurex.parameter import ParameterParser
+
+        parser = ParameterParser()
+        parser.read_dict(parfile)
+        return self._read_region(parser)
+
+    def _region_sources(self):
+        """Return inline mappings or file names in model order."""
+        if self._regions is not None:
+            return list(self._regions.values())
+        return super()._region_sources()
 
     def create_model(self) -> MultiTransitModel:
         """Create model."""

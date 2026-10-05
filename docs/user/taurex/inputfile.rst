@@ -183,7 +183,7 @@ The equivalent of ``examples/parfiles/quickstart.par`` is provided in
 Set the opacity paths first, as for the original quickstart. Relative paths are
 still resolved from the working directory, not the input file's directory.
 
-Multimodel configurations still reference separate regional files. These can
+Multimodel configurations can reference separate regional files. These can
 be either format, including a mixture of YAML and ``.par``:
 
 .. code-block:: yaml
@@ -193,8 +193,52 @@ be either format, including a mixture of YAML and ``.par``:
       parfiles: [east.yaml, west.par]
       fractions: [0.5, 0.5]
 
-This initial YAML support does not introduce inline regional models, shared
-object references, or environment-variable expansion.
+For ``multi_transit``, you can instead place the regional configurations in the
+same file using ``Model.regions``:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1000
+    Chemistry:
+      chemistry_type: taurex
+    Model:
+      model_type: multi_transit
+      fractions: [0.5, 0.5]
+      regions:
+        m1:
+          Model:
+            Absorption: {}
+            Rayleigh: {}
+        m2:
+          Temperature:
+            profile_type: isothermal
+            T: 800
+          Model:
+            Absorption: {}
+            Rayleigh: {}
+
+Region keys must be ``m1``, ``m2``, etc., consecutive and in that order. This order
+matches ``fractions`` and existing regional fitting names such as
+``m1_Rmean_share``. ``regions`` must be non-empty and cannot appear together with
+``parfiles``. Other model types do not yet support inline regions.
+
+Each region may contain ``Temperature``, ``Chemistry``, ``Pressure`` and ``Model``.
+Planet and star are shared from the main configuration. An omitted regional
+profile shares the main profile instance; an explicit profile section creates a
+separate object using that section and the class defaults, without merging fields
+from the main section. Other regional sections are rejected.
+
+A regional ``Model`` accepts contribution sections only. If supplied, its
+contributions replace the entire main contribution list and are instantiated
+separately for each region. If omitted or empty, the region falls back to the main
+contributions, sharing their instances as with regional files. Nested multimodels
+and regional model options are not supported. Relative data paths still resolve
+from the working directory.
+
+This support does not introduce explicit shared-object references or
+environment-variable expansion.
 
 
 Mixins

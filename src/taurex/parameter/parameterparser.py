@@ -140,13 +140,19 @@ class ParameterParser(Logger):
             self._raw_config = configobj.ConfigObj(config)
         else:
             self._raw_config = configobj.ConfigObj(str(path))
-        self.debug(
-            "Raw Config file is {}, filename "
-            "is {}".format(self._raw_config, filename)
-        )
+        self._transform_config()
+
+    def read_dict(self, config: t.Mapping[str, t.Any]) -> None:
+        """Read an in-memory configuration using the file value conversions."""
+        self._raw_config = configobj.ConfigObj(dict(config))
+        self._transform_config()
+
+    def _transform_config(self) -> None:
+        """Apply the same scalar conversions to file and in-memory input."""
+        self.debug("Raw Config is {}".format(self._raw_config))
         self._raw_config.walk(self.transform)
         config = self._raw_config.dict()
-        self.debug("Config file is {}, filename " "is {}".format(config, filename))
+        self.debug("Config is {}".format(config))
 
     def generate_lightcurve(self):
         """Generate lightcurve model from input file."""

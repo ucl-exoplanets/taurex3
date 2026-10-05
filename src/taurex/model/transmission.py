@@ -214,12 +214,15 @@ class TransmissionModel(OneDForwardModel):
         """Compute final absorption and optical depth."""
         # In-place exp to avoid temporary array allocation
         np.exp(-tau, out=tau)
-        ap = self.altitudeProfile[:, None]
         pradius = self._planet.fullRadius
         sradius = self._star.radius
-        _dz = dz[:, None]
+        # Per-layer integration weights. Keeping these 1D lets the integral
+        # below avoid the full (nlayers, ngrid) temporaries that broadcasting
+        # ``(pradius + ap) * (1 - tau) * _dz`` would allocate.
+        weights = (pradius + self.altitudeProfile) * dz * 2.0
 
-        integral = np.sum((pradius + ap) * (1.0 - tau) * _dz * 2.0, axis=0)
+        # sum_i w_i * (1 - tau_ij) == sum_i w_i - sum_i w_i * tau_ij
+        integral = weights.sum() - np.einsum("i,ij->j", weights, tau)
         return ((pradius**2.0) + integral) / (sradius**2), tau
 
     @classmethod

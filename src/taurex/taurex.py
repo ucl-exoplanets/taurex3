@@ -678,7 +678,13 @@ def main():  # noqa: C901
     optimizer = None
     solution = None
 
-    model.model()
+    # Warm-up evaluation. When a spectral grid (e.g. the observed grid) is
+    # available, use it so the native grid is clipped exactly as it will be
+    # during the retrieval. Evaluating on the full native grid instead
+    # allocates tau and the per-contribution cross-sections over the whole
+    # grid, which can use an order of magnitude more memory before the
+    # retrieval even starts (issue #120).
+    model.model(wngrid=wngrid)
     if args.retrieval is True:
         import time
 

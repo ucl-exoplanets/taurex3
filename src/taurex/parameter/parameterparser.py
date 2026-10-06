@@ -1,6 +1,8 @@
 """Parameter parser for input files."""
 
+import os
 import pathlib
+import re
 import typing as t
 
 import configobj
@@ -19,6 +21,38 @@ from .factory import create_planet
 from .factory import create_pressure_profile
 from .factory import create_star
 from .factory import create_temperature_profile
+
+
+_ENVIRONMENT_VARIABLE = re.compile(
+    r"\$\$|\$(?:\{([A-Za-z_][A-Za-z0-9_]*)\}|([A-Za-z_][A-Za-z0-9_]*))"
+)
+
+
+def _expand_environment(section, key):
+    """Expand environment references once, without interpreting shell syntax."""
+
+    def replace(match):
+        if match.group() == "$$":
+            return "$"
+        name = match.group(1) or match.group(2)
+        try:
+            return os.environ[name]
+        except KeyError:
+            raise ValueError(
+                f"Environment variable {name} is not set (parameter {key})"
+            ) from None
+
+    def expand(value):
+        return (
+            _ENVIRONMENT_VARIABLE.sub(replace, value)
+            if isinstance(value, str)
+            else value
+        )
+
+    value = section[key]
+    section[key] = (
+        [expand(item) for item in value] if isinstance(value, list) else expand(value)
+    )
 
 
 class ParameterParser(Logger):
@@ -132,14 +166,31 @@ class ParameterParser(Logger):
         path = pathlib.Path(filename)
         if not path.exists():
             raise Exception(f"Input file {filename} does not exist")
-        self._raw_config = configobj.ConfigObj(filename)
-        self.debug(
-            "Raw Config file is {}, filename "
-            "is {}".format(self._raw_config, filename)
-        )
+        if path.suffix.lower() in (".yaml", ".yml"):
+            from .yamlparser import read_yaml
+
+            with path.open(encoding="utf-8") as stream:
+                config = read_yaml(stream)
+            self._raw_config = configobj.ConfigObj(config)
+        else:
+            self._raw_config = configobj.ConfigObj(str(path))
+        self._transform_config()
+
+    def read_dict(
+        self, config: t.Mapping[str, t.Any], *, expand_environment: bool = True
+    ) -> None:
+        """Read an in-memory configuration using the file value conversions."""
+        self._raw_config = configobj.ConfigObj(dict(config))
+        self._transform_config(expand_environment=expand_environment)
+
+    def _transform_config(self, *, expand_environment: bool = True) -> None:
+        """Apply the same scalar conversions to file and in-memory input."""
+        if expand_environment:
+            self._raw_config.walk(_expand_environment)
+        self.debug(f"Raw Config is {self._raw_config}")
         self._raw_config.walk(self.transform)
         config = self._raw_config.dict()
-        self.debug("Config file is {}, filename " "is {}".format(config, filename))
+        self.debug(f"Config is {config}")
 
     def generate_lightcurve(self):
         """Generate lightcurve model from input file."""

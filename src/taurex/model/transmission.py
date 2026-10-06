@@ -181,11 +181,24 @@ class TransmissionModel(OneDForwardModel):
         tau_dtype = get_float_dtype()
         tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
+        # One scratch buffer for the cross-sections, reused by every
+        # contribution in turn. Each contribution would otherwise allocate
+        # its own (nlayers, ngrid) array on every evaluation, which costs a
+        # full pass of allocation and zeroing per contribution and leaves
+        # the freed pages behind in the allocator.
+        sigma_scratch = None
+
         # Memory-efficient: prepare each contribution just before use,
         # then clean up its sigma_xsec immediately after all layers.
         for contrib in self.contribution_list:
             if contrib.sigma_xsec is None:
-                contrib.prepare(self, wngrid)
+                if sigma_scratch is None:
+                    sigma_scratch = np.zeros(
+                        shape=(total_layers, wngrid_size), dtype=tau_dtype
+                    )
+                else:
+                    sigma_scratch.fill(0.0)
+                contrib.prepare(self, wngrid, _out=sigma_scratch)
 
             for layer in range(total_layers):
                 self.debug("Computing layer %s", layer)

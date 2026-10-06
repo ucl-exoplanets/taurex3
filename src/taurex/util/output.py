@@ -340,11 +340,15 @@ def store_contributions(binner, model, output_size=OutputSize.heavy):  # noqa: C
 
 def _model_contribution(binner, model, output_size=OutputSize.heavy):  # noqa: C901
     """Yield stored dictionaries for the contribution(s) currently set."""
-    native_grid, contribs = model.model_contrib()
+    # Reuse the grid of the last evaluation. The contributions belong to the
+    # model that was just run, and evaluating them on the full native grid
+    # instead allocates every cross-section over all wavenumbers.
+    wngrid = getattr(model, "_last_wngrid", None)
+    native_grid, contribs = model.model_contrib(wngrid=wngrid)
     (
         native_grid,
         contribs_component,
-    ) = model.model_full_contrib()
+    ) = model.model_full_contrib(wngrid=wngrid)
 
     for (
         contrib_name,

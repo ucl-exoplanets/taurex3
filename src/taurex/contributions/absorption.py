@@ -312,12 +312,14 @@ class AbsorptionContribution(Contribution):
 
             yield gas, sigma_xsec
 
-    def prepare(self, model: ForwardModel, wngrid: npt.NDArray[np.float64]) -> None:
-        """Used to prepare the contribution for the calculation.
-
-        Called before the forward model performs the main optical depth
-        calculation. Default behaviour is to loop through :func:`prepare_each`
-        and sum all results into a single cross-section.
+    def prepare(
+        self,
+        model: ForwardModel,
+        wngrid: npt.NDArray[np.float64],
+        _out: t.Optional[npt.NDArray[np.float64]] = None,
+    ) -> None:
+        """Called before the forward model performs the main optical depth
+        calculation.
 
         Parameters
         ----------
@@ -326,6 +328,9 @@ class AbsorptionContribution(Contribution):
 
         wngrid: :obj:`array`
             Wavenumber grid
+
+        _out: :obj:`array`, optional
+            Pre-allocated zeroed buffer to accumulate the gases into.
         """
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
@@ -334,7 +339,7 @@ class AbsorptionContribution(Contribution):
         # so nothing has to be summed here. This keeps the peak at one
         # (nlayers, ngrid) array instead of one per gas plus the sum.
         self.debug("ABSORPTION VERSION")
-        for gas, sigma in self.prepare_each(model, wngrid):
+        for gas, sigma in self.prepare_each(model, wngrid, _out=_out):
             self.debug("Gas %s", gas)
             self.debug("Sigma %s", sigma)
         self.debug("Final sigma is %s", self.sigma_xsec)

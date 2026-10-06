@@ -669,12 +669,6 @@ def main():  # noqa: C901
         )
         binning = observation.create_binner()
 
-    # Handle outputs
-    if args.output_file:
-        # Output taurex data
-        with HDF5Output(args.output_file) as o:
-            model.write(o)
-
     optimizer = None
     solution = None
 
@@ -685,6 +679,13 @@ def main():  # noqa: C901
     # grid, which can use an order of magnitude more memory before the
     # retrieval even starts (issue #120).
     model.model(wngrid=wngrid)
+
+    # Handle outputs. Written after the warm-up so that the model is
+    # evaluated on the same clipped grid instead of the full native one.
+    if args.output_file:
+        # Output taurex data
+        with HDF5Output(args.output_file) as o:
+            model.write(o)
 
     # The model and opacities are now in place, so hand the (potentially
     # large) temporary working set of the warm-up back to the OS before
@@ -719,7 +720,7 @@ def main():  # noqa: C901
             optimizer.update_model(optimized)
             break
 
-    result = model.model()
+    result = model.model(wngrid=wngrid)
 
     if args.save_spectrum is not None:
         # with open(args.save_spectrum, 'w') as f:

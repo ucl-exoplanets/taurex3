@@ -300,18 +300,17 @@ def create_model(
     kwargs, has_kvar = get_keywordarg_dict(klass)
     log.debug(f"Model kwargs {kwargs}")
     log.debug(f"---------------{gas} {gas.activeGases}--------------")
-    if "planet" in kwargs:
-        kwargs["planet"] = planet
-    if "star" in kwargs:
-        kwargs["star"] = star
-    if "chemistry" in kwargs:
-        kwargs["chemistry"] = gas
-    if "temperature_profile" in kwargs:
-        kwargs["temperature_profile"] = temperature
-    if "pressure_profile" in kwargs:
-        kwargs["pressure_profile"] = pressure
-    if "observation" in kwargs:
-        kwargs["observation"] = observation
+    model_components = {
+        "planet": planet,
+        "star": star,
+        "chemistry": gas,
+        "temperature_profile": temperature,
+        "pressure_profile": pressure,
+        "observation": observation,
+    }
+    for name, component in model_components.items():
+        if name in kwargs:
+            kwargs[name] = component
     log.debug(f"New Model kwargs {kwargs}")
     log.debug("Creating model---------------")
 

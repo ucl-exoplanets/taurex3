@@ -187,10 +187,10 @@ class ParameterParser(Logger):
         """Apply the same scalar conversions to file and in-memory input."""
         if expand_environment:
             self._raw_config.walk(_expand_environment)
-        self.debug("Raw Config is {}".format(self._raw_config))
+        self.debug(f"Raw Config is {self._raw_config}")
         self._raw_config.walk(self.transform)
         config = self._raw_config.dict()
-        self.debug("Config is {}".format(config))
+        self.debug(f"Config is {config}")
 
     def generate_lightcurve(self):
         """Generate lightcurve model from input file."""

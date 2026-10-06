@@ -4,8 +4,8 @@ Global:
 Chemistry:
   chemistry_type: taurex
   fill_gases:
-  - H2
-  - He
+    - H2
+    - He
   ratio: 4.8962e-2
   CO2:
     gas_type: constant

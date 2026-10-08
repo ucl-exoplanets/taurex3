@@ -33,6 +33,9 @@ if t.TYPE_CHECKING:
     _BaseInstrument = Instrument
     _BaseGas = Gas
 
+    from taurex.optimizer.optimizer import DerivedParam
+    from taurex.optimizer.optimizer import FitParam
+
 else:
     _BaseStar = object
     _BaseTemperatureProfile = object
@@ -224,6 +227,29 @@ class OptimizerMixin(Mixin[Optimizer], _BaseOptimizer):
     """Enhances :class:`~taurex.optimizers.Optimizer`."""
 
     KLASS_COMPAT = Optimizer
+
+    @property
+    def fitting_parameters(self) -> t.List["FitParam"]:
+        """Returns the list of fitting parameters.
+
+        :class:`~taurex.data.fittable.Fittable` defines a
+        ``fitting_parameters`` *method* returning a dictionary which, being
+        earlier in the MRO, would otherwise shadow the property of the same
+        name on ``Optimizer``. Skip ``Fittable`` and defer to the enhanced
+        class (see `issue #65
+        <https://github.com/ucl-exoplanets/taurex3/issues/65>`_).
+
+        """
+        return super(Fittable, self).fitting_parameters
+
+    @property
+    def derived_parameters(self) -> t.List["DerivedParam"]:
+        """Returns the list of derived parameters.
+
+        See :meth:`fitting_parameters`.
+
+        """
+        return super(Fittable, self).derived_parameters
 
 
 class GasMixin(Mixin[Gas], _BaseGas):

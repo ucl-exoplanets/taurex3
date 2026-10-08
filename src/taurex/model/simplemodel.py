@@ -123,6 +123,11 @@ class SimpleForwardModel(ForwardModel):
 
         self._native_grid = None
 
+        # Grid of the most recent :func:`model` call, kept so that later
+        # re-evaluations (e.g. when writing the output) can reuse it instead
+        # of falling back to the full native grid.
+        self._last_wngrid = None
+
         if contributions:
             for contrib in contributions:
                 self.add_contribution(contrib)
@@ -508,6 +513,7 @@ class SimpleForwardModel(ForwardModel):
             Empty
         """
         wngrid = self._normalize_wngrid(wngrid)
+        self._last_wngrid = wngrid
 
         if not self.built:
             self.build()
@@ -774,8 +780,11 @@ class SimpleForwardModel(ForwardModel):
         :class:`~taurex.output.output.OutputGroup`
 
         """
-        # Run a model if needed
-        self.model()
+        # Run a model if needed, reusing the grid of the last evaluation.
+        # Evaluating on the full native grid instead allocates the optical
+        # depth and per-contribution cross-sections over every wavenumber
+        # instead of over the clipped grid the retrieval actually uses.
+        self.model(wngrid=self._last_wngrid)
 
         model = super().write(output)
 

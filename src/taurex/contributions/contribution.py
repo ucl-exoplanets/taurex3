@@ -361,7 +361,12 @@ class Contribution(Fittable, Logger, Writeable, Citable):
         """
         raise NotImplementedError
 
-    def prepare(self, model: ForwardModel, wngrid: npt.NDArray[np.float64]) -> None:
+    def prepare(
+        self,
+        model: ForwardModel,
+        wngrid: npt.NDArray[np.float64],
+        _out: t.Optional[npt.NDArray[np.float64]] = None,
+    ) -> None:
         """Used to prepare the contribution for the calculation.
 
         Called before the forward model performs the main optical depth
@@ -375,11 +380,17 @@ class Contribution(Fittable, Logger, Writeable, Citable):
 
         wngrid: :obj:`array`
             Wavenumber grid
+
+        _out: :obj:`array`, optional
+            Pre-allocated buffer to sum the components into. When given it is
+            written in place, so that a single ``(nlayers, ngrid)`` array is
+            live at a time regardless of the number of components. The caller
+            must pass a zeroed buffer.
         """
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
-        sigma_xsec = None
+        sigma_xsec = _out
 
         for gas, sigma in self.prepare_each(model, wngrid):
             self.debug("Gas %s", gas)

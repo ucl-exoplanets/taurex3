@@ -181,11 +181,24 @@ class TransmissionModel(OneDForwardModel):
         tau_dtype = get_float_dtype()
         tau = np.zeros(shape=(total_layers, wngrid_size), dtype=tau_dtype)
 
+        # One scratch buffer for the cross-sections, reused by every
+        # contribution in turn. Each contribution would otherwise allocate
+        # its own (nlayers, ngrid) array on every evaluation, which costs a
+        # full pass of allocation and zeroing per contribution and leaves
+        # the freed pages behind in the allocator.
+        sigma_scratch = None
+
         # Memory-efficient: prepare each contribution just before use,
         # then clean up its sigma_xsec immediately after all layers.
         for contrib in self.contribution_list:
             if contrib.sigma_xsec is None:
-                contrib.prepare(self, wngrid)
+                if sigma_scratch is None:
+                    sigma_scratch = np.zeros(
+                        shape=(total_layers, wngrid_size), dtype=tau_dtype
+                    )
+                else:
+                    sigma_scratch.fill(0.0)
+                contrib.prepare(self, wngrid, _out=sigma_scratch)
 
             for layer in range(total_layers):
                 self.debug("Computing layer %s", layer)
@@ -214,12 +227,15 @@ class TransmissionModel(OneDForwardModel):
         """Compute final absorption and optical depth."""
         # In-place exp to avoid temporary array allocation
         np.exp(-tau, out=tau)
-        ap = self.altitudeProfile[:, None]
         pradius = self._planet.fullRadius
         sradius = self._star.radius
-        _dz = dz[:, None]
+        # Per-layer integration weights. Keeping these 1D lets the integral
+        # below avoid the full (nlayers, ngrid) temporaries that broadcasting
+        # ``(pradius + ap) * (1 - tau) * _dz`` would allocate.
+        weights = (pradius + self.altitudeProfile) * dz * 2.0
 
-        integral = np.sum((pradius + ap) * (1.0 - tau) * _dz * 2.0, axis=0)
+        # sum_i w_i * (1 - tau_ij) == sum_i w_i - sum_i w_i * tau_ij
+        integral = weights.sum() - np.einsum("i,ij->j", weights, tau)
         return ((pradius**2.0) + integral) / (sradius**2), tau
 
     @classmethod

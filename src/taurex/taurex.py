@@ -669,16 +669,31 @@ def main():  # noqa: C901
         )
         binning = observation.create_binner()
 
-    # Handle outputs
+    optimizer = None
+    solution = None
+
+    # Warm-up evaluation. When a spectral grid (e.g. the observed grid) is
+    # available, use it so the native grid is clipped exactly as it will be
+    # during the retrieval. Evaluating on the full native grid instead
+    # allocates tau and the per-contribution cross-sections over the whole
+    # grid, which can use an order of magnitude more memory before the
+    # retrieval even starts (issue #120).
+    model.model(wngrid=wngrid)
+
+    # Handle outputs. Written after the warm-up so that the model is
+    # evaluated on the same clipped grid instead of the full native one.
     if args.output_file:
         # Output taurex data
         with HDF5Output(args.output_file) as o:
             model.write(o)
 
-    optimizer = None
-    solution = None
+    # The model and opacities are now in place, so hand the (potentially
+    # large) temporary working set of the warm-up back to the OS before
+    # the retrieval allocates its own.
+    from taurex.util.memory import trim_memory
 
-    model.model()
+    trim_memory()
+
     if args.retrieval is True:
         import time
 
@@ -705,7 +720,7 @@ def main():  # noqa: C901
             optimizer.update_model(optimized)
             break
 
-    result = model.model()
+    result = model.model(wngrid=wngrid)
 
     if args.save_spectrum is not None:
         # with open(args.save_spectrum, 'w') as f:

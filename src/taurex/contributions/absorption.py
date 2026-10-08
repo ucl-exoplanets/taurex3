@@ -318,8 +318,7 @@ class AbsorptionContribution(Contribution):
         wngrid: npt.NDArray[np.float64],
         _out: t.Optional[npt.NDArray[np.float64]] = None,
     ) -> None:
-        """Called before the forward model performs the main optical depth
-        calculation.
+        """Called before the forward model performs the main optical depth calculation.
 
         Parameters
         ----------

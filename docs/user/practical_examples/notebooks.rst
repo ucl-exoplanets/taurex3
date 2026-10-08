@@ -25,3 +25,4 @@ use these notebooks to dig deeper into the same workflow.
     Spectral binning <../../examples/09_binning>
     Fitting parameters and retrievals <../../examples/10_retrievals>
     Multimodel example <../../examples/11_multimodel>
+    Instrument systematics <../../examples/12_instruments>

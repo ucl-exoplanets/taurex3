@@ -23,3 +23,4 @@ The notebook source files live in ``examples/notebooks``.
     Spectral binning <09_binning>
     Fitting parameters and retrievals <10_retrievals>
     Multimodel example <11_multimodel>
+    Instrument systematics <12_instruments>

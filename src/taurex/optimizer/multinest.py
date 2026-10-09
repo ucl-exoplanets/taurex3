@@ -94,6 +94,56 @@ class NestOutputType(t.TypedDict):
     solutions: t.Dict[str, NestSolutionOutput]
 
 
+def read_mode_chains(
+    path: PathLike,
+) -> t.Tuple[t.List[npt.NDArray[np.float64]], t.List[npt.NDArray[np.float64]]]:
+    """Reads the posterior samples of each mode from a multinest output file.
+
+    Multinest stores the posterior samples of every mode it found in a single
+    file (``<prefix>post_separate.dat``), separating the samples of the modes
+    with blank lines. Neither the number of blank lines used as a separator nor
+    the number of modes is guaranteed, and a mode without usable samples only
+    writes separators. Modes are therefore detected as groups of samples
+    delimited by blank lines instead of counting blank lines, and empty groups
+    are ignored.
+
+    Parameters
+    ----------
+    path:
+        Path of the file to read
+
+    Returns
+    -------
+    tuple
+        Samples and weights of each mode found in the file.
+
+    """
+    modes: t.List[t.Tuple[t.List[t.List[float]], t.List[float]]] = []
+    mode_samples: t.List[t.List[float]] = []
+    mode_weights: t.List[float] = []
+
+    with open(path) as f:
+        for line in f:
+            fields = line.split()
+            # Blank lines separate the samples of two modes
+            if not fields:
+                if mode_samples:
+                    modes.append((mode_samples, mode_weights))
+                    mode_samples, mode_weights = [], []
+                continue
+            sample = [float(x) for x in fields[2:]]
+            if len(sample) > 0:
+                mode_samples.append(sample)
+                mode_weights.append(float(fields[0]))
+        if mode_samples:
+            modes.append((mode_samples, mode_weights))
+
+    return (
+        [np.asarray(samples, dtype=np.float64) for samples, _ in modes],
+        [np.asarray(weights, dtype=np.float64) for _, weights in modes],
+    )
+
+
 class MultiNestOptimizer(Optimizer):
     """An optimizer that uses the MultiNest library."""
 
@@ -105,7 +155,7 @@ class MultiNestOptimizer(Optimizer):
         sampling_efficiency: t.Optional[t.Literal["parameter"]] = "parameter",
         num_live_points: t.Optional[int] = 1500,
         max_iterations: t.Optional[int] = 0,
-        search_multi_modes: t.Optional[bool] = True,
+        search_multi_modes: t.Optional[bool] = False,
         num_params_cluster: t.Optional[int] = None,
         maximum_modes: t.Optional[int] = 100,
         constant_efficiency_mode: t.Optional[bool] = False,
@@ -136,7 +186,7 @@ class MultiNestOptimizer(Optimizer):
         max_iterations:
             Maximum no. of iterations (0=inf)
         search_multi_modes:
-            Search for multiple modes
+            Search for multiple modes (by default False)
         num_params_cluster:
             Parameters on which to cluster
             e.g. if nclust_par = 3, it will cluster on the first 3
@@ -361,7 +411,6 @@ class MultiNestOptimizer(Optimizer):
 
         self.warning("Store the multinest results")
         nest_out = {"solutions": {}}
-        data = np.loadtxt(self.dir_multinest / f"{self.multinest_prefix}.txt")
 
         nest_analyser = pymultinest.Analyzer(
             n_params=len(self.fitting_parameters),
@@ -428,79 +477,68 @@ class MultiNestOptimizer(Optimizer):
 
             nest_out["NEST_stats"]["modes"] = [mode]
 
-        modes = []
-        modes_weights = []
-        chains = []
-        chains_weights = []
-
         if self.multimodes:
             # separate modes. get individual samples for each mode
 
             # get parameter values and sample probability (=weight)
             # for each mode
-            with open(
-                os.path.join(
-                    self.dir_multinest / f"{self.multinest_prefix}post_separate.dat",
-                )
-            ) as f:
-                lines = f.readlines()
-                for idx, line in enumerate(lines):
-                    if idx > 2:  # skip the first two lines
-                        if lines[idx - 1] == "\n" and lines[idx - 2] == "\n":
-                            modes.append(chains)
-                            modes_weights.append(chains_weights)
-                            chains = []
-                            chains_weights = []
-                    chain = [float(x) for x in line.split()[2:]]
-                    if len(chain) > 0:
-                        chains.append(chain)
-                        chains_weights.append(float(line.split()[0]))
-                modes.append(chains)
-                modes_weights.append(chains_weights)
-            modes_array = []
-            for mode in modes:
-                mode_array = np.zeros((len(mode), len(mode[0])))
-                for idx, line in enumerate(mode):
-                    mode_array[idx, :] = line
-                modes_array.append(mode_array)
+            modes_array, modes_weights = read_mode_chains(
+                self.dir_multinest / f"{self.multinest_prefix}post_separate.dat"
+            )
         else:
             # not running in multimode. Get chains directly from file
             # 1-.txt
+            data = np.loadtxt(self.dir_multinest / f"{self.multinest_prefix}.txt")
             modes_array = [data[:, 2:]]
-            chains_weights = [data[:, 0]]
-            modes_weights.append(chains_weights[0])
-            modes = [0]
+            modes_weights = [data[:, 0]]
 
-        for nmode in range(len(modes)):
+        # Multinest reports the statistics of the modes it found while the
+        # samples of each mode are stored separately, so both are matched by
+        # index. A mode without usable samples is only reported by the
+        # statistics, so only the modes with both are stored as solutions.
+        n_modes = min(len(modes_array), len(nest_stats["modes"]))
+        if len(modes_array) != len(nest_stats["modes"]):
+            self.warning(
+                "Multinest found %s mode(s) but stored samples for %s mode(s), "
+                "storing the %s mode(s) with both",
+                len(nest_stats["modes"]),
+                len(modes_array),
+                n_modes,
+            )
+
+        for nmode in range(n_modes):
             self.debug(f"Nmode: {nmode}")
+
+            tracedata = modes_array[nmode]
+            weights = modes_weights[nmode]
+            mode_stats = nest_stats["modes"][nmode]
 
             mydict = {
                 "type": "nest",
                 "local_logE": (
-                    nest_out["NEST_stats"]["modes"][0]["local log-evidence"],
-                    nest_out["NEST_stats"]["modes"][0]["local log-evidence error"],
+                    mode_stats["local log-evidence"],
+                    mode_stats["local log-evidence error"],
                 ),
-                "weights": np.asarray(modes_weights[nmode]),
-                "tracedata": modes_array[nmode],
+                "weights": weights,
+                "tracedata": tracedata,
                 "fit_params": {},
             }
 
-            nest_stats
             for idx, param_name in enumerate(self.fit_names):
-                trace = modes_array[nmode][:, idx]
+                trace = tracedata[:, idx]
                 q_16, q_50, q_84 = quantile_corner(
                     trace,
                     [0.16, 0.5, 0.84],
-                    weights=np.asarray(modes_weights[nmode]),
+                    weights=weights,
                 )
 
                 mydict["fit_params"][param_name] = {
                     "value": q_50,
                     "sigma_m": q_50 - q_16,
                     "sigma_p": q_84 - q_50,
-                    "nest_map": nest_stats["modes"][nmode]["maximum a posterior"][idx],
-                    "mean": nest_stats["modes"][nmode]["mean"][idx],
-                    "nest_sigma": nest_stats["modes"][nmode]["sigma"][idx],
+                    "nest_map": mode_stats["maximum a posterior"][idx],
+                    "mean": mode_stats["mean"][idx],
+                    "nest_sigma": mode_stats["sigma"][idx],
                     "trace": trace,
                 }
 

@@ -283,26 +283,39 @@ def create_model(
         config, ForwardModel, alt_type="model_type"
     )
 
+    config = dict(config)
+    regional_kwargs = {}
+    if "regions" in config:
+        from taurex.model.multimodel import MultiParameterTransitModel
+
+        if klass is not MultiParameterTransitModel:
+            raise ValueError("Model.regions is only supported for multi_transit")
+        if "parfiles" in config:
+            raise ValueError("Model.regions and Model.parfiles cannot be combined")
+        regional_kwargs["regions"] = config.pop("regions")
+        if regional_kwargs["regions"] is None:
+            raise ValueError("Model.regions must be a non-empty mapping")
+
     log.debug(f"Chosen_model is {klass}")
     kwargs, has_kvar = get_keywordarg_dict(klass)
     log.debug(f"Model kwargs {kwargs}")
     log.debug(f"---------------{gas} {gas.activeGases}--------------")
-    if "planet" in kwargs:
-        kwargs["planet"] = planet
-    if "star" in kwargs:
-        kwargs["star"] = star
-    if "chemistry" in kwargs:
-        kwargs["chemistry"] = gas
-    if "temperature_profile" in kwargs:
-        kwargs["temperature_profile"] = temperature
-    if "pressure_profile" in kwargs:
-        kwargs["pressure_profile"] = pressure
-    if "observation" in kwargs:
-        kwargs["observation"] = observation
+    model_components = {
+        "planet": planet,
+        "star": star,
+        "chemistry": gas,
+        "temperature_profile": temperature,
+        "pressure_profile": pressure,
+        "observation": observation,
+    }
+    for name, component in model_components.items():
+        if name in kwargs:
+            kwargs[name] = component
     log.debug(f"New Model kwargs {kwargs}")
     log.debug("Creating model---------------")
 
     kwargs.update({k: v for k, v in config.items() if not isinstance(v, dict)})
+    kwargs.update(regional_kwargs)
     obj = klass(**kwargs)
 
     contribs = generate_contributions(config)

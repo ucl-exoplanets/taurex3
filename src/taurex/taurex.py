@@ -418,7 +418,7 @@ def main():  # noqa: C901
         "--input",
         dest="input_file",
         type=str,
-        help="Input par file to pass",
+        help="Input parameter file (.par, .yaml or .yml)",
     )
 
     parser.add_argument(

@@ -136,6 +136,149 @@ The same pattern applies to ``model_type = multi_eclipse`` and
 ``model_type = multi_directimage``.
 
 
+YAML files
+----------
+
+Files ending in ``.yaml`` or ``.yml`` use YAML syntax with the same section names,
+parameters and model-building behavior as ``.par`` files. Existing ``.par``
+files continue to work unchanged. For example:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1500
+
+    Chemistry:
+      chemistry_type: taurex
+      fill_gases: [H2, He]
+      ratio: 0.17
+      H2O:
+        gas_type: constant
+        mix_ratio: 1e-4
+
+    Model:
+      model_type: transmission
+      Absorption: {}
+      CIA:
+        cia_pairs: [H2-H2, H2-He]
+
+    Fitting:
+      T:fit: true
+      T:bounds: [1000, 2000]
+      T:prior: 'Uniform(bounds=(1000, 2000))'
+
+Use indentation for subsections, YAML sequences for lists, and ``{}`` for empty
+sections such as ``Absorption``. Section and parameter names retain their case.
+Scalar values use the existing TauREx conversion rules, including scientific
+notation and boolean strings. Quoting a numeric value does not disable this
+conversion. Keys such as the molecule name ``NO`` remain strings. Duplicate
+keys are rejected.
+
+The equivalent of ``examples/parfiles/quickstart.par`` is provided in
+``examples/parfiles/quickstart.yaml``. Run it with::
+
+    taurex -i examples/parfiles/quickstart.yaml --plot
+
+Set the opacity paths first, as for the original quickstart. Relative paths are
+still resolved from the working directory, not the input file's directory.
+
+Multimodel configurations can reference separate regional files. These can
+be either format, including a mixture of YAML and ``.par``:
+
+.. code-block:: yaml
+
+    Model:
+      model_type: multi_transit
+      parfiles: [east.yaml, west.par]
+      fractions: [0.5, 0.5]
+
+For ``multi_transit``, you can instead place the regional configurations in the
+same file using ``Model.regions``:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1000
+    Chemistry:
+      chemistry_type: taurex
+    Model:
+      model_type: multi_transit
+      fractions: [0.5, 0.5]
+      regions:
+        m1:
+          Model:
+            Absorption: {}
+            Rayleigh: {}
+        m2:
+          Temperature:
+            profile_type: isothermal
+            T: 800
+          Model:
+            Absorption: {}
+            Rayleigh: {}
+
+Region keys must be ``m1``, ``m2``, etc., consecutive and in that order. This order
+matches ``fractions`` and existing regional fitting names such as
+``m1_Rmean_share``. ``regions`` must be non-empty and cannot appear together with
+``parfiles``. Other model types do not yet support inline regions.
+
+Each region may contain ``Temperature``, ``Chemistry``, ``Pressure`` and ``Model``.
+Planet and star are shared from the main configuration. An omitted regional
+profile shares the main profile instance; an explicit profile section creates a
+separate object using that section and the class defaults, without merging fields
+from the main section. Other regional sections are rejected.
+
+A regional ``Model`` accepts contribution sections only. If supplied, its
+contributions replace the entire main contribution list and are instantiated
+separately for each region. If omitted or empty, the region falls back to the main
+contributions, sharing their instances as with regional files. Nested multimodels
+and regional model options are not supported. Relative data paths still resolve
+from the working directory.
+
+This support does not introduce explicit shared-object references.
+
+Environment variables
+---------------------
+
+Both YAML and PAR files support ``$NAME`` and ``${NAME}`` in parameter values.
+This lets users share a configuration while keeping data paths local:
+
+.. code-block:: yaml
+
+    Global:
+      xsec_path: ${TAUREX_DATA}/xsec
+      cia_path: ${TAUREX_DATA}/cia
+
+Set the variable in the shell before starting TauREx, for example:
+
+.. code-block:: bash
+
+    export TAUREX_DATA="/data/taurex"
+    taurex -i input.yaml --retrieval
+
+Each user can choose a different data directory without editing the shared
+configuration. The data itself must already be available there.
+
+Expansion applies to string values and list elements at all nesting levels,
+including inline regions and separately loaded regional files. Section names
+and parameter keys are not expanded. Variable names use letters, digits and
+underscores and cannot begin with a digit.
+
+A referenced variable that is not set raises an error naming the variable and
+parameter. An explicitly empty variable expands to an empty string. Use ``$$``
+for a literal dollar sign, for example ``$$HOME`` to obtain the text ``$HOME``.
+Quotes alone do not disable expansion.
+
+Expansion happens once, after parsing the file and before the existing numeric
+and boolean conversions. For example, a variable containing ``1200`` can supply
+a temperature. Replacement text is not parsed as YAML or split into list items,
+and references inside replacement text are not expanded again. Shell commands,
+shell default expressions such as ``${NAME:-default}``, and ``~`` expansion are
+not supported. Relative paths remain relative to the working directory.
+
+
 Mixins
 ------
 

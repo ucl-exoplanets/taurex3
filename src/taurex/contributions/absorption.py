@@ -246,12 +246,13 @@ class AbsorptionContribution(Contribution):
             Wavenumber grid
 
         _out : npt.NDArray[np.float64], optional
-            Pre-allocated output buffer to reuse (avoids allocation per gas).
+            Pre-allocated accumulator to sum the gases into. When ``None``
+            a single accumulator is allocated on the first gas.
 
         Yields
         ------
         t.Generator[t.Tuple[str, npt.NDArray[np.float64]], None, None]
-            Gas name and opacity
+            Gas name and the running sum of the opacities so far
 
         """
         self.debug("Preparing model with %s", wngrid.shape)
@@ -263,10 +264,14 @@ class AbsorptionContribution(Contribution):
             self._opacity_cache = KTableCache()
         else:
             self._opacity_cache = OpacityCache()
-        sigma_xsec = None
         self.weights = None
 
         dtype = get_float_dtype()
+
+        # All gases are summed into one accumulator so only a single
+        # (nlayers, ngrid) array is ever live, regardless of how many
+        # molecules are active.
+        sigma_xsec = _out
 
         for gas in model.chemistry.activeGases:
             # self._total_contrib[...] =0.0
@@ -278,15 +283,16 @@ class AbsorptionContribution(Contribution):
             if self._use_ktables and self.weights is None:
                 self.weights = xsec.weights
 
-            if _out is not None:
-                sigma_xsec = _out
-            elif self._use_ktables:
-                sigma_xsec = np.empty(
-                    shape=(self._nlayers, self._ngrid, len(self.weights)),
-                    dtype=dtype,
-                )
-            else:
-                sigma_xsec = np.empty(shape=(self._nlayers, self._ngrid), dtype=dtype)
+            if sigma_xsec is None:
+                if self._use_ktables:
+                    sigma_xsec = np.zeros(
+                        shape=(self._nlayers, self._ngrid, len(self.weights)),
+                        dtype=dtype,
+                    )
+                else:
+                    sigma_xsec = np.zeros(
+                        shape=(self._nlayers, self._ngrid), dtype=dtype
+                    )
 
             for idx_layer, tp in enumerate(
                 zip(model.temperatureProfile, model.pressureProfile, strict=True)
@@ -296,7 +302,7 @@ class AbsorptionContribution(Contribution):
                 temperature, pressure = tp
                 # print(gas,self._opacity_cache[gas].opacity(
                 #     temperature,pressure,wngrid),gas_mix[idx_layer])
-                sigma_xsec[idx_layer] = (
+                sigma_xsec[idx_layer] += (
                     xsec.opacity(temperature, pressure, wngrid) * gas_mix[idx_layer]
                 )
 
@@ -306,12 +312,13 @@ class AbsorptionContribution(Contribution):
 
             yield gas, sigma_xsec
 
-    def prepare(self, model: ForwardModel, wngrid: npt.NDArray[np.float64]) -> None:
-        """Used to prepare the contribution for the calculation.
-
-        Called before the forward model performs the main optical depth
-        calculation. Default behaviour is to loop through :func:`prepare_each`
-        and sum all results into a single cross-section.
+    def prepare(
+        self,
+        model: ForwardModel,
+        wngrid: npt.NDArray[np.float64],
+        _out: t.Optional[npt.NDArray[np.float64]] = None,
+    ) -> None:
+        """Called before the forward model performs the main optical depth calculation.
 
         Parameters
         ----------
@@ -320,26 +327,20 @@ class AbsorptionContribution(Contribution):
 
         wngrid: :obj:`array`
             Wavenumber grid
+
+        _out: :obj:`array`, optional
+            Pre-allocated zeroed buffer to accumulate the gases into.
         """
         self._ngrid = wngrid.shape[0]
         self._nlayers = model.nLayers
 
-        sigma_xsec = None
-        # Pre-allocate one reusable temp buffer for per-gas computation,
-        # avoiding repeated allocation/deallocation in parallel MPI contexts.
-        _temp = None
+        # :func:`prepare_each` accumulates every gas into a single buffer,
+        # so nothing has to be summed here. This keeps the peak at one
+        # (nlayers, ngrid) array instead of one per gas plus the sum.
         self.debug("ABSORPTION VERSION")
-        for gas, sigma in self.prepare_each(model, wngrid, _out=_temp):
+        for gas, sigma in self.prepare_each(model, wngrid, _out=_out):
             self.debug("Gas %s", gas)
             self.debug("Sigma %s", sigma)
-            if sigma_xsec is None:
-                sigma_xsec = sigma
-                # Allocate the reusable temp buffer matching sigma_xsec shape
-                _temp = np.empty_like(sigma_xsec)
-            else:
-                np.add(sigma_xsec, sigma, out=sigma_xsec)
-            self.sigma_xsec = None
-        self.sigma_xsec = sigma_xsec
         self.debug("Final sigma is %s", self.sigma_xsec)
         self.info("Done")
 

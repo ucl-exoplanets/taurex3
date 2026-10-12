@@ -154,8 +154,12 @@ class FlatMieContribution(Contribution):
         sigma_xsec = np.zeros(
             shape=(self._nlayers, wngrid.shape[0]), dtype=get_float_dtype()
         )
-        sigma_xsec[save_start : save_stop + 1] = weight[:, None] * self.mieMixing
-
+        # Multiply straight into the destination rows instead of letting the
+        # (ncloud_layers, 1) -> (ncloud_layers, ngrid) broadcast materialise a
+        # full temporary first.
+        np.multiply(
+            weight[:, None], self.mieMixing, out=sigma_xsec[save_start : save_stop + 1]
+        )
         sigma_xsec = sigma_xsec[::-1]
 
         self.sigma_xsec = sigma_xsec

@@ -157,7 +157,11 @@ class HDF5Opacity(InterpolatingOpacity):
             )
 
         if use_shared:
-            xsec_arr = self._spec_dict["xsecarr"][()] if sh_root else None
+            # Pass the on-disk dataset on the shared-memory root instead of
+            # materialising it first. ``allocate_as_shared`` streams it into
+            # the shared segment in chunks, so the root rank never holds a
+            # private copy of the whole cross-section array.
+            xsec_arr = self._spec_dict["xsecarr"] if sh_root else None
             self._xsec_grid = allocate_as_shared(
                 # Dont copy the array until shared memory
                 # is allocated. Then copy it to shared memory

@@ -308,17 +308,17 @@ class ClassFactory(Singleton):
     def _collect_opacity(self, module):
         from taurex.opacity import Opacity
 
-        return [c for c in self._collect_classes(module, Opacity)]
+        return [*self._collect_classes(module, Opacity)]
 
     def _collect_ktables(self, module):
         from taurex.opacity.ktables import KTable
 
-        return [c for c in self._collect_classes(module, KTable)]
+        return [*self._collect_classes(module, KTable)]
 
     def _collect_observation(self, module):
         from taurex.spectrum import BaseSpectrum
 
-        return [c for c in self._collect_classes(module, BaseSpectrum)]
+        return [*self._collect_classes(module, BaseSpectrum)]
 
     def _collect_priors(self, module):
         from taurex.core.priors import Prior

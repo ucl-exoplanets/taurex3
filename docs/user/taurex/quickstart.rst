@@ -30,8 +30,8 @@ We can do this by defining an ``xsec_path`` for cross sections and ``cia_path`` 
 ``[Global]`` header in our ``quickstart.par`` files like so::
 
     [Global]
-    xsec_path = /path/to/xsec
-    cia_path = /path/to/cia
+    xsec_path = /path/to/xsec/xsec_sampled_R15000_0.3-15
+    cia_path = /path/to/cia/HITRAN
 
 
 Forward Model

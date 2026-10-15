@@ -239,7 +239,7 @@ class InstrumentMixin(Mixin[Instrument], _BaseInstrument):
 
 
 def determine_mixin_args(
-    klasses: t.Sequence[t.Union[t.Type[T], t.Type[M]]]
+    klasses: t.Sequence[t.Union[t.Type[T], t.Type[M]]],
 ) -> t.Tuple[t.Dict[str, t.Any], bool]:
     """Determine all arguments for a mixin class.
 

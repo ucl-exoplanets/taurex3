@@ -14,6 +14,11 @@ Including a noise model in the TauREx3 input makes the output file capable
 of being used as an observation in the retrieval. It is also capable
 of fitting itself (See :ref:`taurexspectrum`)
 
+Instrument models consume the active binner. In practice this means response
+functions, per-channel broadening profiles, and wavelength shifts should be
+configured on ``[Binning]`` when they are part of the instrument transfer
+function rather than the atmospheric model itself.
+
 The instrument is defined by the ``instrument`` variable:
     - ``snr``
         - Signal-to-noise ratio instrument

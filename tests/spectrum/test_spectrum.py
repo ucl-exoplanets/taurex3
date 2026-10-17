@@ -296,7 +296,9 @@ class OffsetSpectraContTest(unittest.TestCase):
 
         spectrum = OffsetSpectra(path_spectra=[first_file, second_file])
 
-        self.assertIsInstance(spectrum.create_binner(), FluxBinner)
+        wn = np.sort(10000.0 / np.linspace(0.9, 2.5, 5000))
+        binned = spectrum.create_binner().bindown(wn, 10000.0 / wn)[1]
+        np.testing.assert_allclose(binned, spectrum.wavelengthGrid, rtol=1e-3)
 
         shifted_binner = spectrum.create_binner(
             broadening_type="none", wlshift=[0.01, -0.02]

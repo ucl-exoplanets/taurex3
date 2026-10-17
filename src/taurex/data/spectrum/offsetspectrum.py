@@ -11,6 +11,7 @@ from taurex.util import compute_bin_edges
 from taurex.util import wnwidth_to_wlwidth
 
 from .spectrum import BaseSpectrum
+from taurex.binning.fluxbinnerconv import lsf_mode
 
 
 class _OffsetSpectrumBase(BaseSpectrum):
@@ -23,6 +24,7 @@ class _OffsetSpectrumBase(BaseSpectrum):
         slopes: t.Optional[t.Sequence[float]] = None,
         error_scale: t.Optional[t.Sequence[float]] = None,
         slope_type: t.Optional[str] = "linear",
+        wlshift: t.Optional[t.Union[float, t.Sequence[float]]] = None,
     ) -> None:
         super().__init__(self.__class__.__name__)
 
@@ -31,6 +33,10 @@ class _OffsetSpectrumBase(BaseSpectrum):
         self.offsets = self._normalize_parameter(offsets, 0.0, "offsets")
         self.slopes = self._normalize_parameter(slopes, 0.0, "slopes")
         self.escale = self._normalize_parameter(error_scale, 1.0, "error_scale")
+        if wlshift is None or np.isscalar(wlshift):
+            self.wlshift = [float(wlshift or 0.0)] * len(self.path_spectra)
+        else:
+            self.wlshift = self._normalize_parameter(wlshift, 0.0, "wlshift")
 
         self._raw = [self._load_spectrum(path) for path in self.path_spectra]
         self._raw = [self._sort_spectrum(spectrum) for spectrum in self._raw]
@@ -44,6 +50,7 @@ class _OffsetSpectrumBase(BaseSpectrum):
         self._process_spectra()
         self._obs_spectrum = self._combine_raw_spectra()
         self.generate_offset_fitting_params()
+        self.generate_wlshift_fitting_params()
 
     def _normalize_parameter(
         self,
@@ -117,8 +124,10 @@ class _OffsetSpectrumBase(BaseSpectrum):
 
     @property
     def wavelengthGrid(self) -> npt.NDArray[np.float64]:  # noqa: N802
-        """Wavelength grid in microns."""
-        return self.rawData[:, 0]
+        """Wavelength grid in microns, corrected by each spectrum's ``WLShift_i``."""
+        return np.concatenate(
+            [s[:, 0] + shift for s, shift in zip(self._raw, self.wlshift, strict=True)]
+        )
 
     @property
     def binEdges(self) -> npt.NDArray[np.float64]:  # noqa: N802
@@ -220,17 +229,58 @@ class _OffsetSpectrumBase(BaseSpectrum):
                 bounds,
             )
 
-    def generate_broadening_fitting_params(self, order):
-        """Create fittable polynomial coefficients for the response function."""
-        resolution_guess = 15000.0
-        calibrated = bool(self._broadening_profiles)
-        self.broadening_coeffs = [np.zeros(order + 1) for _ in self._raw]
-        if not calibrated:
-            for coeffs in self.broadening_coeffs:
-                coeffs[0] = np.log(resolution_guess)
+    def generate_wlshift_fitting_params(self) -> None:
+        """Create a fittable wavelength shift (microns) for each spectrum."""
 
-        for index in range(len(self.broadening_coeffs)):
-            for k in range(order + 1):
+        # we can take twice the bin width.
+        self._wlshift_bounds = [2.0 * float(np.median(w)) for w in self._raw_bin_widths]
+        for index, bound in enumerate(self._wlshift_bounds):
+
+            def read_shift(self, index=index):
+                return self.wlshift[index]
+
+            def write_shift(self, value, index=index):
+                self.wlshift[index] = value
+
+            self.add_fittable_param(
+                f"WLShift_{index + 1}",
+                rf"$\Delta\lambda_{{{index + 1}}}$",
+                read_shift,
+                write_shift,
+                "linear",
+                False,
+                (-bound, bound),
+            )
+
+    def generate_broadening_fitting_params(self, order):
+        """Create fittable polynomial coefficients for the response function.
+
+        ``order`` is an int or one int per spectrum (negative: not fitted).
+        Spectra with a file get departures, ``functional`` ones get log R,
+        ``none`` ones get no parameter.
+        """
+        resolution_guess = 15000.0
+        count = len(self._raw)
+        orders = list(order) if isinstance(order, (list, tuple)) else [order] * count
+        if self._broadening_profiles:
+            modes = [lsf_mode(entry) for entry in self._broadening_profiles]
+        else:
+            modes = ["functional"] * count
+        self.broadening_coeffs = []
+        for mode, k_max in zip(modes, orders, strict=True):
+            if mode == "none" or int(k_max) < 0:
+                self.broadening_coeffs.append(None)
+                continue
+            coeffs = np.zeros(int(k_max) + 1)
+            if mode == "functional":
+                coeffs[0] = np.log(resolution_guess)
+            self.broadening_coeffs.append(coeffs)
+
+        for index, coeffs in enumerate(self.broadening_coeffs):
+            if coeffs is None:
+                continue
+            calibrated = modes[index] == "file"
+            for k in range(coeffs.size):
 
                 def read_coeff(self, index=index, k=k):
                     return self.broadening_coeffs[index][k]
@@ -245,7 +295,7 @@ class _OffsetSpectrumBase(BaseSpectrum):
 
                 self.add_fittable_param(
                     f"Broadening_{index + 1}_{k}",
-                    rf"$b_{{{index + 1},{k}}}$",
+                    f"$b_{{{index + 1},{k}}}$",
                     read_coeff,
                     write_coeff,
                     "linear",
@@ -262,6 +312,7 @@ class _OffsetSpectrumBase(BaseSpectrum):
         factor_cut: int = 5,
         wlres: float = 15000,
         broadening_coeffs: t.Optional[t.Sequence[t.Sequence[float]]] = None,
+        fwhm_to_sigma: float = 2.355,
         broadening_basis="chebyshev",
     ) -> FluxBinnerConv:
         return FluxBinnerConv(
@@ -275,6 +326,8 @@ class _OffsetSpectrumBase(BaseSpectrum):
             wlres=wlres,
             broadening_coeffs=broadening_coeffs,
             broadening_basis=broadening_basis,
+            fwhm_to_sigma=fwhm_to_sigma,
+            max_wlshift=max(self._wlshift_bounds, default=0.0)
         )
 
     def create_binner(self, **kwargs: t.Any):
@@ -283,28 +336,14 @@ class _OffsetSpectrumBase(BaseSpectrum):
         Multi-spectrum observations can optionally promote response-function
         handling into the binner layer by passing convolution settings here.
         """
-        if not kwargs:
-            return super().create_binner()
-
-        broadening_profiles = kwargs.get("broadening_profiles")
-        broadening_type = kwargs.get("broadening_type", "stsci_fits")
-        wlshift = kwargs.get("wlshift", 0.0)
-        max_wlbroadening = kwargs.get("max_wlbroadening", 0.1)
-        factor_cut = kwargs.get("factor_cut", 5)
-        wlres = kwargs.get("wlres", 15000)
-
-        if broadening_type == "none" and broadening_profiles is None:
-            shifts = wlshift if isinstance(wlshift, (list, tuple)) else [wlshift]
-            if all(float(shift) == 0.0 for shift in shifts):
-                return super().create_binner()
-
         return self._create_convolution_binner(
-            broadening_profiles=broadening_profiles,
-            broadening_type=broadening_type,
-            wlshift=wlshift,
-            max_wlbroadening=max_wlbroadening,
-            factor_cut=factor_cut,
-            wlres=wlres,
+            broadening_profiles=kwargs.get("broadening_profiles"),
+            broadening_type=kwargs.get("broadening_type", "none"), ## by doing none, we should avoid the convolution no?
+            wlshift=kwargs.get("wlshift", self.wlshift),
+            max_wlbroadening=kwargs.get("max_wlbroadening", 0.1),
+            factor_cut=kwargs.get("factor_cut", 5),
+            wlres=kwargs.get("wlres", 15000),
+            fwhm_to_sigma=kwargs.get("fwhm_to_sigma", 2.355),
         )
 
 
@@ -335,9 +374,9 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
         wlres: float = 15000,
         broadening_order: t.Optional[int] = None,
         broadening_basis="chebyshev",
+        fwhm_to_sigma: float = 2.355,
     ) -> None:
         """Initialise with spectrum paths and systematic correction parameters."""
-        self._wlshift = wlshift
         self._broadening_profiles = list(path_broadening or [])
         self._profile_type = broadening_type
         self._broadening_basis = broadening_basis
@@ -345,13 +384,14 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
         self._factor_cut = factor_cut
         self._wlres = wlres
         self.broadening_coeffs = None
-
+        self._fwhm_to_sigma = fwhm_to_sigma
         super().__init__(
             path_spectra=path_spectra,
             offsets=offsets,
             slopes=slopes,
             error_scale=error_scale,
-            slope_type=slope_type,
+            slope_type=slope_type, 
+            wlshift=wlshift
         )
 
         if broadening_order is not None:
@@ -364,12 +404,13 @@ class OffsetSpectraCont(_OffsetSpectrumBase):
                 "broadening_profiles", self._broadening_profiles
             ),
             broadening_type=kwargs.get("broadening_type", self._profile_type),
-            wlshift=kwargs.get("wlshift", self._wlshift),
+            wlshift=kwargs.get("wlshift", self.wlshift),
             max_wlbroadening=kwargs.get("max_wlbroadening", self._max_wlbroadening),
             factor_cut=kwargs.get("factor_cut", self._factor_cut),
             wlres=kwargs.get("wlres", self._wlres),
             broadening_coeffs=kwargs.get("broadening_coeffs", self.broadening_coeffs),
             broadening_basis=self._broadening_basis,
+            fwhm_to_sigma=kwargs.get("fwhm_to_sigma", self._fwhm_to_sigma),
         )
 
     @classmethod

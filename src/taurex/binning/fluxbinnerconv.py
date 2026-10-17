@@ -19,6 +19,15 @@ from .binner import Binner
 from .fluxbinner import FluxBinner
 
 
+def lsf_mode(entry: t.Optional[str]) -> str:
+    """Classify one the braodning entries as: "none", "function" or "file"."""
+    if entry is None or str(entry).strip().lower() in ("", "none"):
+        return "none"
+    if str(entry).strip().lower() == "function":
+        return "functional"
+    return "file"
+
+
 class FluxBinnerConv(Binner):
     """Bin to multiple wavelength grids with optional profile convolution."""
 
@@ -34,6 +43,8 @@ class FluxBinnerConv(Binner):
         broadening_basis: str = "chebyshev",
         factor_cut: int = 5,
         wlres: float = 15000,
+        fwhm_to_sigma: float = 2.355,
+        max_wlshift: float = 0.0,
     ) -> None:
         """Initialise with wavelength grids and optional broadening profiles."""
         super().__init__()
@@ -42,6 +53,9 @@ class FluxBinnerConv(Binner):
             raise ValueError("wlgrids and wlgrid_widths must have the same length")
 
         self._wlshifts = self._normalize_wlshift(wlshift, len(wlgrids))
+        self._max_wlshift = max_wlshift
+        self._unshifted_wlgrids = [np.asarray(grid, dtype=np.float64) for grid in wlgrids]
+        self._binner_shifts = list(self._wlshifts)
         self._wlgrids = [
             np.asarray(grid, dtype=np.float64) + shift
             for grid, shift in zip(wlgrids, self._wlshifts, strict=False)
@@ -56,6 +70,7 @@ class FluxBinnerConv(Binner):
         self._wlres = wlres
         self._broadening_coeffs = broadening_coeffs
         self._broadening_basis = broadening_basis
+        self._fwhm_to_sigma = fwhm_to_sigma
 
         self._wlgrid = np.concatenate(self._wlgrids)
         self._wlgrid_width = np.concatenate(self._wlgrid_widths)
@@ -82,15 +97,20 @@ class FluxBinnerConv(Binner):
                 raise ValueError(
                     "max_wlbroadening is required when broadening_type='polynomial'"
                 )
-            for wlgrid in self._wlgrids:
-                pad = self._factor_cut * self._max_wlbroadening
-                native = create_grid_res(self._wlres, wlgrid[0] - pad, wlgrid[-1] + pad)
+            for wlgrid, widths in zip(self._wlgrids, self._wlgrid_widths, strict=True):
+                pad = self._factor_cut * self._max_wlbroadening + self._max_wlshift
+                native = create_grid_res(
+                    self._wlres,
+                    wlgrid[0] - widths[0] / 2 - pad,
+                    wlgrid[-1] + widths[-1] / 2 + pad,
+                )
                 self._grid_fbs.append(
                     FluxBinner(
                         wngrid=10000.0 / native[:, 0],
                         wngrid_width=10000.0 * native[:, 1] / native[:, 0] ** 2,
                     )
                 )
+                self._profiles.append(None)
 
     @staticmethod
     def _normalize_wlshift(
@@ -99,6 +119,9 @@ class FluxBinnerConv(Binner):
     ) -> t.List[float]:
         if wlshift is None:
             return [0.0] * grid_count
+
+        if isinstance(wlshift, list) and len(wlshift) == grid_count:
+            return wlshift 
 
         if isinstance(wlshift, (list, tuple, np.ndarray)):
             shifts = [float(shift) for shift in wlshift]
@@ -110,17 +133,20 @@ class FluxBinnerConv(Binner):
 
     def sigma(self, index):
         """Gaussian broadening sigma on the convolution grid of instrument `index`."""
-        if self._broadening_coeffs is None:
-            return self._profiles[index]
+        coeffs = None if self._broadening_coeffs is None else self._broadening_coeffs[index]
+        profile = self._profiles[index]
+        if coeffs is None:
+            if profile is None:
+                raise ValueError(f"spectrum {index + 1} has a function LSF but no broadening_order")
+            return profile
 
         wl = 10000.0 / self._grid_fbs[index]._bin_centers[::-1]
-        coeffs = self._broadening_coeffs[index]
 
         if self._broadening_basis == "sigma_poly":
             # legacy in sigma directly
             poly = np.polynomial.polynomial.polyval(wl, coeffs)
-            if self._profiles:
-                sigma = self._profiles[index] + poly
+            if profile is not None:
+                sigma = profile + poly
             else:
                 sigma = poly
             return np.clip(sigma, 1e-20, self._max_wlbroadening)
@@ -128,10 +154,12 @@ class FluxBinnerConv(Binner):
         if self._broadening_basis == "resolution_poly":
             # legacy in Resolution
             resolution = np.polynomial.polynomial.polyval(wl, coeffs)
-            if self._profiles:
-                resolution = resolution + 0.5 * wl / self._profiles[index]
+            if profile is not None:
+                resolution = resolution + wl / (self._fwhm_to_sigma * profile)
             with np.errstate(divide="ignore", invalid="ignore"):
-                sigma = 0.5 * wl / np.clip(resolution, a_min=1, a_max=self._wlres)
+                sigma = wl / (
+                    self._fwhm_to_sigma * np.clip(resolution, a_min=1, a_max=self._wlres)
+                )
             sigma = np.nan_to_num(sigma, nan=1e-20, posinf=np.inf, neginf=1e-20)
             return np.clip(sigma, 1e-20, self._max_wlbroadening)
 
@@ -139,17 +167,16 @@ class FluxBinnerConv(Binner):
         x = 2.0 * (wl - wl[0]) / (wl[-1] - wl[0]) - 1.0
         poly = np.exp(chebyshev.chebval(x, coeffs))
         if self._broadening_basis == "chebyshev_linear":
-            if self._profiles:
-                sigma = self._profiles[index] * np.maximum(1.0 + poly, 0.05)
+            if profile is not None:
+                sigma = profile * np.maximum(1.0 + poly, 0.05)
             else:
-                sigma = 0.5 * wl / np.maximum(poly, 1.0)
+                sigma = wl / (self._fwhm_to_sigma * np.maximum(poly, 1.0))
         else:
-            if self._profiles:
-                sigma = (
-                    self._profiles[index] * poly
-                )  # this handles departure from calibration
+            if profile is not None:
+                sigma = profile * poly  # this handles departure from calibration
             else:
-                sigma = 0.5 * wl / poly  # this handles direct fitting of resolution
+                # this handles direct fitting of resolution
+                sigma = wl / (self._fwhm_to_sigma * poly)
         return np.clip(sigma, 0.5 * np.gradient(wl), self._max_wlbroadening)
 
     def load_stsci_profiles(
@@ -159,7 +186,21 @@ class FluxBinnerConv(Binner):
         profiles: t.List[npt.NDArray[np.float64]] = []
         grid_fbs: t.List[FluxBinner] = []
 
-        for file_name, wlgrid in zip(files, self._wlgrids, strict=False):
+        for file_name, wlgrid, widths in zip(files, self._wlgrids, self._wlgrid_widths, strict=True):
+            mode = lsf_mode(file_name)
+            if mode == "none":  # binned only, no convolution
+                profiles.append(None)
+                grid_fbs.append(None)
+                continue
+            if mode == "functional":  # unknown LSF, so use broadening_order
+                if self._max_wlbroadening is None:
+                    raise ValueError("max_wlbroadening is required for a functional LSF")
+                pad = self._factor_cut * self._max_wlbroadening + self._max_wlshift
+                native_grid = create_grid_res(self._wlres, wlgrid[0] - widths[0] / 2 - pad, wlgrid[-1] + widths[-1] / 2 + pad,)
+                ww = wnwidth_to_wlwidth(native_grid[:, 0], native_grid[:, 1])
+                grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0], ww))
+                profiles.append(None)
+                continue
             try:
                 with fits.open(file_name) as hdu:
                     science_data = hdu[1].data
@@ -170,12 +211,13 @@ class FluxBinnerConv(Binner):
                 wavelength = np.asarray(science_data[:, 0], dtype=np.float64)
                 resolution = np.asarray(science_data[:, 1], dtype=np.float64)
 
-            std = wavelength / resolution / 2.0
+            std = wavelength / (resolution * self._fwhm_to_sigma) # Convert FWHM to sigma 2.355 is default as JWST
+            edge_std = np.interp([wlgrid[0], wlgrid[-1]], wavelength, std)
+            pad = self._factor_cut * 1.5 * edge_std + self._max_wlshift ## Larger padding
             native_grid = create_grid_res(
                 self._wlres,
-                wlgrid[0] - 10.0 * std[0],
-                wlgrid[-1] + 10.0 * std[-1],
-            )
+                wlgrid[0] - widths[0] / 2 - pad[0],
+                wlgrid[-1] + widths[-1] / 2 + pad[1],)
             # grid_fbs.append(FluxBinner(10000.0 / native_grid[:, 0],
             #     native_grid[:, 1]))  # It was this before, must be a forgotten error!
             ww = wnwidth_to_wlwidth(native_grid[:, 0], native_grid[:, 1])
@@ -195,6 +237,19 @@ class FluxBinnerConv(Binner):
             profiles.append(sigma)
 
         return profiles, grid_fbs
+
+    def _shifted_binner(self, index: int) -> FluxBinner:
+        """Rebuild binner if its shift changed."""
+        shift = self._wlshifts[index]
+        if shift != self._binner_shifts[index]:
+            grid = self._unshifted_wlgrids[index] + shift
+            self.binners[index] = FluxBinner(
+                wlgrid=grid, wlgrid_width=self._wlgrid_widths[index]
+            )
+            self._wlgrids[index] = grid
+            self._wlgrid = np.concatenate(self._wlgrids)  # outputs follow the shift
+            self._binner_shifts[index] = shift
+        return self.binners[index]
 
     @staticmethod
     def gaussian(
@@ -260,10 +315,11 @@ class FluxBinnerConv(Binner):
         errors = []
         widths = []
 
-        for index, binner in enumerate(self.binners):
+        for index in range(len(self.binners)):
+            binner = self._shifted_binner(index)
             wn, flux, err, wnwidth = wngrid, spectrum, error, grid_width
 
-            if self._grid_fbs:
+            if self._grid_fbs and self._grid_fbs[index] is not None:
                 wn, flux, err, wnwidth = self._grid_fbs[index].bindown(
                     wn, flux, grid_width=wnwidth, error=err
                 )

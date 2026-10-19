@@ -4,11 +4,13 @@ import typing as t
 
 import numpy as np
 import numpy.typing as npt
+from astropy import units as u
 
 from taurex.data.fittable import fitparam
 from taurex.model import OneDForwardModel
 from taurex.output import OutputGroup
 from taurex.types import get_float_dtype
+from taurex.util import convert_to_unit_value
 
 from .contribution import Contribution
 
@@ -34,8 +36,8 @@ class LeeMieContribution(Contribution):
     lee_mie_q: float
         Extinction coefficient
 
-    lee_mie_mix_ratio: float
-        Mixing ratio in atmosphere in particles/m3
+    lee_mie_mix_ratio: float or astropy.units.Quantity
+        Particle number density in particles/m3
 
     lee_mie_bottomP: float
         Bottom of cloud deck in Pa
@@ -113,11 +115,11 @@ class LeeMieContribution(Contribution):
 
     def __init__(
         self,
-        lee_mie_radius: t.Optional[float] = 0.01,
-        lee_mie_q: t.Optional[float] = 40,
-        lee_mie_mix_ratio: t.Optional[float] = 1e-10,
-        lee_mie_bottomP: t.Optional[float] = -1,  # noqa: N803
-        lee_mie_topP: t.Optional[float] = -1,
+        lee_mie_radius: t.Optional[t.Union[float, u.Quantity]] = 0.01,
+        lee_mie_q: t.Optional[t.Union[float, u.Quantity]] = 40,
+        lee_mie_mix_ratio: t.Optional[t.Union[float, u.Quantity]] = 1e-10,
+        lee_mie_bottomP: t.Optional[t.Union[float, u.Quantity]] = -1,  # noqa: N803
+        lee_mie_topP: t.Optional[t.Union[float, u.Quantity]] = -1,
     ) -> None:
         """Initialize LeeMieContribution.
 
@@ -129,8 +131,8 @@ class LeeMieContribution(Contribution):
         lee_mie_q: float
             Extinction coefficient
 
-        lee_mie_mix_ratio: float
-            Mixing ratio in atmosphere in particles/m3
+        lee_mie_mix_ratio: float or astropy.units.Quantity
+            Particle number density in particles/m3
 
         lee_mie_bottomP: float
             Bottom of cloud deck in Pa
@@ -141,11 +143,35 @@ class LeeMieContribution(Contribution):
         """
         super().__init__("Mie")
 
-        self._mie_radius = lee_mie_radius
-        self._mie_q = lee_mie_q
-        self._mie_mix = lee_mie_mix_ratio
-        self._mie_bottom_pressure = lee_mie_bottomP
-        self._mie_top_pressure = lee_mie_topP
+        self._mie_radius = self._normalize_radius(lee_mie_radius)
+        self._mie_q = self._normalize_dimensionless(lee_mie_q)
+        self._mie_mix = self._normalize_number_density(lee_mie_mix_ratio)
+        self._mie_bottom_pressure = self._normalize_pressure(lee_mie_bottomP)
+        self._mie_top_pressure = self._normalize_pressure(lee_mie_topP)
+
+    @staticmethod
+    def _normalize_radius(value: t.Any) -> t.Any:
+        """Convert a particle radius to plain numeric microns."""
+        return convert_to_unit_value(value, u.um, default_unit=u.um)
+
+    @staticmethod
+    def _normalize_dimensionless(value: t.Any) -> t.Any:
+        """Convert a dimensionless quantity to plain numeric form."""
+        return convert_to_unit_value(
+            value,
+            u.dimensionless_unscaled,
+            default_unit=u.dimensionless_unscaled,
+        )
+
+    @staticmethod
+    def _normalize_number_density(value: t.Any) -> t.Any:
+        """Convert particle number density to plain numeric values in m^-3."""
+        return convert_to_unit_value(value, u.m**-3, default_unit=u.m**-3)
+
+    @staticmethod
+    def _normalize_pressure(value: t.Any) -> t.Any:
+        """Convert pressure to plain numeric values in Pa."""
+        return convert_to_unit_value(value, u.Pa, default_unit=u.Pa)
 
     @fitparam(
         param_name="lee_mie_radius",
@@ -158,9 +184,9 @@ class LeeMieContribution(Contribution):
         return self._mie_radius
 
     @mieRadius.setter
-    def mieRadius(self, value: float) -> None:  # noqa: N802
+    def mieRadius(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Particle radius in um."""
-        self._mie_radius = value
+        self._mie_radius = self._normalize_radius(value)
 
     @fitparam(
         param_name="lee_mie_q",
@@ -174,8 +200,8 @@ class LeeMieContribution(Contribution):
         return self._mie_q
 
     @mieQ.setter
-    def mieQ(self, value: float) -> None:  # noqa: N802
-        self._mie_q = value
+    def mieQ(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
+        self._mie_q = self._normalize_dimensionless(value)
 
     @fitparam(
         param_name="lee_mie_topP",
@@ -189,9 +215,9 @@ class LeeMieContribution(Contribution):
         return self._mie_top_pressure
 
     @mieTopPressure.setter
-    def mieTopPressure(self, value: float) -> None:  # noqa: N802
+    def mieTopPressure(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
         """Pressure at top of cloud deck in Pa."""
-        self._mie_top_pressure = value
+        self._mie_top_pressure = self._normalize_pressure(value)
 
     @fitparam(
         param_name="lee_mie_bottomP",
@@ -205,9 +231,11 @@ class LeeMieContribution(Contribution):
         return self._mie_bottom_pressure
 
     @mieBottomPressure.setter
-    def mieBottomPressure(self, value: float) -> None:  # noqa: N802
+    def mieBottomPressure(  # noqa: N802
+        self, value: t.Union[float, u.Quantity]
+    ) -> None:
         """Pressure at bottom of cloud deck in Pa."""
-        self._mie_bottom_pressure = value
+        self._mie_bottom_pressure = self._normalize_pressure(value)
 
     @fitparam(
         param_name="lee_mie_mix_ratio",
@@ -217,13 +245,13 @@ class LeeMieContribution(Contribution):
         default_bounds=[1e-40, 1],
     )
     def mieMixing(self) -> float:  # noqa: N802
-        """Mixing ratio in atmosphere."""
+        """Particle number density in m^-3."""
         return self._mie_mix
 
     @mieMixing.setter
-    def mieMixing(self, value: float) -> None:  # noqa: N802
-        """Mixing ratio in atmosphere."""
-        self._mie_mix = value
+    def mieMixing(self, value: t.Union[float, u.Quantity]) -> None:  # noqa: N802
+        """Particle number density in m^-3."""
+        self._mie_mix = self._normalize_number_density(value)
 
     def prepare_each(
         self, model: OneDForwardModel, wngrid: npt.NDArray[np.float64]

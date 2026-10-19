@@ -6,6 +6,7 @@ This will probably be replaced by a more general forward model class
 in the future.
 
 """
+
 import pickle  # noqa: S403
 import typing as t
 

@@ -104,7 +104,8 @@ class ExoTransmitOpacity(InterpolatingOpacity):
             [float(col) for col in lines[0].split()]
         )  # *t_conversion
 
-        self._pressure_grid = np.array([float(col) for col in lines[1].split()]) * 1e5
+        # Pressures in the Exo-Transmit tables are already in Pa.
+        self._pressure_grid = np.array([float(col) for col in lines[1].split()])
 
         self._min_pressure = self._pressure_grid.min()
         self._max_pressure = self._pressure_grid.max()

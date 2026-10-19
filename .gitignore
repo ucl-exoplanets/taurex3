@@ -15,5 +15,7 @@ __pycache__/
 scratch/
 /examples/tmp/
 .venv/
+node_modules/
 .docs-preview/
 .github/copilot-instructions.md
+tmp/

@@ -3,7 +3,9 @@
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+import astropy.units as u
 import numpy as np
+import pytest
 
 from taurex.stellar import PhoenixStar
 
@@ -62,3 +64,30 @@ def test_phoenix_find_spectrum(tmpdir):
         phoenix._temperature = tp
         phoenix._metallicity = mtl
         assert phoenix.find_nearest_file() == fn
+
+
+def test_phoenix_quantity_inputs_and_setters(tmpdir):
+    """PHOENIX normalizes constructor values and its overridden setters."""
+    with patch.multiple(
+        "taurex.stellar.PhoenixStar",
+        get_avail_phoenix=MagicMock(),
+        recompute_spectra=MagicMock(),
+    ):
+        phoenix = PhoenixStar(
+            temperature=1 * u.kK,
+            radius=1 * u.R_earth,
+            mass=2 * u.M_earth,
+            distance=1 * u.kpc,
+            phoenix_path=str(tmpdir),
+        )
+
+        assert phoenix.temperature == pytest.approx(1000)
+        assert phoenix.radius == pytest.approx(u.R_earth.to(u.m))
+        assert phoenix.mass == pytest.approx((2 * u.M_earth).to_value(u.kg))
+        assert phoenix.distance == pytest.approx(1000)
+
+        phoenix.temperature = 2000 * u.K
+        phoenix.mass = 3 * u.M_earth
+
+        assert phoenix.temperature == pytest.approx(2000)
+        assert phoenix.mass == pytest.approx((3 * u.M_earth).to_value(u.kg))

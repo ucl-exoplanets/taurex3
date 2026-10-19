@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+from astropy import units as u
 from hypothesis import given
 from hypothesis.strategies import floats as st_floats
 from hypothesis.strategies import integers as st_integers
@@ -62,3 +63,57 @@ def test_npoint(params, limit_slope, smoothing_window):
     else:
         # Lets make sure it doesn't crash
         npoint.profile
+
+
+def test_npoint_accepts_quantity_nodes():
+    """Temperature and pressure nodes are normalized to K and Pa."""
+    profile = NPoint(
+        T_surface=1.5 * u.kK,
+        T_top=u.Quantity(0.0, u.deg_C),
+        P_surface=1.0 * u.bar,
+        P_top=1.0 * u.mbar,
+        temperature_points=np.array([500.0]) * u.K,
+        pressure_points=np.array([0.1]) * u.bar,
+    )
+
+    assert profile.temperatureSurface == pytest.approx(1500.0)
+    assert profile.temperatureTop == pytest.approx(273.15)
+    assert profile.pressureSurface == pytest.approx(1e5)
+    assert profile.pressureTop == pytest.approx(100.0)
+    np.testing.assert_allclose(profile._t_points, [500.0])
+    np.testing.assert_allclose(profile._p_points, [1e4])
+
+
+def test_npoint_fitting_setters_accept_quantities():
+    """Generated node setters normalize Quantity input."""
+    profile = NPoint(temperature_points=[500.0], pressure_points=[1e4])
+    parameters = profile.fitting_parameters()
+
+    parameters["T_point1"][3](0.6 * u.kK)
+    parameters["P_point1"][3](0.2 * u.bar)
+
+    assert parameters["T_point1"][2]() == pytest.approx(600.0)
+    assert parameters["P_point1"][2]() == pytest.approx(2e4)
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("T_surface", 1.0 * u.m),
+        ("T_top", 1.0 * u.m),
+        ("P_surface", 1.0 * u.s),
+        ("P_top", 1.0 * u.s),
+        ("temperature_points", np.array([1.0]) * u.m),
+        ("pressure_points", np.array([1.0]) * u.s),
+    ],
+)
+def test_npoint_rejects_incompatible_quantities(parameter, value):
+    """Reject incompatible NPoint temperature and pressure dimensions."""
+    kwargs = {
+        "temperature_points": [500.0] if parameter != "temperature_points" else [],
+        "pressure_points": [1e4] if parameter != "pressure_points" else [],
+        parameter: value,
+    }
+
+    with pytest.raises(u.UnitConversionError):
+        NPoint(**kwargs)

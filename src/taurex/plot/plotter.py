@@ -1,6 +1,7 @@
 """Plotting module for TauREx."""
 
 import os
+import re
 
 import h5py
 import matplotlib
@@ -21,6 +22,19 @@ mpl.rcParams["errorbar.capsize"] = 2
 
 # rc('text', usetex=True) # use tex in plots
 # rc('font', **{ 'family' : 'serif','serif':['Palatino'], 'size'   : 11})
+
+
+def _sanitize_mathtext_label(label) -> str:
+    """Collapse a run of two or more backslashes in a mathtext label to one.
+
+    Older TauREx runs stored fitparam mathtext labels with a doubled
+    backslash, which matplotlib mathtext reads as a line-break token. Saving
+    the figure then raises ParseSyntaxException mid-save, leaving a truncated
+    or blank PDF and skipping the PNG twin. Collapsing the run restores the
+    intended single-backslash command and leaves every already-valid label
+    untouched.
+    """
+    return re.sub(r"\\{2,}", r"\\", str(label))
 
 
 class Plotter:
@@ -653,6 +667,13 @@ class Plotter:
                     index = self.derivedNames.index(param.name.split("/")[-1])
                     latex_names.append(self.derivedLatex[index])
                     _tracedata = np.column_stack((_tracedata, param["trace"]))
+
+            # Guard against mathtext labels that would raise at save time (e.g.
+            # a double-backslash command stored by an older run before the
+            # guillot fitparam fix): collapse the run so the intended
+            # single-backslash command is restored and the figure renders
+            # instead of truncating the PDF.
+            latex_names = [_sanitize_mathtext_label(x) for x in latex_names]
 
             if color is None:
                 color_idx = float(solution_idx) / self.num_solutions

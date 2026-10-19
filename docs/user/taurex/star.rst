@@ -48,6 +48,10 @@ Keywords
 | ``magnitudeK``   | :obj:`float` | Magnitude in K-band        | 10.0    |
 +------------------+--------------+----------------------------+---------+
 
+The physical inputs ``temperature``, ``radius``, ``mass`` and ``distance``
+also accept :class:`astropy.units.Quantity`. Unitless values retain the units
+listed above. ``metallicity`` accepts a dimensionless Quantity.
+
 --------
 Examples
 --------
@@ -94,6 +98,10 @@ Keywords
 +------------------+--------------+----------------------------+--------------+
 | ``magnitudeK``   | :obj:`float` | Magnitude in K-band        | 10.0         |
 +------------------+--------------+----------------------------+--------------+
+
+The physical inputs ``temperature``, ``radius``, ``mass`` and ``distance``
+also accept :class:`astropy.units.Quantity`. Unitless values retain the units
+listed above. ``metallicity`` accepts a dimensionless Quantity.
 
 --------
 Examples

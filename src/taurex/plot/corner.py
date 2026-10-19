@@ -305,7 +305,7 @@ def corner(  # noqa: C901
 
             if verbose:
                 print("Quantiles:")
-                print([item for item in zip(quantiles, qvalues, strict=True)])
+                print([*zip(quantiles, qvalues, strict=True)])
 
         if show_titles:
             title = None

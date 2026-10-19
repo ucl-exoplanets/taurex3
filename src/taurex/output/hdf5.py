@@ -33,9 +33,11 @@ class HDF5OutputGroup(OutputGroup):
         metadata: t.Optional[MetadataType] = None,
     ) -> None:
         """Write array to HDF5 group."""
-        array = np.array(array)
+        # Hand the array to h5py as it is: np.array() would copy it, which
+        # doubles the transient memory of the largest arrays being written.
+        arr = np.asarray(array)
         ds = self._entry.create_dataset(
-            str(array_name), data=array, shape=array.shape, dtype=array.dtype
+            str(array_name), data=arr, shape=arr.shape, dtype=arr.dtype
         )
         if metadata:
             for k, v in metadata.items():

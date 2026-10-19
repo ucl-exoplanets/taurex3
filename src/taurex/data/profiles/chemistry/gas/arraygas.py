@@ -35,8 +35,12 @@ class ArrayGas(Gas):
 
         """
         super().__init__(self.__class__.__name__, molecule_name)
-        mix_ratio_array = mix_ratio_array or [1e-2, 1e-6]
-        self._mix_ratio_array = np.array(mix_ratio_array)
+        if mix_ratio_array is None:
+            mix_ratio_array = [1e-2, 1e-6]
+        self._mix_ratio_array = np.asarray(
+            self.normalize_dimensionless(mix_ratio_array),
+            dtype=np.float64,
+        )
 
     @property
     def mixProfile(self) -> npt.NDArray[np.float64]:  # noqa: N802

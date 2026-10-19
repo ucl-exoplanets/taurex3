@@ -123,7 +123,13 @@ class Opacity(Logger, Citable):
 
         orig = self.compute_opacity(temperature, pressure, wngrid_filter)
 
-        if wngrid is None or np.array_equal(
+        if wngrid is None:
+            return orig
+
+        # Check the shape first: the filtered opacity grid only matches
+        # ``wngrid`` when it already *is* the requested grid, so in the
+        # common case the extra array from ``take`` is never needed.
+        if wngrid_filter.shape[0] == wngrid.shape[0] and np.array_equal(
             self.wavenumberGrid.take(wngrid_filter), wngrid
         ):
             return orig

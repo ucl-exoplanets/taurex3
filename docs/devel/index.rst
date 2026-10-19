@@ -10,6 +10,7 @@ Developers guide
 
     Overview <overview>
     Guidelines <guidelines>
+    Physical units <units>
     Basics <basics>
     Retrieval Parameters <fittingparameters>
     Building Components <components>

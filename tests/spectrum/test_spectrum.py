@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 import numpy as np
 
-from taurex.binning import FluxBinner
 from taurex.binning import FluxBinnerConv
 from taurex.data.spectrum.observed import ObservedSpectrum
 from taurex.data.spectrum.offsetspectrum import OffsetSpectra

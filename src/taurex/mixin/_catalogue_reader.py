@@ -1,10 +1,45 @@
 """Reader classes for CSV/TSV catalogue files."""
 
 import re
+from urllib.parse import quote
 
 import pandas as pd
+import requests
 
 from taurex.log import Logger
+
+
+_EXOMAST_RESOLVER = "https://exo.mast.stsci.edu/api/v0.1/exoplanets/resolver/"
+_EXOMAST_PROPERTIES = (
+    "https://exo.mast.stsci.edu/api/v0.1/exoplanets/{exoplanet_id}/properties"
+)
+
+
+def fetch_exomast_properties(planet_name: str) -> dict:
+    """Return planet and stellar properties for *planet_name* from ExoMAST.
+
+    The ExoMAST API resolves the planet name to an ``exoplanetID`` first and
+    then serves one row per catalogue.  The NExScI row is preferred because it
+    is the reference catalogue; any other row is used as a fallback.
+    """
+    resolver = requests.get(
+        f"{_EXOMAST_RESOLVER}{quote(planet_name, safe='')}", timeout=30
+    )
+    resolver.raise_for_status()
+    matches = resolver.json()
+    if not matches:
+        raise LookupError(f"ExoMAST has no entry for {planet_name!r}")
+
+    exoplanet_id = matches[0]["exoplanetID"]
+    response = requests.get(
+        _EXOMAST_PROPERTIES.format(exoplanet_id=exoplanet_id), timeout=30
+    )
+    response.raise_for_status()
+    rows = response.json()
+    if not rows:
+        raise LookupError(f"ExoMAST has no properties for {planet_name!r}")
+
+    return next((row for row in rows if row.get("catalog_name") == "nexsci"), rows[0])
 
 
 class CatalogueReader(Logger):

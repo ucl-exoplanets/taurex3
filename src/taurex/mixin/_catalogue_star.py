@@ -1,11 +1,10 @@
 """Star mixins that load parameters from a catalogue (file or ExoMAST)."""
 
-import requests
-
 from taurex.constants import MSOL
 from taurex.constants import RSOL
 
 from ._catalogue_reader import FileReader
+from ._catalogue_reader import fetch_exomast_properties
 from .core import StarMixin
 
 
@@ -102,16 +101,16 @@ class StarCatalogueExomast(StarMixin):
         """Populate star parameters from the ExoMAST API."""
         if planet_name is not None and temperature is None:
             data = self._fetch_exomast(planet_name)
-            if temperature is None and "st_teff" in data:
-                temperature = float(data["st_teff"][0])
-            if radius is None and "st_rad" in data:
-                radius = float(data["st_rad"][0])
-            if mass is None and "st_mass" in data:
-                mass = float(data["st_mass"][0])
-            if metallicity is None and "st_met" in data:
-                metallicity = float(data["st_met"][0])
-            if distance is None and "sy_dist" in data:
-                distance = float(data["sy_dist"][0])
+            if temperature is None and "Teff" in data:
+                temperature = float(data["Teff"])
+            if radius is None and "Rs" in data:
+                radius = float(data["Rs"])
+            if mass is None and "Ms" in data:
+                mass = float(data["Ms"])
+            if metallicity is None and "Fe/H" in data:
+                metallicity = float(data["Fe/H"])
+            if distance is None and "distance" in data:
+                distance = float(data["distance"])
 
         self._temperature = temperature or 5000
         self._radius = (radius or 1.0) * RSOL
@@ -123,10 +122,7 @@ class StarCatalogueExomast(StarMixin):
     @staticmethod
     def _fetch_exomast(planet_name):
         """Fetch stellar data from the ExoMAST API."""
-        url = "https://exo.mast.stsci.edu/api/v1.0/exoplanets/"
-        r = requests.get(f"{url}{planet_name}", timeout=30)
-        r.raise_for_status()
-        return r.json()
+        return fetch_exomast_properties(planet_name)
 
     @classmethod
     def input_keywords(cls):

@@ -176,20 +176,24 @@ class TestStarCatalogueFile:
 class TestPlanetCatalogueExomast:
     """Tests for the ExoMAST planet catalogue mixin (mocked)."""
 
-    @patch("taurex.mixin._catalogue_planet.requests.get")
+    @patch("taurex.mixin._catalogue_reader.requests.get")
     def test_populates_from_exomast(self, mock_get):
         """Planet parameters are fetched from ExoMAST API."""
-        mock_get.return_value.json.return_value = {
-            "pl_masse": [0.5],
-            "pl_masse_unit": "Mj",
-            "pl_rade": [1.1],
-            "pl_rade_unit": "Rj",
-            "pl_orbsmax": [0.03],
-            "pl_orbper": [1.5],
-            "pl_orbincl": [85.0],
-            "pl_orbeccen": [0.0],
-            "pl_trandur": [5400],
-        }
+        mock_get.return_value.json.side_effect = [
+            [{"exoplanetID": 1}],
+            [
+                {
+                    "catalog_name": "nexsci",
+                    "Mp": 0.5,
+                    "Rp": 1.1,
+                    "orbital_distance": 0.03,
+                    "orbital_period": 1.5,
+                    "inclination": 85.0,
+                    "eccentricity": 0.0,
+                    "transit_duration": 0.0625,
+                }
+            ],
+        ]
         mock_get.return_value.raise_for_status = lambda: None
 
         PlanetE = enhance_class(
@@ -201,22 +205,21 @@ class TestPlanetCatalogueExomast:
         assert PlanetE.fullRadius == pytest.approx(1.1 * 71492000, rel=1e-4)
         assert PlanetE._orbit_period == 1.5
         assert PlanetE._inclination == 85.0
-        assert PlanetE._transit_time == 5400
+        assert PlanetE._transit_time == pytest.approx(5400.0)
 
-    @patch("taurex.mixin._catalogue_planet.requests.get")
-    def test_defaults_on_http_error(self, mock_get):
-        """Defaults are used when the ExoMAST API call fails."""
+    @patch("taurex.mixin._catalogue_reader.requests.get")
+    def test_http_error_propagates(self, mock_get):
+        """The ExoMAST API errors are not silently replaced by defaults."""
         import requests as req
 
         mock_get.side_effect = req.RequestException("network unreachable")
 
-        PlanetE = enhance_class(
-            Planet,
-            PlanetCatalogueExomast,
-            planet_name="Nonexistent b",
-        )
-        assert PlanetE._orbit_period == 2.0
-        assert PlanetE._inclination == 90.0
+        with pytest.raises(req.RequestException):
+            enhance_class(
+                Planet,
+                PlanetCatalogueExomast,
+                planet_name="Nonexistent b",
+            )
 
     def test_defaults_when_no_planet_name(self):
         """Defaults are used when no planet_name is given."""
@@ -233,16 +236,22 @@ class TestPlanetCatalogueExomast:
 class TestStarCatalogueExomast:
     """Tests for the ExoMAST star catalogue mixin (mocked)."""
 
-    @patch("taurex.mixin._catalogue_star.requests.get")
+    @patch("taurex.mixin._catalogue_reader.requests.get")
     def test_populates_from_exomast(self, mock_get):
         """Star parameters are fetched from ExoMAST API."""
-        mock_get.return_value.json.return_value = {
-            "st_teff": [7200],
-            "st_rad": [1.5],
-            "st_mass": [1.3],
-            "st_met": [-0.2],
-            "sy_dist": [120.0],
-        }
+        mock_get.return_value.json.side_effect = [
+            [{"exoplanetID": 1}],
+            [
+                {
+                    "catalog_name": "nexsci",
+                    "Teff": 7200,
+                    "Rs": 1.5,
+                    "Ms": 1.3,
+                    "Fe/H": -0.2,
+                    "distance": 120.0,
+                }
+            ],
+        ]
         mock_get.return_value.raise_for_status = lambda: None
 
         StarE = enhance_class(

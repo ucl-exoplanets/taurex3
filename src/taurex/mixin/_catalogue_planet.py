@@ -1,8 +1,7 @@
 """Planet mixins that load parameters from a catalogue (file or ExoMAST)."""
 
-import requests
-
 from ._catalogue_reader import FileReader
+from ._catalogue_reader import fetch_exomast_properties
 from .core import PlanetMixin
 
 
@@ -132,24 +131,22 @@ class PlanetCatalogueExomast(PlanetMixin):
                 eccentricity,
                 transit_time,
             )
-            try:
-                data = self._fetch_exomast(planet_name)
-                if pmass is None and "pl_masse" in data:
-                    pmass = float(data["pl_masse"][0])
-                if prad is None and "pl_rade" in data:
-                    prad = float(data["pl_rade"][0])
-                if pdist is None and "pl_orbsmax" in data:
-                    pdist = float(data["pl_orbsmax"][0])
-                if pper is None and "pl_orbper" in data:
-                    pper = float(data["pl_orbper"][0])
-                if pincl is None and "pl_orbincl" in data:
-                    pincl = float(data["pl_orbincl"][0])
-                if pecc is None and "pl_orbeccen" in data:
-                    pecc = float(data["pl_orbeccen"][0])
-                if ptrans is None and "pl_trandur" in data:
-                    ptrans = float(data["pl_trandur"][0])
-            except requests.RequestException:
-                pass
+            data = self._fetch_exomast(planet_name)
+            if pmass is None and "Mp" in data:
+                pmass = float(data["Mp"])
+            if prad is None and "Rp" in data:
+                prad = float(data["Rp"])
+            if pdist is None and "orbital_distance" in data:
+                pdist = float(data["orbital_distance"])
+            if pper is None and "orbital_period" in data:
+                pper = float(data["orbital_period"])
+            if pincl is None and "inclination" in data:
+                pincl = float(data["inclination"])
+            if pecc is None and "eccentricity" in data:
+                pecc = float(data["eccentricity"])
+            if ptrans is None and "transit_duration" in data:
+                # ExoMAST reports the duration in days; TauREx expects seconds.
+                ptrans = float(data["transit_duration"]) * 86400.0
             planet_mass, planet_radius, planet_distance = pmass, prad, pdist
             orbital_period, inclination, eccentricity = pper, pincl, pecc
             transit_time = ptrans
@@ -171,10 +168,7 @@ class PlanetCatalogueExomast(PlanetMixin):
     @staticmethod
     def _fetch_exomast(planet_name):
         """Fetch planetary data from the ExoMAST API."""
-        url = "https://exo.mast.stsci.edu/api/v1.0/exoplanets/"
-        r = requests.get(f"{url}{planet_name}", timeout=30)
-        r.raise_for_status()
-        return r.json()
+        return fetch_exomast_properties(planet_name)
 
     @classmethod
     def input_keywords(cls):

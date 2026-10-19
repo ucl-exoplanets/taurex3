@@ -24,7 +24,6 @@ from astropy.io import fits
 from bs4 import BeautifulSoup
 from scipy.interpolate import RegularGridInterpolator
 
-from ._stellar_io import download_to_directory
 from ._stellar_io import is_remote_url
 from ._stellar_io import json_unzip
 from ._stellar_io import parse_directory_listing
@@ -326,7 +325,12 @@ class PhoenixSource(abc.ABC):
                         pdf = self._fetch_spectrum(t, lg, f, a)
                         if wlen is None:
                             wlen = pdf.wlen
-                        spectra.append(pdf.flux)
+                            spectra.append(pdf.flux)
+                        else:
+                            # Sources such as SVO sample each grid point on a
+                            # different wavelength grid, so resample before
+                            # stacking the interpolation cube.
+                            spectra.append(np.interp(wlen, pdf.wlen, pdf.flux))
         spectra_arr = np.array(spectra).reshape(
             len(teffs), len(loggs), len(fehs), len(alphas), -1
         )
@@ -379,17 +383,8 @@ def list_sources() -> list[str]:
 #  SVO source
 # ======================================================================
 
-_SVO_BASE = "http://svo2.cab.inta-csic.es/svo/theory/phoenix/"
-_SVO_MODEL = "phoenix"
-_SVO_DATASET = "svo_dataset.jsonz"
-
-
-def _load_svo_dataset():
-    here = pathlib.Path(__file__).resolve().parent
-    cache_file = here / "_phoenix_cache" / _SVO_DATASET
-    if cache_file.exists():
-        return json_unzip(cache_file)
-    return {}
+_SVO_BASE = "https://svo2.cab.inta-csic.es/theory/newov2/"
+_SVO_MODEL = "bt-settl-cifist"
 
 
 class SVOSource(PhoenixSource):
@@ -411,88 +406,119 @@ class SVOSource(PhoenixSource):
             model_name=model_name or _SVO_MODEL,
             interpolation_mode=interpolation_mode,
         )
-        self._dataset = _load_svo_dataset()
+        self._catalog: Optional[pd.DataFrame] = None
+
+    def _load_catalog(self) -> pd.DataFrame:
+        """Return the SVO catalogue for the selected model."""
+        if self._catalog is not None:
+            return self._catalog
+
+        model = self._model_name
+        response = requests.post(
+            urljoin(self._base_url, "index.php"),
+            timeout=100,
+            data={
+                "models": model,
+                "oby": "",
+                "odesc": "",
+                "sbut": "",
+                f"params[{model}][teff][min]": "0",
+                f"params[{model}][teff][max]": "700000",
+                f"params[{model}][logg][min]": "-90",
+                f"params[{model}][logg][max]": "90",
+                f"params[{model}][meta][min]": "-90",
+                f"params[{model}][meta][max]": "90",
+                f"params[{model}][alpha][min]": "-90",
+                f"params[{model}][alpha][max]": "90",
+                "nres": "all",
+                "boton": "Search",
+                "reqmodels[]": model,
+            },
+        )
+        response.raise_for_status()
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        headers = {
+            cell.text.strip(): idx
+            for idx, cell in enumerate(soup.find_all("td", class_="tabcab"))
+        }
+
+        rows = []
+        for tr in soup.find_all("tr"):
+            cells = tr.find_all("td", class_="tabfld")
+            if not cells:
+                continue
+            link = cells[-3].find("a")
+            try:
+                rows.append(
+                    {
+                        "teff": int(cells[headers["Teff"]].text.strip()),
+                        "logg": float(cells[headers["Logg"]].text.strip()),
+                        "feh": float(cells[headers["Metallicity"]].text.strip()),
+                        "alpha": (
+                            float(cells[headers["Alpha"]].text.strip())
+                            if "Alpha" in headers
+                            else 0.0
+                        ),
+                        "filename": urljoin(self._base_url, link["href"]),
+                    }
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+
+        self._catalog = pd.DataFrame(rows)
+        return self._catalog
 
     def download_teff(self) -> Sequence[float]:
-        """Return sorted list of Teff values from the SVO grid."""
-        data = self._dataset.get("data", {})
-        teffs = list(data.get("teff", {}).keys())
-        if not teffs:
-            return self._scrape_teff()
-        return sorted(float(t) for t in teffs)
+        """Return sorted Teff values from the SVO grid."""
+        return sorted(self._load_catalog()["teff"].unique().tolist())
 
     def download_logg(self) -> Sequence[float]:
-        """Return sorted list of log(g) values from the SVO grid."""
-        data = self._dataset.get("data", {})
-        loggs = list(data.get("logg", {}).keys())
-        if not loggs:
-            return self._scrape_logg()
-        return sorted(float(g) for g in loggs)
+        """Return sorted log(g) values from the SVO grid."""
+        return sorted(self._load_catalog()["logg"].unique().tolist())
 
     def download_feh(self) -> Sequence[float]:
-        """Return sorted list of [Fe/H] values from the SVO grid."""
-        data = self._dataset.get("data", {})
-        fehs = list(data.get("feh", {}).keys())
-        if not fehs:
-            return self._scrape_feh()
-        return sorted(float(f) for f in fehs)
+        """Return sorted [Fe/H] values from the SVO grid."""
+        return sorted(self._load_catalog()["feh"].unique().tolist())
 
     def download_alpha(self) -> Sequence[float]:
-        """Return sorted list of [alpha/Fe] values from the SVO grid."""
-        data = self._dataset.get("data", {})
-        alphas = list(data.get("alpha", {}).keys())
-        if not alphas:
-            return self._scrape_alpha()
-        return sorted(float(a) for a in alphas)
-
-    def _scrape_teff(self) -> Sequence[float]:
-        return self._scrape_col(0)
-
-    def _scrape_logg(self) -> Sequence[float]:
-        return self._scrape_col(1)
-
-    def _scrape_feh(self) -> Sequence[float]:
-        return self._scrape_col(2)
-
-    def _scrape_alpha(self) -> Sequence[float]:
-        return self._scrape_col(3)
-
-    def _scrape_col(self, col: int) -> list[float]:
-        url = urljoin(self._base_url, "grid/")
-        r = requests.get(url, timeout=60)
-        r.raise_for_status()
-        soup = BeautifulSoup(r.text, "html.parser")
-        vals = set()
-        for row in soup.select("table tr"):
-            cells = row.find_all("td")
-            if len(cells) >= 4:
-                try:
-                    vals.add(float(cells[col].get_text(strip=True)))
-                except ValueError:
-                    continue
-        return sorted(vals)
+        """Return sorted [alpha/Fe] values from the SVO grid."""
+        return sorted(self._load_catalog()["alpha"].unique().tolist())
 
     def _fetch_spectrum(self, teff, logg, feh, alpha) -> PhoenixDataFile:
-        teff_s = f"{int(teff):05d}"
-        logg_s = f"{logg:+.1f}"
-        feh_s = f"{feh:+.1f}"
-        filename = (
-            f"lte{teff_s}-{logg_s}{feh_s}.PHOENIX-"
-            f"ACES-AGSS-COND-2011-Spec{feh_s}.Alpha={alpha:+.1f}.7.gz.txt"
+        cat = self._load_catalog()
+        mask = (
+            (np.abs(cat["teff"] - teff) < 1e-3)
+            & (np.abs(cat["logg"] - logg) < 1e-3)
+            & (np.abs(cat["feh"] - feh) < 1e-3)
+            & (np.abs(cat["alpha"] - alpha) < 1e-3)
         )
-        url = urljoin(self._base_url, f"zones/StarWars/{feh_s}/{filename}")
+        matches = cat[mask]
+        if matches.empty:
+            raise FileNotFoundError(
+                f"No SVO spectrum for teff={teff}, logg={logg}, "
+                f"feh={feh}, alpha={alpha}"
+            )
 
+        url = matches.iloc[0]["filename"]
+        local = None
         if self._path and not is_remote_url(str(self._path)):
-            local = pathlib.Path(self._path) / filename
-            if not local.exists():
-                download_to_directory(url, pathlib.Path(self._path))
-            fits_path = local
-        else:
-            r = requests.get(url, timeout=120)
-            r.raise_for_status()
-            return _read_fits_spectrum(io.BytesIO(r.content), teff, logg, feh, alpha)
+            local = pathlib.Path(self._path) / (
+                f"svo_{self._model_name}_T{int(teff):05d}_g{logg:.1f}"
+                f"_m{feh:+.1f}_a{alpha:.1f}.txt"
+            )
+            if local.exists():
+                return _read_svo_ascii(local, teff, logg, feh, alpha)
 
-        return _read_fits_spectrum(fits_path, teff, logg, feh, alpha)
+        r = requests.get(url, timeout=120)
+        r.raise_for_status()
+
+        if local is not None:
+            local.parent.mkdir(parents=True, exist_ok=True)
+            local.write_bytes(r.content)
+            return _read_svo_ascii(local, teff, logg, feh, alpha)
+
+        return _read_svo_ascii(io.BytesIO(r.content), teff, logg, feh, alpha)
 
 
 # ======================================================================
@@ -750,6 +776,21 @@ def _read_fits_spectrum(source, teff, logg, feh, alpha) -> PhoenixDataFile:
         wlen = wlen / 1000.0
 
     flux = data * 1e-9
+    return PhoenixDataFile(
+        teff=teff, logg=logg, feh=feh, alpha=alpha, wlen=wlen, flux=flux
+    )
+
+
+def _read_svo_ascii(source, teff, logg, feh, alpha) -> PhoenixDataFile:
+    """Read an SVO ASCII spectrum and return a PhoenixDataFile.
+
+    SVO returns wavelength in Angstrom and flux in
+    erg s^-1 cm^-2 Angstrom^-1.  The conversion to W m^-2 um^-1 is a factor
+    of 10 (1e-3 for cm^-2 to m^-2 times 1e4 for Angstrom^-1 to um^-1).
+    """
+    table = pd.read_csv(source, comment="#", names=["wavelength", "flux"], sep=r"\s+")
+    wlen = table["wavelength"].to_numpy(dtype=float) / 10_000.0
+    flux = table["flux"].to_numpy(dtype=float) * 10.0
     return PhoenixDataFile(
         teff=teff, logg=logg, feh=feh, alpha=alpha, wlen=wlen, flux=flux
     )

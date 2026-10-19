@@ -228,6 +228,10 @@ class Optimizer(Logger, Citable):
             self._binner = observed.create_binner()
         self._compile_params()
 
+    def set_binner(self, binner) -> None:
+        """Override the default observation-derived binner."""
+        self._binner = binner
+
     def compile_params(self) -> None:
         """Dummy, does nothing and will be depcreated."""
         import warnings
@@ -605,7 +609,8 @@ class Optimizer(Logger, Citable):
 
         # self.update_model(fit_params)
         obs_bins = self._observed.wavenumberGrid
-
+        # binner = self._observed.create_binner() ## remove to allow fit and
+        # avoid reloading instrumnet LSF.
         try:
             _, final_model, _, _ = self._binner.bin_model(
                 self._model.model(wngrid=obs_bins)

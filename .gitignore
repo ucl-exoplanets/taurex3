@@ -4,6 +4,7 @@
 /.nox/
 /.python-version
 /.pytype/
+.github/copilot-instructions.md
 /dist/
 /docs/_build/
 /src/*.egg-info/
@@ -17,3 +18,4 @@ scratch/
 node_modules/
 .docs-preview/
 .github/copilot-instructions.md
+tmp/

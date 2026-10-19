@@ -3,6 +3,8 @@
 from taurex.data.spectrum.array import ArraySpectrum
 from taurex.data.spectrum.iraclis import IraclisSpectrum
 from taurex.data.spectrum.observed import ObservedSpectrum
+from taurex.data.spectrum.offsetspectrum import OffsetSpectra  # noqa: F401
+from taurex.data.spectrum.offsetspectrum import OffsetSpectraCont  # noqa: F401
 from taurex.data.spectrum.spectrum import BaseSpectrum
 
 

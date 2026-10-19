@@ -95,7 +95,7 @@ Version 3.4 also fixes a number of defects: pressure-unit handling in the ExoTra
 
 TauREx 3 has been the retrieval framework behind a large number of published exoplanet atmosphere studies since its 2021 release [@alrefaie2021; @alrefaie2022]. Version 3.4 extends this impact to a regime that was previously out of reach: retrievals with high-resolution opacity data and multiple cloud parameterisations that previously exhausted available memory. We demonstrate this with a retrieval campaign on W107. The first experiment uses HST/WFC3; a second, planned experiment will use JWST.
 
-<!-- TODO: add the W107 JWST figures once that run completes (placeholders below). -->
+<!-- TODO: the w107_jwst_*.pdf files currently reuse the HST figures as placeholders; replace them when the JWST run completes. -->
 
 ## W107 with HST/WFC3
 

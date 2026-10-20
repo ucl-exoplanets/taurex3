@@ -11,7 +11,7 @@ without modifying the main codebase. For example, new forward models, opacity fo
 chemistry and optimizers.
 
 Finding Plugins
-===============
+~~~~~~~~~~~~~~~~~~~~
 
 TauREx plugins usually are named as 'taurex_foo' or 'taurex-bar'. The Plugin Catalogue contains
 a list of plugins developed by us in the :ref:`pluginscata` . You can also
@@ -19,7 +19,7 @@ search PyPI for packages with keywords `taurex <pypi_>`_.
 
 
 Using Plugins
-=============
+~~~~~~~~~~~~~~~~~~~~
 
 .. note::
 
@@ -103,7 +103,7 @@ Now we can use FastChem in the input file with retrievals::
 
 
 Building Plugins
-================
+~~~~~~~~~~~~~~~~~~~~
 
 While `PyPI <pypi_>`_ contains a growing list of TauREx plugins,
 you may not find a plugin that matches your needs. In this case

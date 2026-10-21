@@ -14,13 +14,20 @@ If you would rather work through the same ideas interactively, see the
 Prerequisites
 -------------
 
-Before reading this you should have a few things on hand. Firstly ``H2O`` and ``CO2`` absorption cross sections
-in one of the :ref:`supported_data_formats` is required. This example assumes cross-sections at *R=10000*.
-Secondly some collisionally induced absorption (CIA) cross sections are also
-required for a later part for ``H2-He`` and ``H2-H2``, you can get these from the HITRAN_ site.
+Before reading this you should have a few things on hand. Firstly ``H2O`` and ``CO2`` absorption cross sections (xsec) in one of the :ref:`supported_data_formats` is required, distributed by [ExoMol](https://www.exomol.com). 
+Secondly some collisionally induced absorption (CIA) cross sections are also required for a later part for ``H2-He`` and ``H2-H2``, distributed by [HITRAN](https://hitran.org/).
 
 .. tip::
-    A starter set of these cross-sections and cia can be found in this dropbox: https://www.dropbox.com/sh/13y33d02vh56jh2/AABxuHdrZI83bSgoLz1Wzb2Fa?dl=0
+    A starter set of these cross-sections and cia can be found in this dropbox: https://www.dropbox.com/sh/13y33d02vh56jh2/AABxuHdrZI83bSgoLz1Wzb2Fa?dl=0. You can download ``H2O`` and ``CO2`` opacities from ``xsec/xsec_sampled_R15000_0.3-15`` and save them locally in your ``/path/to/xsec`` folder. For the CIA ``H2-He`` and ``H2-H2`` files, you can download them from ``cia/HITRAN/data`` and save them locally in your ``/path/to/cia`` folder.
+
+
+
+**A note on data provenance.** TauREx provides software to read and analyse these datasets, but the files themselves are third-party products. The opacity files downloaded below come from [ExoMol](https://www.exomol.com) and the CIA files from [HITRAN](https://hitran.org/); they are not created, owned, or warranted by the TauREx team.
+
+Once the files are in place, TauREx's caching system discovers them automatically — path configuration is a one-time step.
+
+
+
 
 
 Setup
@@ -168,7 +175,7 @@ using the ``-o`` output argument::
 We can use this output to plot profiles spectra and even the optical depth!
 Try::
 
-    taurex-plot -i myfile.h5 -o fm_plots/ --all
+    taurex-plot -i myfile.hdf5 -o fm_plots/ --all
 
 To plot everything:
 

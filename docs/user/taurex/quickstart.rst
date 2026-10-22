@@ -212,23 +212,24 @@ temperature profile. We should try running a retrieval. We will use nestle_ as o
 but other brands are available. This has already be setup under the ``[Optimizer]`` section of the input
 file so we will not worry about it now. We now need to inform the optimizer what parameters we need to fit.
 The ``[Fitting]`` section should list all of the parameters in our model that we want (or dont want) to fit
-and *how* to go about fitting it. By default the ``planet_radius`` parameter is fit when no section is provided,
-we should start by creating our ``[Fitting]`` section and disabling the ``planet_radius`` fit::
+and *how* to go about fitting it. 
 
     [Fitting]
-    planet_radius:fit = False
+    planet_radius:fit = True
+    planet_radius:bounds = 0.8,2.1
 
 the syntax is pretty simple, its essentially ``parameter_name:option`` with ``option`` being either
 ``fit``, ``bounds`` and ``mode``. ``fit`` is simply tells the optimizer whether to fit the parameter, ``bounds``
 describes the parameter space to optimize in and ``mode`` instructs the optimizer to fit in either ``linear``
 or ``log`` space.
 The parameter we are interested in is isothermal temperature which is represented as ``T``, and we will fit
-it within *1200 K* and *1400 K*::
+it within *1000 K* and *2000 K*::
 
     [Fitting]
-    planet_radius:fit = False
+    planet_radius:fit = True
+    planet_radius:bounds = 0.8,2.1
     T:fit = True
-    T:bounds = 1200.0,1400.0
+    T:bounds = 1000,2000
 
 We don't need to include ``mode`` as by default ``T`` fits in linear space. Some parameters such as
 abundances fit in log space by default.

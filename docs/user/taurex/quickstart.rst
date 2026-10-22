@@ -14,7 +14,7 @@ If you would rather work through the same ideas interactively, see the
 Prerequisites
 -------------
 
-Before reading this you should have a few things on hand. Firstly ``H2O`` and ``CO2`` absorption cross sections (xsec) in one of the :ref:`supported_data_formats` is required, distributed by [ExoMol](https://www.exomol.com). 
+Before reading this you should have a few things on hand. Firstly ``H2O`` and ``CO2`` absorption cross sections (xsec) in one of the :ref:`supported_data_formats` is required, distributed by [ExoMol](https://www.exomol.com).
 Secondly some collisionally induced absorption (CIA) cross sections are also required for a later part for ``H2-He`` and ``H2-H2``, distributed by [HITRAN](https://hitran.org/).
 
 .. tip::
@@ -212,7 +212,7 @@ temperature profile. We should try running a retrieval. We will use nestle_ as o
 but other brands are available. This has already be setup under the ``[Optimizer]`` section of the input
 file so we will not worry about it now. We now need to inform the optimizer what parameters we need to fit.
 The ``[Fitting]`` section should list all of the parameters in our model that we want (or dont want) to fit
-and *how* to go about fitting it. 
+and *how* to go about fitting it.
 
     [Fitting]
     planet_radius:fit = True

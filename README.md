@@ -56,4 +56,4 @@ please [file an issue] along with a detailed description.
 
 [license]: https://github.com/ucl-exoplanets/taurex3/blob/main/LICENSE
 [contributor guide]: https://github.com/ucl-exoplanets/taurex3/blob/main/CONTRIBUTING.md
-[documentation]: https://taurex3.readthedocs.io/en/latest/
+[documentation]: https://ucl-exoplanets.github.io/taurex3/index.html

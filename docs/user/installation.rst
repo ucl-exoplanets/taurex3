@@ -79,9 +79,10 @@ For contributor checks, use::
 
 To build documentation do::
 
-    python setup.py build_sphinx
+    python -m pip install -r docs/requirements.txt
+    python -m sphinx -b html docs docs/build
 
-The output can be found in the ``doc/build`` directory
+The output can be found in the ``docs/build`` directory
 
 Dependencies
 ------------

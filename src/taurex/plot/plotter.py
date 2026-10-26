@@ -1232,7 +1232,8 @@ class Plotter:
 
     def _plot_tau(self, contribution, pressure, wavelength):
         """Plot tau."""
-        from taurex.plot import plot_depth_contrib, plot_optical_depth
+        from taurex.plot import plot_depth_contrib
+        from taurex.plot import plot_optical_depth
 
         fig = plt.figure("Contribution function")
         grid = fig.add_gridspec(1, 4, wspace=0.4, hspace=0.3)

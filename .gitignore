@@ -17,7 +17,3 @@ scratch/
 node_modules/
 .docs-preview/
 .github/copilot-instructions.md
-
-# Local coding-agent handoff notes (repository root only).
-/HANDOFF.md
-/*_HANDOFF.md

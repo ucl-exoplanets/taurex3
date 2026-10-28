@@ -51,5 +51,38 @@ The band spans temperature plus/minus one standard deviation. The caller
 controls titles, legends and saving; additional keyword arguments style
 the line. Both forward and fitted TP plots in ``Plotter`` use this function.
 
+Gas abundance profiles
+----------------------
+
+Call ``plot_gas_profile`` once per gas, supplying its volume mixing ratios
+and matching pressures in Pa. Both axes are logarithmic, with pressure in
+bar increasing downwards. The function returns the line and optional band.
+
+.. code-block:: python
+
+   fig, ax = plt.subplots()
+   for name, profile, std in zip(gas_names, mixing_ratios, mixing_ratio_stds):
+       line, band = tplot.plot_gas_profile(
+           ax, profile, pressure, std=std, label=name,
+       )
+   ax.set_xlim(1e-12, 3)
+   ax.legend()
+   plt.show()
+
+Arrays contain one value per pressure layer; omit ``std`` for profiles
+without uncertainties. Mixing ratios and standard deviations must be finite
+and nonnegative. Zero mixing ratios are retained in the line data, but are
+not visible on a logarithmic axis.
+
+The uncertainty convention matches the existing retrieval plots: the upper
+bound is ``profile + std``, reflected about the profile in logarithmic space
+to obtain the lower bound. Equivalently, the lower bound is
+``profile**2 / (profile + std)`` for positive profiles, with zero as the limit
+at zero mixing ratio. This is not an arithmetic plus/minus interval.
+One continuous band replaces the two adjacent legacy bands. Active and
+inactive gas plots in ``Plotter`` reuse this function, while retaining their
+colors, legends, file names and mixing-ratio limits. Pressure limits follow
+the supplied layer range, as in the standalone TP function.
+
 .. automodule:: taurex.plot
    :members:

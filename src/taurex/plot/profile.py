@@ -1,4 +1,4 @@
-"""Plot atmospheric depth profiles from arrays on caller-owned axes."""
+"""Plot atmospheric profiles from arrays on caller-owned axes."""
 
 import numpy as np
 
@@ -80,6 +80,71 @@ def plot_temperature_pressure(ax, temperature, pressure, std=None, **kwargs):
             alpha=0.5,
         )
     ax.set_xlabel("Temperature (K)")
+    _pressure_axis(ax, pressure)
+    return line, band
+
+
+def plot_gas_profile(ax, mixing_ratio, pressure, std=None, **kwargs):
+    r"""Plot one gas mixing-ratio profile and an optional uncertainty band.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Caller-owned axes. No figure, legend or file is created.
+    mixing_ratio : array_like
+        One-dimensional finite nonnegative volume mixing ratios, one per layer.
+        Zero values are retained but cannot be displayed on a logarithmic axis.
+    pressure : array_like
+        Matching finite positive pressures in Pa, displayed in bar.
+        Must be strictly monotonic in either direction; a single layer is allowed.
+    std : array_like, optional
+        Matching finite nonnegative standard deviations in mixing ratio.
+    \*\*kwargs : dict
+        Passed to ``ax.plot``, for example color, label or linestyle.
+
+    Returns
+    -------
+    line : matplotlib.lines.Line2D
+        The gas profile.
+    band : matplotlib.collections.FillBetweenPolyCollection or None
+        Uncertainty band, or None if std is omitted.
+
+    Notes
+    -----
+    Both axes are logarithmic, with pressure increasing downwards. The band
+    uses the historical Plotter convention: upper = mixing_ratio + std and
+    lower = 10**(2*log10(mixing_ratio) - log10(upper)). This is symmetric in
+    log space, rather than an arithmetic plus/minus interval. At zero mixing
+    ratio the lower bound is zero (the continuous limit). The band uses the
+    line color and alpha 0.5. Set axis limits and titles on the supplied axes.
+    """
+    pressure = _pressure_array(pressure)
+    mixing_ratio = np.asarray(mixing_ratio, dtype=float)
+    if mixing_ratio.shape != pressure.shape:
+        raise ValueError("mixing_ratio must be one-dimensional and match pressure")
+    if not np.all(np.isfinite(mixing_ratio)) or np.any(mixing_ratio < 0):
+        raise ValueError("mixing_ratio must contain finite nonnegative values")
+    if std is not None:
+        std = np.asarray(std, dtype=float)
+        if std.shape != mixing_ratio.shape:
+            raise ValueError("std must match mixing_ratio")
+        if not np.all(np.isfinite(std)) or np.any(std < 0):
+            raise ValueError("std must contain finite nonnegative values")
+        upper = mixing_ratio + std
+        lower = np.zeros_like(mixing_ratio)
+        positive = mixing_ratio > 0
+        log_profile = np.log10(mixing_ratio[positive])
+        lower[positive] = 10 ** (
+            log_profile - (np.log10(upper[positive]) - log_profile)
+        )
+    ax.set_xscale("log")
+    (line,) = ax.plot(mixing_ratio, pressure, **kwargs)
+    band = None
+    if std is not None:
+        band = ax.fill_betweenx(
+            pressure, lower, upper, color=line.get_color(), alpha=0.5
+        )
+    ax.set_xlabel("Mixing ratio")
     _pressure_axis(ax, pressure)
     return line, band
 

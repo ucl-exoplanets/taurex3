@@ -202,6 +202,8 @@ class Plotter:
 
     def plot_fit_xprofile(self):
         """Plot fitted mixing ratio profiles."""
+        from taurex.plot import plot_gas_profile
+
         for solution_idx, solution_val in self.solution_iter():
 
             fig = plt.figure(figsize=(7, 7 / self.phi))
@@ -209,7 +211,7 @@ class Plotter:
             num_moles = len(self.activeGases)
 
             profiles = solution_val["Profiles"]
-            pressure_profile = profiles["pressure_profile"][:] / 1e5
+            pressure_profile = profiles["pressure_profile"][:]
             active_profile = profiles["active_mix_profile"][...]
             active_profile_std = profiles["active_mix_profile_std"][...]
 
@@ -223,37 +225,16 @@ class Plotter:
                 prof = active_profile[mol_idx]
                 prof_std = active_profile_std[mol_idx]
 
-                plt.plot(
+                plot_gas_profile(
+                    ax,
                     prof,
                     pressure_profile,
+                    std=prof_std,
                     color=cols_mol[mol_name],
                     label=mol_name,
                 )
 
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof + prof_std,
-                    prof,
-                    color=self.cmap(mol_idx / num_moles),
-                    alpha=0.5,
-                )
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof,
-                    np.power(
-                        10,
-                        (np.log10(prof) - (np.log10(prof + prof_std) - np.log10(prof))),
-                    ),
-                    color=self.cmap(mol_idx / num_moles),
-                    alpha=0.5,
-                )
-
-            plt.yscale("log")
-            plt.gca().invert_yaxis()
-            plt.xscale("log")
             plt.xlim(1e-12, 3)
-            plt.xlabel("Mixing ratio")
-            plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
             ax.set_position(
@@ -288,7 +269,7 @@ class Plotter:
             num_moles = len(self.inactiveGases)
 
             profiles = solution_val["Profiles"]
-            pressure_profile = profiles["pressure_profile"][:] / 1e5
+            pressure_profile = profiles["pressure_profile"][:]
             active_profile = profiles["active_mix_profile"][...]
             active_profile_std = profiles["active_mix_profile_std"][...]
 
@@ -304,37 +285,16 @@ class Plotter:
                 prof = inactive_profile[mol_idx]
                 prof_std = inactive_profile_std[mol_idx]
 
-                plt.plot(
+                plot_gas_profile(
+                    ax,
                     prof,
                     pressure_profile,
+                    std=prof_std,
                     color=cols_mol[mol_name],
                     label=mol_name,
                 )
 
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof + prof_std,
-                    prof,
-                    color=self.cmap(inactive_idx / num_moles),
-                    alpha=0.5,
-                )
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof,
-                    np.power(
-                        10,
-                        (np.log10(prof) - (np.log10(prof + prof_std) - np.log10(prof))),
-                    ),
-                    color=self.cmap(inactive_idx / num_moles),
-                    alpha=0.5,
-                )
-
-            plt.yscale("log")
-            plt.gca().invert_yaxis()
-            plt.xscale("log")
             plt.xlim(1e-12, 3)
-            plt.xlabel("Mixing ratio")
-            plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
             ax.set_position(
@@ -364,10 +324,12 @@ class Plotter:
 
     def plot_forward_xprofile(self):
         """Plot forward mixing ratio profiles."""
+        from taurex.plot import plot_gas_profile
+
         solution_val = self.forward_output()
 
         profiles = solution_val["Profiles"]
-        pressure_profile = profiles["pressure_profile"][:] / 1e5
+        pressure_profile = profiles["pressure_profile"][:]
         active_profile = profiles["active_mix_profile"][...]
 
         inactive_profile = profiles["inactive_mix_profile"][...]
@@ -383,19 +345,15 @@ class Plotter:
 
             prof = active_profile[mol_idx]
 
-            plt.plot(
+            plot_gas_profile(
+                ax,
                 prof,
                 pressure_profile,
                 color=cols_mol[mol_name],
                 label=mol_name,
             )
 
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xscale("log")
         plt.xlim(1e-12, 3)
-        plt.xlabel("Mixing ratio")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
         ax.set_position(
@@ -434,19 +392,15 @@ class Plotter:
 
             prof = inactive_profile[mol_idx]
 
-            plt.plot(
+            plot_gas_profile(
+                ax,
                 prof,
                 pressure_profile,
                 color=cols_mol[mol_name],
                 label=mol_name,
             )
 
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xscale("log")
         plt.xlim(1e-12, 3)
-        plt.xlabel("Mixing ratio")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
         ax.set_position(

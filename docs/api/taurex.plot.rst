@@ -29,7 +29,7 @@ Functions return Matplotlib artists for further customization and do not
 save or show figures, select a backend, or change global plotting settings.
 
 Temperature–pressure profiles
-----------------------------
+------------------------------
 
 Temperatures and their optional standard deviations are supplied in kelvin,
 with one value per pressure layer. Pressure is supplied in Pa and displayed

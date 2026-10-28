@@ -66,7 +66,7 @@ Two Layer
 Array
 -----------------------------------------------------
 
-.. automodule:: taurex.data.profiles.chemistry.gas.twolayergas
+.. automodule:: taurex.data.profiles.chemistry.gas.arraygas
    :members:
    :undoc-members:
    :show-inheritance:

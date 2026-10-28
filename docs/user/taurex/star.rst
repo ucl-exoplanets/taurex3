@@ -70,6 +70,7 @@ Stellar emission spectrum is read from the PHOENIX_ library ``.fits.gz`` files a
 Any temperature outside of the range provided by PHOENIX will use a blackbody SED instead.
 The ``.fits.gz`` filenames must include the temperature as the first number. TauREx3 splits the filename
 in terms of numbers so any text can be included in the beginning of the file name, therefore these are valid::
+
     lte05600.fits.gz  # 5600 Kelvin
     abunchofothertext-andanother-here05660-0.4_0.5.0.8.fits.gz #5660 Kelvin
     5700-056-034-0434.fits.gz #5700 Kelvin

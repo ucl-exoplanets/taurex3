@@ -55,6 +55,9 @@ extensions = [
     "nbsphinx",
 ]
 
+# Optional sampler bindings are not required to render their API documentation.
+autodoc_mock_imports = ["pypolychord"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
@@ -62,7 +65,7 @@ templates_path = ["_templates"]
 # You can specify multiple suffix as a list of string:
 #
 # source_suffix = ['.rst', '.md']
-source_suffix = ".rst"
+source_suffix = {".rst": "restructuredtext"}
 
 # The master toctree document.
 master_doc = "index"
@@ -94,13 +97,7 @@ html_theme = "furo"
 # further.  For a list of options available for each theme, see the
 # documentation.
 #
-html_theme_options = {
-    "collapse_navigation": False,
-    "sticky_navigation": True,
-    "navigation_depth": 4,
-    "includehidden": True,
-    "titles_only": False,
-}
+html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

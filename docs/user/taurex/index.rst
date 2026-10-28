@@ -1,6 +1,6 @@
-=========================
+============================
 ``taurex`` Program Reference
-=========================
+============================
 
 This section documents the configuration and reference material for the
 standalone ``taurex`` program. If you are looking for a guided first run,

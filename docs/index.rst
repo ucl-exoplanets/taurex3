@@ -56,6 +56,7 @@ Looking for more learning material?
 - Explore `this external tutorial series <https://github.com/Mael-Voyer/TauREx-tutorial>`_.
 
 ----------------------------------
+
 :Release: |release|
 
 .. |image1| image::  _static/taurex_logo.png

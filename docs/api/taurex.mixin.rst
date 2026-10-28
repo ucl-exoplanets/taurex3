@@ -1,5 +1,5 @@
 Mixin (``taurex.mixin``)
-=======================
+========================
 
 .. automodule:: taurex.mixin.core
    :members:

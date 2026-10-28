@@ -16,6 +16,7 @@ class ArraySpectrum(BaseSpectrum):
     Loads spectrum and computes bin
     edges and bin widths. Spectrum shape(nbins, 3-4) with 3-4 columns with
     ordering:
+
         1. wavelength (um)
         2. spectral data
         3. error

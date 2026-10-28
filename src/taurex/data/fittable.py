@@ -514,6 +514,7 @@ class Fittable:
         params : :obj:`dict`
             Dictionary with key as the parameter name (``param_name``)
             and value as a tuple with:
+
                 * parameter name
                 * parameter name in Latex form
                 * get function

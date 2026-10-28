@@ -11,6 +11,7 @@ taurex.util.emission module
    :members:
    :undoc-members:
    :show-inheritance:
+
 taurex.util.math module
 -----------------------
 
@@ -18,6 +19,7 @@ taurex.util.math module
    :members:
    :undoc-members:
    :show-inheritance:
+
 taurex.util.util module
 -----------------------
 

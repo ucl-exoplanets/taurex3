@@ -18,9 +18,11 @@ The input is defined in various *headers*, with each header having variables tha
 
     [Header2]
     parameter1 = adifferentvalue
+
 Of course comments are handled with ``#``
 
- The available headers are:
+The available headers are:
+
     - :ref:`userglobal`
     - :ref:`userchemistry`
     - :ref:`usertemperature`

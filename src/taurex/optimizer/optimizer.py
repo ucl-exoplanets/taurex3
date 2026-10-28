@@ -582,6 +582,7 @@ class Optimizer(Logger, Citable):
 
         Computes the Chi-Squared between the forward model and
         observation. The steps taken are:
+
             1. Forward model (FM) is updated with :func:`update_model`
             2. FM is then computed at its native grid then binned.
             3. Chi-squared between FM and observation is computed

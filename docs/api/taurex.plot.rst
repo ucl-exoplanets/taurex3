@@ -118,5 +118,39 @@ spectral samples remain in ``Plotter``. If no positive samples remain,
 the adapter draws nothing. An explicitly supplied color now styles both
 the line and its bands; previously it only styled the bands.
 
+Spectral contributions
+----------------------
+
+``plot_spectral_contributions`` draws a mapping of names to spectral arrays
+on a shared wavelength grid. Names become line labels, and mapping order
+determines drawing order and the default color cycle. Each contribution is
+drawn independently: no summing, normalization, selection or rebinning is
+performed. This supports model contributions that do not add up linearly.
+
+.. code-block:: python
+
+   fig, ax = plt.subplots()
+   artists = tplot.plot_spectral_contributions(
+       ax, wavelengths,
+       {"Absorption-H2O": water_spectrum, "Rayleigh": rayleigh_spectrum},
+       std={"Absorption-H2O": water_std},
+   )
+   ax.set_ylabel("Transit depth")
+   ax.legend()
+   plt.show()
+
+The optional standard-deviation mapping may cover only some contributions;
+unknown names are rejected. Each returned dictionary entry contains the line
+and bands from ``plot_spectrum``. All component arrays are validated before
+drawing. Shared keyword arguments style all lines; call separately or modify
+returned artists for individual styles. An empty mapping draws nothing.
+
+The simple and full contribution methods in ``Plotter`` select HDF5 groups,
+prepare each spectrum using the same rebinning and positive-value selection
+as regular spectra, then delegate drawing to this API. Simple plots retain
+individual absorption components and totals for other contributions; full
+plots retain individual components of every contribution. Simple totals now
+also receive a contribution-name label, making them visible in the legend.
+
 .. automodule:: taurex.plot
    :members:

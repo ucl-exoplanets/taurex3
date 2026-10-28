@@ -986,7 +986,7 @@ class Plotter:
                 if isinstance(component_value, h5py.Dataset):
                     continue
                 total_label = f"{contrib_name}-{component_name}"
-                self._generic_plot(
+                self._contribution_plot(
                     wlgrid,
                     native_grid,
                     component_value,
@@ -1011,7 +1011,7 @@ class Plotter:
                     if isinstance(component_value, h5py.Dataset):
                         continue
                     total_label = f"{contrib_name}-{component_name}"
-                    self._generic_plot(
+                    self._contribution_plot(
                         wlgrid,
                         native_grid,
                         component_value,
@@ -1019,11 +1019,12 @@ class Plotter:
                         label=total_label,
                     )
             else:
-                self._generic_plot(
+                self._contribution_plot(
                     wlgrid,
                     native_grid,
                     contrib_dict,
                     resolution,
+                    label=contrib_name,
                 )
 
         return wlgrid
@@ -1040,6 +1041,41 @@ class Plotter:
         label=None,
     ):
         """Generic plotting function."""
+        from taurex.plot import plot_spectrum
+
+        wlgrid, binned_spectrum, binned_error = self._prepare_spectrum(
+            wlgrid, native_grid, spectra, resolution
+        )
+        if wlgrid.size == 0:
+            return
+        return plot_spectrum(
+            plt.gca(),
+            wlgrid,
+            binned_spectrum,
+            std=binned_error,
+            color=color,
+            label=label,
+            alpha=alpha,
+        )
+
+    def _contribution_plot(self, wlgrid, native_grid, spectra, resolution, label):
+        """Draw one selected HDF5 component using the array contribution API."""
+        from taurex.plot import plot_spectral_contributions
+
+        wlgrid, values, errors = self._prepare_spectrum(
+            wlgrid, native_grid, spectra, resolution
+        )
+        if wlgrid.size == 0:
+            return
+        return plot_spectral_contributions(
+            plt.gca(),
+            wlgrid,
+            {label: values},
+            std={label: errors} if errors is not None else None,
+        )
+
+    def _prepare_spectrum(self, wlgrid, native_grid, spectra, resolution):
+        """Read, optionally rebin, and select positive HDF5 spectral samples."""
         binned_error = None
         if resolution is not None:
             from taurex.binning import FluxBinner
@@ -1085,21 +1121,11 @@ class Plotter:
             except KeyError:
                 binned_error = None
 
-        from taurex.plot import plot_spectrum
-
         good = binned_spectrum > 0
-        # Keep the historical selection in the HDF5 adapter; the standalone
-        # function accepts zero and negative values as well.
-        if not np.any(good):
-            return
-        return plot_spectrum(
-            plt.gca(),
+        return (
             wlgrid[good],
             binned_spectrum[good],
-            std=binned_error[good] if binned_error is not None else None,
-            color=color,
-            label=label,
-            alpha=alpha,
+            binned_error[good] if binned_error is not None else None,
         )
 
     def close(self):

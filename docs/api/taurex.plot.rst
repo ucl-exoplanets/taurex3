@@ -84,5 +84,39 @@ inactive gas plots in ``Plotter`` reuse this function, while retaining their
 colors, legends, file names and mixing-ratio limits. Pressure limits follow
 the supplied layer range, as in the standalone TP function.
 
+Spectra
+-------
+
+``plot_spectrum`` accepts wavelength samples in micrometres, spectral values,
+and optional standard deviations in the same units as the spectrum. It
+returns the line and a tuple of the one- and two-sigma bands (an empty tuple
+without uncertainties). Arrays must be one-dimensional, nonempty and finite;
+wavelengths must be positive and standard deviations nonnegative.
+
+.. code-block:: python
+
+   fig, ax = plt.subplots()
+   line, bands = tplot.plot_spectrum(
+       ax, wavelengths, spectrum, std=spectrum_std,
+       color="tab:blue", label="Model",
+   )
+   ax.set_ylabel("Transit depth")
+   ax.set_xscale("log")
+   ax.legend()
+   plt.show()
+
+The function retains the supplied sample order and includes zero and negative
+spectral values. It performs no rebinning or unit conversion and sets only
+the wavelength label. The caller controls scales, limits and the ordinate
+label, since its meaning depends on the model. Both bands use the line color;
+their opacities are 0.5 and 0.2, matching the historical spectrum plots.
+
+``Plotter._generic_plot`` delegates drawing to this function, so forward,
+fitted and contribution plots share it. HDF5 dataset selection, optional
+``FluxBinner`` rebinning and the historical selection of strictly positive
+spectral samples remain in ``Plotter``. If no positive samples remain,
+the adapter draws nothing. An explicitly supplied color now styles both
+the line and its bands; previously it only styled the bands.
+
 .. automodule:: taurex.plot
    :members:

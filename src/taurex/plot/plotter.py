@@ -1085,34 +1085,22 @@ class Plotter:
             except KeyError:
                 binned_error = None
 
+        from taurex.plot import plot_spectrum
+
         good = binned_spectrum > 0
-        plt.plot(
+        # Keep the historical selection in the HDF5 adapter; the standalone
+        # function accepts zero and negative values as well.
+        if not np.any(good):
+            return
+        return plot_spectrum(
+            plt.gca(),
             wlgrid[good],
             binned_spectrum[good],
+            std=binned_error[good] if binned_error is not None else None,
+            color=color,
             label=label,
             alpha=alpha,
         )
-        if binned_error is not None:
-            plt.fill_between(
-                wlgrid[good],
-                binned_spectrum[good] - binned_error[good],
-                binned_spectrum[good] + binned_error[good],
-                alpha=0.5,
-                zorder=-2,
-                color=color,
-                edgecolor="none",
-            )
-
-            # 2 sigma
-            plt.fill_between(
-                wlgrid[good],
-                binned_spectrum[good] - 2 * binned_error[good],
-                binned_spectrum[good] + 2 * binned_error[good],
-                alpha=0.2,
-                zorder=-3,
-                color=color,
-                edgecolor="none",
-            )
 
     def close(self):
         """Close HDF5 file."""

@@ -541,9 +541,11 @@ class Plotter:
 
     def plot_fitted_tp(self):
         """Plot fitted TP profile."""
+        from taurex.plot import plot_temperature_pressure
+
         # fitted model
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)  # noqa: F841
+        ax = fig.add_subplot(111)
 
         for solution_idx, solution_val in self.solution_iter():
             if self.num_solutions > 1:
@@ -552,25 +554,15 @@ class Plotter:
                 label = "Fitted profile"
             temp_prof = solution_val["Profiles"]["temp_profile"][:]
             temp_prof_std = solution_val["Profiles"]["temp_profile_std"][:]
-            pres_prof = solution_val["Profiles"]["pressure_profile"][:] / 1e5
-            plt.plot(
+            pres_prof = solution_val["Profiles"]["pressure_profile"][:]
+            plot_temperature_pressure(
+                ax,
                 temp_prof,
                 pres_prof,
+                std=temp_prof_std,
                 color=self.cmap(float(solution_idx) / self.num_solutions),
                 label=label,
             )
-            plt.fill_betweenx(
-                pres_prof,
-                temp_prof - temp_prof_std,
-                temp_prof + temp_prof_std,
-                color=self.cmap(float(solution_idx) / self.num_solutions),
-                alpha=0.5,
-            )
-
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xlabel("Temperature (K)")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         legend = plt.legend(loc="upper left", ncol=1, prop={"size": 11})
         legend.get_frame().set_facecolor("white")
@@ -589,19 +581,16 @@ class Plotter:
 
     def plot_forward_tp(self):
         """Plot forward TP profile."""
+        from taurex.plot import plot_temperature_pressure
+
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)  # noqa: F841
+        ax = fig.add_subplot(111)
 
         solution_val = self.forward_output()
 
         temp_prof = solution_val["Profiles"]["temp_profile"][:]
-        pres_prof = solution_val["Profiles"]["pressure_profile"][:] / 1e5
-        plt.plot(temp_prof, pres_prof)
-
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xlabel("Temperature (K)")
-        plt.ylabel("Pressure (bar)")
+        pres_prof = solution_val["Profiles"]["pressure_profile"][:]
+        plot_temperature_pressure(ax, temp_prof, pres_prof)
         plt.tight_layout()
         legend = plt.legend(loc="upper left", ncol=1, prop={"size": 11})
         legend.get_frame().set_facecolor("white")

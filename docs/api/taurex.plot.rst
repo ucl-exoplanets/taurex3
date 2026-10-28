@@ -28,5 +28,28 @@ matching the existing Plotter. It is not a wavelength-weighted integral.
 Functions return Matplotlib artists for further customization and do not
 save or show figures, select a backend, or change global plotting settings.
 
+Temperature–pressure profiles
+----------------------------
+
+Temperatures and their optional standard deviations are supplied in kelvin,
+with one value per pressure layer. Pressure is supplied in Pa and displayed
+in bar, increasing downwards on a logarithmic axis. Either pressure order
+is supported, including a single layer. The function returns the line and
+the uncertainty band (``None`` when no standard deviations are supplied).
+
+.. code-block:: python
+
+   fig, ax = plt.subplots()
+   line, band = tplot.plot_temperature_pressure(
+       ax, temperature, pressure, std=temperature_std,
+       color="tab:red", label="Retrieved profile",
+   )
+   ax.legend()
+   plt.show()
+
+The band spans temperature plus/minus one standard deviation. The caller
+controls titles, legends and saving; additional keyword arguments style
+the line. Both forward and fitted TP plots in ``Plotter`` use this function.
+
 .. automodule:: taurex.plot
    :members:

@@ -1029,7 +1029,7 @@ class Plotter:
 
         return wlgrid
 
-    def _generic_plot(  # noqa: C901
+    def _generic_plot(
         self,
         wlgrid,
         native_grid,
@@ -1109,13 +1109,12 @@ class Plotter:
                 binned_error = binner.bindown(native_grid, native_error)[1]
 
         else:
-            try:
-                binned_spectrum = spectra["binned_spectrum"][...]
-            except KeyError:
-                try:
-                    binned_spectrum = spectra["bin_spectrum"][...]
-                except KeyError:
-                    binned_spectrum = spectra["native_spectrum"][...]
+            # Prefer current dataset names, then the legacy name, then native.
+            spectrum_key = next(
+                (key for key in ("binned_spectrum", "bin_spectrum") if key in spectra),
+                "native_spectrum",
+            )
+            binned_spectrum = spectra[spectrum_key][...]
             try:
                 binned_error = spectra["binned_std"][...]
             except KeyError:

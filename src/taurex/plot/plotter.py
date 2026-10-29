@@ -1232,124 +1232,18 @@ class Plotter:
 
     def _plot_tau(self, contribution, pressure, wavelength):
         """Plot tau."""
-        grid = plt.GridSpec(1, 4, wspace=0.4, hspace=0.3)
+        from taurex.plot import plot_depth_contrib
+        from taurex.plot import plot_optical_depth
+
         fig = plt.figure("Contribution function")
-        fig = fig  # noqa: F841
-        ax1 = plt.subplot(grid[0, :3])
-        pos = plt.imshow(contribution, aspect="auto")
-        plt.colorbar(pos, ax=ax1)
-
-        # mapping of the pressure array onto the ticks:
-        y_labels = np.array(
-            [
-                pow(10.0, p)
-                for p in np.arange(
-                    np.ceil(np.log10(np.max(pressure))),
-                    np.floor(np.log10(np.min(pressure))) - 1.0,
-                    step=-1,
-                )
-            ]
-        )
-        y_ticks = np.zeros(len(y_labels))
-        for i in range(len(y_ticks)):
-            y_ticks[i] = (
-                np.abs(pressure - y_labels[i])
-            ).argmin()  # To find the corresponding index
-        plt.yticks(
-            y_ticks,
-            ["$10^{%.f}$" % y for y in np.log10(y_labels) - 5],
-        )
-
-        # mapping of the wavelength array onto the ticks:
-        x_label0 = np.ceil(np.min(wavelength) * 10) / 10.0
-        x_label5 = np.round(np.max(wavelength) * 10) / 10.0
-        x_label1 = (
-            np.round(
-                pow(
-                    10,
-                    (np.log10(x_label5) - np.log10(x_label0)) * 1 / 5.0
-                    + np.log10(x_label0),
-                )
-                * 10
-            )
-            / 10.0
-        )
-        x_label2 = (
-            np.round(
-                pow(
-                    10,
-                    (np.log10(x_label5) - np.log10(x_label0)) * 2 / 5.0
-                    + np.log10(x_label0),
-                )
-                * 10
-            )
-            / 10.0
-        )
-        x_label3 = (
-            np.round(
-                pow(
-                    10,
-                    (np.log10(x_label5) - np.log10(x_label0)) * 3 / 5.0
-                    + np.log10(x_label0),
-                )
-                * 10
-            )
-            / 10.0
-        )
-        x_label4 = (
-            np.round(
-                pow(
-                    10,
-                    (np.log10(x_label5) - np.log10(x_label0)) * 4 / 5.0
-                    + np.log10(x_label0),
-                )
-                * 10
-            )
-            / 10.0
-        )
-
-        x_labels = np.array(
-            [
-                x_label0,
-                x_label1,
-                x_label2,
-                x_label3,
-                x_label4,
-                x_label5,
-            ]
-        )
-        x_ticks = np.zeros(len(x_labels))
-        for i in range(len(x_ticks)):
-            x_ticks[i] = (
-                np.abs(wavelength - x_labels[i])
-            ).argmin()  # To find the corresponding index
-        plt.xticks(x_ticks, x_labels)
-        plt.gca().invert_yaxis()
-        plt.gca().invert_xaxis()
-        plt.xlabel(r"Wavelength [$\mu$m]")
-        plt.ylabel("Pressure [bar]")
-
-        ax2 = plt.subplot(grid[0, 3])
-        ax2 = ax2  # noqa: F841
-
-        contribution_collapsed = np.average(contribution, axis=1)
-        # contribution_collapsed = np.amax(
-        #     contribution_hr, axis=1
-        # )
-        # good for emission
-        contribution_sum = np.zeros(len(contribution_collapsed))
-        for i in range(len(contribution_collapsed) - 1):
-            contribution_sum[i + 1] = (
-                contribution_sum[i] + contribution_collapsed[i + 1]
-            )
-        plt.plot(
-            contribution_collapsed,
-            pressure * pow(10, -5),
-        )
-        plt.ylim(y_labels[0] / 1.0e5, y_labels[-1] / 1.0e5)
-        plt.yscale("log")
-        plt.gca().yaxis.tick_right()
-        plt.xlabel("Contribution")
+        grid = fig.add_gridspec(1, 4, wspace=0.4, hspace=0.3)
+        ax1 = fig.add_subplot(grid[0, :3])
+        mesh = plot_optical_depth(ax1, contribution, pressure, wavelength)
+        fig.colorbar(mesh, ax=ax1)
+        ax2 = fig.add_subplot(grid[0, 3], sharey=ax1)
+        plot_depth_contrib(ax2, contribution, pressure)
+        ax2.set_ylabel("")
+        ax2.yaxis.tick_right()
 
     @property
     def fittingNames(self):

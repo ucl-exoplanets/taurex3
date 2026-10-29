@@ -202,6 +202,8 @@ class Plotter:
 
     def plot_fit_xprofile(self):
         """Plot fitted mixing ratio profiles."""
+        from taurex.plot import plot_gas_profile
+
         for solution_idx, solution_val in self.solution_iter():
 
             fig = plt.figure(figsize=(7, 7 / self.phi))
@@ -209,7 +211,7 @@ class Plotter:
             num_moles = len(self.activeGases)
 
             profiles = solution_val["Profiles"]
-            pressure_profile = profiles["pressure_profile"][:] / 1e5
+            pressure_profile = profiles["pressure_profile"][:]
             active_profile = profiles["active_mix_profile"][...]
             active_profile_std = profiles["active_mix_profile_std"][...]
 
@@ -223,37 +225,16 @@ class Plotter:
                 prof = active_profile[mol_idx]
                 prof_std = active_profile_std[mol_idx]
 
-                plt.plot(
+                plot_gas_profile(
+                    ax,
                     prof,
                     pressure_profile,
+                    std=prof_std,
                     color=cols_mol[mol_name],
                     label=mol_name,
                 )
 
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof + prof_std,
-                    prof,
-                    color=self.cmap(mol_idx / num_moles),
-                    alpha=0.5,
-                )
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof,
-                    np.power(
-                        10,
-                        (np.log10(prof) - (np.log10(prof + prof_std) - np.log10(prof))),
-                    ),
-                    color=self.cmap(mol_idx / num_moles),
-                    alpha=0.5,
-                )
-
-            plt.yscale("log")
-            plt.gca().invert_yaxis()
-            plt.xscale("log")
             plt.xlim(1e-12, 3)
-            plt.xlabel("Mixing ratio")
-            plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
             ax.set_position(
@@ -288,7 +269,7 @@ class Plotter:
             num_moles = len(self.inactiveGases)
 
             profiles = solution_val["Profiles"]
-            pressure_profile = profiles["pressure_profile"][:] / 1e5
+            pressure_profile = profiles["pressure_profile"][:]
             active_profile = profiles["active_mix_profile"][...]
             active_profile_std = profiles["active_mix_profile_std"][...]
 
@@ -304,37 +285,16 @@ class Plotter:
                 prof = inactive_profile[mol_idx]
                 prof_std = inactive_profile_std[mol_idx]
 
-                plt.plot(
+                plot_gas_profile(
+                    ax,
                     prof,
                     pressure_profile,
+                    std=prof_std,
                     color=cols_mol[mol_name],
                     label=mol_name,
                 )
 
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof + prof_std,
-                    prof,
-                    color=self.cmap(inactive_idx / num_moles),
-                    alpha=0.5,
-                )
-                plt.fill_betweenx(
-                    pressure_profile,
-                    prof,
-                    np.power(
-                        10,
-                        (np.log10(prof) - (np.log10(prof + prof_std) - np.log10(prof))),
-                    ),
-                    color=self.cmap(inactive_idx / num_moles),
-                    alpha=0.5,
-                )
-
-            plt.yscale("log")
-            plt.gca().invert_yaxis()
-            plt.xscale("log")
             plt.xlim(1e-12, 3)
-            plt.xlabel("Mixing ratio")
-            plt.ylabel("Pressure (bar)")
             plt.tight_layout()
             box = ax.get_position()
             ax.set_position(
@@ -364,10 +324,12 @@ class Plotter:
 
     def plot_forward_xprofile(self):
         """Plot forward mixing ratio profiles."""
+        from taurex.plot import plot_gas_profile
+
         solution_val = self.forward_output()
 
         profiles = solution_val["Profiles"]
-        pressure_profile = profiles["pressure_profile"][:] / 1e5
+        pressure_profile = profiles["pressure_profile"][:]
         active_profile = profiles["active_mix_profile"][...]
 
         inactive_profile = profiles["inactive_mix_profile"][...]
@@ -383,19 +345,15 @@ class Plotter:
 
             prof = active_profile[mol_idx]
 
-            plt.plot(
+            plot_gas_profile(
+                ax,
                 prof,
                 pressure_profile,
                 color=cols_mol[mol_name],
                 label=mol_name,
             )
 
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xscale("log")
         plt.xlim(1e-12, 3)
-        plt.xlabel("Mixing ratio")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
         ax.set_position(
@@ -434,19 +392,15 @@ class Plotter:
 
             prof = inactive_profile[mol_idx]
 
-            plt.plot(
+            plot_gas_profile(
+                ax,
                 prof,
                 pressure_profile,
                 color=cols_mol[mol_name],
                 label=mol_name,
             )
 
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xscale("log")
         plt.xlim(1e-12, 3)
-        plt.xlabel("Mixing ratio")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         box = ax.get_position()
         ax.set_position(
@@ -541,9 +495,11 @@ class Plotter:
 
     def plot_fitted_tp(self):
         """Plot fitted TP profile."""
+        from taurex.plot import plot_temperature_pressure
+
         # fitted model
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)  # noqa: F841
+        ax = fig.add_subplot(111)
 
         for solution_idx, solution_val in self.solution_iter():
             if self.num_solutions > 1:
@@ -552,25 +508,15 @@ class Plotter:
                 label = "Fitted profile"
             temp_prof = solution_val["Profiles"]["temp_profile"][:]
             temp_prof_std = solution_val["Profiles"]["temp_profile_std"][:]
-            pres_prof = solution_val["Profiles"]["pressure_profile"][:] / 1e5
-            plt.plot(
+            pres_prof = solution_val["Profiles"]["pressure_profile"][:]
+            plot_temperature_pressure(
+                ax,
                 temp_prof,
                 pres_prof,
+                std=temp_prof_std,
                 color=self.cmap(float(solution_idx) / self.num_solutions),
                 label=label,
             )
-            plt.fill_betweenx(
-                pres_prof,
-                temp_prof - temp_prof_std,
-                temp_prof + temp_prof_std,
-                color=self.cmap(float(solution_idx) / self.num_solutions),
-                alpha=0.5,
-            )
-
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xlabel("Temperature (K)")
-        plt.ylabel("Pressure (bar)")
         plt.tight_layout()
         legend = plt.legend(loc="upper left", ncol=1, prop={"size": 11})
         legend.get_frame().set_facecolor("white")
@@ -589,19 +535,16 @@ class Plotter:
 
     def plot_forward_tp(self):
         """Plot forward TP profile."""
+        from taurex.plot import plot_temperature_pressure
+
         fig = plt.figure(figsize=(5, 3.5))
-        ax = fig.add_subplot(111)  # noqa: F841
+        ax = fig.add_subplot(111)
 
         solution_val = self.forward_output()
 
         temp_prof = solution_val["Profiles"]["temp_profile"][:]
-        pres_prof = solution_val["Profiles"]["pressure_profile"][:] / 1e5
-        plt.plot(temp_prof, pres_prof)
-
-        plt.yscale("log")
-        plt.gca().invert_yaxis()
-        plt.xlabel("Temperature (K)")
-        plt.ylabel("Pressure (bar)")
+        pres_prof = solution_val["Profiles"]["pressure_profile"][:]
+        plot_temperature_pressure(ax, temp_prof, pres_prof)
         plt.tight_layout()
         legend = plt.legend(loc="upper left", ncol=1, prop={"size": 11})
         legend.get_frame().set_facecolor("white")
@@ -1043,7 +986,7 @@ class Plotter:
                 if isinstance(component_value, h5py.Dataset):
                     continue
                 total_label = f"{contrib_name}-{component_name}"
-                self._generic_plot(
+                self._contribution_plot(
                     wlgrid,
                     native_grid,
                     component_value,
@@ -1068,7 +1011,7 @@ class Plotter:
                     if isinstance(component_value, h5py.Dataset):
                         continue
                     total_label = f"{contrib_name}-{component_name}"
-                    self._generic_plot(
+                    self._contribution_plot(
                         wlgrid,
                         native_grid,
                         component_value,
@@ -1076,16 +1019,17 @@ class Plotter:
                         label=total_label,
                     )
             else:
-                self._generic_plot(
+                self._contribution_plot(
                     wlgrid,
                     native_grid,
                     contrib_dict,
                     resolution,
+                    label=contrib_name,
                 )
 
         return wlgrid
 
-    def _generic_plot(  # noqa: C901
+    def _generic_plot(
         self,
         wlgrid,
         native_grid,
@@ -1097,6 +1041,41 @@ class Plotter:
         label=None,
     ):
         """Generic plotting function."""
+        from taurex.plot import plot_spectrum
+
+        wlgrid, binned_spectrum, binned_error = self._prepare_spectrum(
+            wlgrid, native_grid, spectra, resolution
+        )
+        if wlgrid.size == 0:
+            return
+        return plot_spectrum(
+            plt.gca(),
+            wlgrid,
+            binned_spectrum,
+            std=binned_error,
+            color=color,
+            label=label,
+            alpha=alpha,
+        )
+
+    def _contribution_plot(self, wlgrid, native_grid, spectra, resolution, label):
+        """Draw one selected HDF5 component using the array contribution API."""
+        from taurex.plot import plot_spectral_contributions
+
+        wlgrid, values, errors = self._prepare_spectrum(
+            wlgrid, native_grid, spectra, resolution
+        )
+        if wlgrid.size == 0:
+            return
+        return plot_spectral_contributions(
+            plt.gca(),
+            wlgrid,
+            {label: values},
+            std={label: errors} if errors is not None else None,
+        )
+
+    def _prepare_spectrum(self, wlgrid, native_grid, spectra, resolution):
+        """Read, optionally rebin, and select positive HDF5 spectral samples."""
         binned_error = None
         if resolution is not None:
             from taurex.binning import FluxBinner
@@ -1130,46 +1109,23 @@ class Plotter:
                 binned_error = binner.bindown(native_grid, native_error)[1]
 
         else:
-            try:
-                binned_spectrum = spectra["binned_spectrum"][...]
-            except KeyError:
-                try:
-                    binned_spectrum = spectra["bin_spectrum"][...]
-                except KeyError:
-                    binned_spectrum = spectra["native_spectrum"][...]
+            # Prefer current dataset names, then the legacy name, then native.
+            spectrum_key = next(
+                (key for key in ("binned_spectrum", "bin_spectrum") if key in spectra),
+                "native_spectrum",
+            )
+            binned_spectrum = spectra[spectrum_key][...]
             try:
                 binned_error = spectra["binned_std"][...]
             except KeyError:
                 binned_error = None
 
         good = binned_spectrum > 0
-        plt.plot(
+        return (
             wlgrid[good],
             binned_spectrum[good],
-            label=label,
-            alpha=alpha,
+            binned_error[good] if binned_error is not None else None,
         )
-        if binned_error is not None:
-            plt.fill_between(
-                wlgrid[good],
-                binned_spectrum[good] - binned_error[good],
-                binned_spectrum[good] + binned_error[good],
-                alpha=0.5,
-                zorder=-2,
-                color=color,
-                edgecolor="none",
-            )
-
-            # 2 sigma
-            plt.fill_between(
-                wlgrid[good],
-                binned_spectrum[good] - 2 * binned_error[good],
-                binned_spectrum[good] + 2 * binned_error[good],
-                alpha=0.2,
-                zorder=-3,
-                color=color,
-                edgecolor="none",
-            )
 
     def close(self):
         """Close HDF5 file."""

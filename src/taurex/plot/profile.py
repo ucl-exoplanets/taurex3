@@ -1,24 +1,152 @@
-"""Plot atmospheric depth profiles from arrays on caller-owned axes."""
+"""Plot atmospheric profiles from arrays on caller-owned axes."""
 
 import numpy as np
 
 
 def _depth_arrays(tau, pressure):
     tau = np.asarray(tau)
+    pressure = _pressure_array(pressure)
+    if tau.ndim != 2 or tau.shape[0] != pressure.size or tau.shape[1] == 0:
+        raise ValueError(
+            "tau must have shape (number of pressures, number of wavelengths)"
+        )
+    return tau, pressure
+
+
+def _pressure_array(pressure):
     pressure = np.asarray(pressure, dtype=float)
     if pressure.ndim != 1 or pressure.size == 0:
         raise ValueError("pressure must be a nonempty one-dimensional array")
     if not np.all(np.isfinite(pressure)) or np.any(pressure <= 0):
         raise ValueError("pressure must contain finite positive values")
-    if tau.ndim != 2 or tau.shape[0] != pressure.size or tau.shape[1] == 0:
-        raise ValueError(
-            "tau must have shape (number of pressures, number of wavelengths)"
-        )
     if pressure.size > 1 and not (
         np.all(np.diff(pressure) > 0) or np.all(np.diff(pressure) < 0)
     ):
         raise ValueError("pressure must be strictly monotonic")
-    return tau, pressure / 1.0e5
+    return pressure / 1.0e5
+
+
+def plot_temperature_pressure(ax, temperature, pressure, std=None, **kwargs):
+    r"""Plot a temperature–pressure profile from arrays.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Caller-owned axes. No figure is created or saved.
+    temperature : array_like
+        One-dimensional, finite positive temperatures in K.
+    pressure : array_like
+        Matching positive, finite, strictly monotonic pressures in Pa.
+        Ascending and descending grids are supported; displayed in bar.
+    std : array_like, optional
+        Matching finite nonnegative temperature standard deviations in K.
+        Drawn as a band at temperature plus/minus std, with alpha 0.5
+        and the same color as the line.
+    \*\*kwargs : dict
+        Passed to ``ax.plot``, including color, label and linestyle.
+
+    Returns
+    -------
+    line : matplotlib.lines.Line2D
+        The temperature profile.
+    band : matplotlib.collections.FillBetweenPolyCollection or None
+        The uncertainty band, or None when std is omitted.
+
+    Notes
+    -----
+    Pressure uses a logarithmic axis increasing downwards. Set titles and
+    limits on the supplied axes after plotting. No legend is created.
+    """
+    pressure = _pressure_array(pressure)
+    temperature = np.asarray(temperature, dtype=float)
+    if temperature.shape != pressure.shape:
+        raise ValueError("temperature must be one-dimensional and match pressure")
+    if not np.all(np.isfinite(temperature)) or np.any(temperature <= 0):
+        raise ValueError("temperature must contain finite positive values")
+    if std is not None:
+        std = np.asarray(std, dtype=float)
+        if std.shape != temperature.shape:
+            raise ValueError("std must match temperature")
+        if not np.all(np.isfinite(std)) or np.any(std < 0):
+            raise ValueError("std must contain finite nonnegative values")
+    (line,) = ax.plot(temperature, pressure, **kwargs)
+    band = None
+    if std is not None:
+        band = ax.fill_betweenx(
+            pressure,
+            temperature - std,
+            temperature + std,
+            color=line.get_color(),
+            alpha=0.5,
+        )
+    ax.set_xlabel("Temperature (K)")
+    _pressure_axis(ax, pressure)
+    return line, band
+
+
+def plot_gas_profile(ax, mixing_ratio, pressure, std=None, **kwargs):
+    r"""Plot one gas mixing-ratio profile and an optional uncertainty band.
+
+    Parameters
+    ----------
+    ax : matplotlib.axes.Axes
+        Caller-owned axes. No figure, legend or file is created.
+    mixing_ratio : array_like
+        One-dimensional finite nonnegative volume mixing ratios, one per layer.
+        Zero values are retained but cannot be displayed on a logarithmic axis.
+    pressure : array_like
+        Matching finite positive pressures in Pa, displayed in bar.
+        Must be strictly monotonic in either direction; a single layer is allowed.
+    std : array_like, optional
+        Matching finite nonnegative standard deviations in mixing ratio.
+    \*\*kwargs : dict
+        Passed to ``ax.plot``, for example color, label or linestyle.
+
+    Returns
+    -------
+    line : matplotlib.lines.Line2D
+        The gas profile.
+    band : matplotlib.collections.FillBetweenPolyCollection or None
+        Uncertainty band, or None if std is omitted.
+
+    Notes
+    -----
+    Both axes are logarithmic, with pressure increasing downwards. The band
+    uses the historical Plotter convention: upper = mixing_ratio + std and
+    lower = 10**(2*log10(mixing_ratio) - log10(upper)). This is symmetric in
+    log space, rather than an arithmetic plus/minus interval. At zero mixing
+    ratio the lower bound is zero (the continuous limit). The band uses the
+    line color and alpha 0.5. Set axis limits and titles on the supplied axes.
+    """
+    pressure = _pressure_array(pressure)
+    mixing_ratio = np.asarray(mixing_ratio, dtype=float)
+    if mixing_ratio.shape != pressure.shape:
+        raise ValueError("mixing_ratio must be one-dimensional and match pressure")
+    if not np.all(np.isfinite(mixing_ratio)) or np.any(mixing_ratio < 0):
+        raise ValueError("mixing_ratio must contain finite nonnegative values")
+    if std is not None:
+        std = np.asarray(std, dtype=float)
+        if std.shape != mixing_ratio.shape:
+            raise ValueError("std must match mixing_ratio")
+        if not np.all(np.isfinite(std)) or np.any(std < 0):
+            raise ValueError("std must contain finite nonnegative values")
+        upper = mixing_ratio + std
+        lower = np.zeros_like(mixing_ratio)
+        positive = mixing_ratio > 0
+        log_profile = np.log10(mixing_ratio[positive])
+        lower[positive] = 10 ** (
+            log_profile - (np.log10(upper[positive]) - log_profile)
+        )
+    ax.set_xscale("log")
+    (line,) = ax.plot(mixing_ratio, pressure, **kwargs)
+    band = None
+    if std is not None:
+        band = ax.fill_betweenx(
+            pressure, lower, upper, color=line.get_color(), alpha=0.5
+        )
+    ax.set_xlabel("Mixing ratio")
+    _pressure_axis(ax, pressure)
+    return line, band
 
 
 def _pressure_axis(ax, pressure):

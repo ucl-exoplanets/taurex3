@@ -13,7 +13,7 @@ class Writeable(metaclass=ABCMeta):
 
         Parameters
         ----------
-        output : OutputGroup
+        output : taurex.output.output.OutputGroup
             Output group to write to.
 
         """

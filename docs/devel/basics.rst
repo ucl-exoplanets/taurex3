@@ -140,6 +140,7 @@ Calling ``do_things`` will output::
 
 While you can use your own printing methods. We recommend using these built in methods for logging
 as:
+
     - They can be automatically hidden during retrievals
     - They will only output once under MPI
     - They automatically include the class, function and line number for :meth:`~taurex.log.logger.Logger.debug`, :meth:`~taurex.log.logger.Logger.error` and :meth:`~taurex.log.logger.Logger.critical`.

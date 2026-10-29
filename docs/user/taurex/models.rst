@@ -6,20 +6,34 @@
 
 This header defines the type of forward model (FM) that will be computed by TauREx3.
 There are several built-in forward ``model_type`` values:
-    - ``transmission``
-        - Transmission forward model
-    - ``emission``
-        - Emission forward model
-    - ``directimage``
-        - Direct-image forward model
-    - ``multi_transit``
-        - Composite transmission model combining multiple 1D regions
-    - ``multi_eclipse``
-        - Composite emission model combining multiple 1D regions
-    - ``multi_directimage``
-        - Composite direct-imaging model combining multiple 1D regions
-    - ``custom``
-        - User-type forward model, See :ref:`customtypes`
+
+- ``transmission``
+
+  - Transmission forward model
+
+- ``emission``
+
+  - Emission forward model
+
+- ``directimage``
+
+  - Direct-image forward model
+
+- ``multi_transit``
+
+  - Composite transmission model combining multiple 1D regions
+
+- ``multi_eclipse``
+
+  - Composite emission model combining multiple 1D regions
+
+- ``multi_directimage``
+
+  - Composite direct-imaging model combining multiple 1D regions
+
+- ``custom``
+
+  - User-type forward model, See :ref:`customtypes`
 
 Both emission and direct image also include an optional keyword ``ngauss`` which
 dictates the number of Gaussian quadrate points used in the integration. By default
@@ -231,7 +245,7 @@ Mie scattering (Precomputed grids)
 Computes cloud extinction from precomputed :math:`Q_\mathrm{ext}` grids,
 promoting the former ``taurex-PCQ`` plugin into the main TauREx codebase.
 This is useful when you want PyMieScatt-style cloud retrievals without paying
- the cost of recomputing Mie efficiencies for every model evaluation.
+the cost of recomputing Mie efficiencies for every model evaluation.
 
 Each species points to an HDF5 grid file containing:
 

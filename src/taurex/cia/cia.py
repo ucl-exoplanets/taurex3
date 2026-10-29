@@ -13,6 +13,7 @@ class CIA(Logger):
 
     This is the base class for collisionally induced absorption opacities.
     To function in Taurex3, it requires concrete implementations of:
+
         - :func:`wavenumberGrid`
         - :func:`compute_cia`
         - :func:`temperatureGrid`

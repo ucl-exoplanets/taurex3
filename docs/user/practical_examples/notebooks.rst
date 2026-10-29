@@ -1,8 +1,8 @@
 .. _notebook_walkthroughs:
 
-====================
+=====================
 Notebook Walkthroughs
-====================
+=====================
 
 These notebooks provide a second path through the practical material.
 They are useful if you want to inspect each step more interactively than in

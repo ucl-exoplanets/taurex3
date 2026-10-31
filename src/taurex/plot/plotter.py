@@ -1420,7 +1420,9 @@ def main():  # noqa: C901
         "--labels", nargs="+", help="One legend label per input file (comparison mode)"
     )
     parser.add_argument(
-        "--parameters", nargs="+", help="Ordered fitting parameters for combined posteriors"
+        "--parameters",
+        nargs="+",
+        help="Ordered fitting parameters for combined posteriors",
     )
     args = parser.parse_args()
 

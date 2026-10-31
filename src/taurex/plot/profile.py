@@ -151,8 +151,11 @@ def plot_gas_profile(ax, mixing_ratio, pressure, std=None, **kwargs):
 
 def _pressure_axis(ax, pressure):
     ax.set_yscale("log")
-    if pressure.size > 1:
-        ax.set_ylim(pressure.max(), pressure.min())
+    existing = [np.asarray(line.get_ydata()) for line in ax.lines]
+    values = np.concatenate([pressure, *existing])
+    values = values[np.isfinite(values) & (values > 0)]
+    if values.max() > values.min():
+        ax.set_ylim(values.max(), values.min())
     elif not ax.yaxis_inverted():
         ax.invert_yaxis()
     ax.set_ylabel("Pressure [bar]")

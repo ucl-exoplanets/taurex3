@@ -1303,7 +1303,8 @@ def main():  # noqa: C901
         dest="input_file",
         type=str,
         required=True,
-        help="Input hdf5 file from taurex",
+        nargs="+",
+        help="One or more input HDF5 files from TauREx",
     )
     parser.add_argument(
         "-P",
@@ -1374,7 +1375,7 @@ def main():  # noqa: C901
         "--all",
         dest="all",
         default=False,
-        help="Plot everythiong",
+        help="Plot everything (multiple inputs: TP, gases, spectra and posteriors)",
         action="store_true",
     )
     parser.add_argument(
@@ -1415,7 +1416,18 @@ def main():  # noqa: C901
         default=None,
         help="Resolution to bin spectra to",
     )
+    parser.add_argument(
+        "--labels", nargs="+", help="One legend label per input file (comparison mode)"
+    )
+    parser.add_argument(
+        "--parameters", nargs="+", help="Ordered fitting parameters for combined posteriors"
+    )
     args = parser.parse_args()
+
+    from taurex.plot.cli import comparison_mode
+
+    if comparison_mode(args, parser):
+        return
 
     plot_xprofile = args.xprofile or args.all
     plot_tp_profile = args.tpprofile or args.all
@@ -1427,7 +1439,7 @@ def main():  # noqa: C901
     plot_cond = args.cprofile or args.all
 
     plot = Plotter(
-        args.input_file,
+        args.input_file[0],
         cmap=args.cmap,
         title=args.title,
         prefix=args.prefix,

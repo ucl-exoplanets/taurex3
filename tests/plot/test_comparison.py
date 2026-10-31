@@ -164,3 +164,121 @@ def test_invalid_posterior_weights(outputs, bad):
         fd["Output/Solutions/solution0/weights"] = np.full(200, bad)
     with pytest.raises(ValueError, match="weights"):
         plot_posterior_files(outputs)
+
+
+def test_cli_combined_pdfs(outputs, tmp_path, monkeypatch):
+    """Exercise argparse and render all four comparison PDFs."""
+    from taurex.plot.plotter import main
+
+    destination = tmp_path / "plots"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "taurex-plot",
+            "-i",
+            *map(str, outputs),
+            "-o",
+            str(destination),
+            "--all",
+            "--labels",
+            "A",
+            "B",
+            "--parameters",
+            "b",
+            "a",
+            "--prefix",
+            "comparison",
+            "--title",
+            "Two targets",
+            "-m",
+            "viridis",
+        ],
+    )
+    main()
+    assert {path.name for path in destination.iterdir()} == {
+        f"comparison_{suffix}.pdf"
+        for suffix in ("tp_profile", "mixratio", "spectrum", "posteriors")
+    }
+    assert all(path.read_bytes().startswith(b"%PDF") for path in destination.iterdir())
+    assert not plt.get_fignums()
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        ["--labels", "one"],
+        ["--resolution", "100"],
+        ["--plot-tau"],
+        ["--plot-contrib"],
+        ["--full-contrib"],
+        ["--plot-cprofile"],
+        ["--parameters", "a"],
+    ],
+)
+def test_cli_rejects_unsupported_options(outputs, tmp_path, monkeypatch, extra):
+    """Reject unsupported comparison arguments before producing any files."""
+    from taurex.plot.plotter import main
+
+    destination = tmp_path / "plots"
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "taurex-plot",
+            "-i",
+            *map(str, outputs),
+            "-o",
+            str(destination),
+            "--plot-tpprofile",
+            *extra,
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 2
+    assert not destination.exists()
+
+
+def test_cli_single_input_legacy(outputs, tmp_path, monkeypatch):
+    """Pass a scalar filename to the unchanged single-file Plotter."""
+    from taurex.plot import plotter
+
+    calls = []
+    monkeypatch.setattr(
+        plotter, "Plotter", lambda filename, **kwargs: calls.append(filename)
+    )
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "taurex-plot",
+            "-i",
+            str(outputs[0]),
+            "-o",
+            str(tmp_path),
+        ],
+    )
+    plotter.main()
+    assert calls == [str(outputs[0])]
+
+
+def test_cli_all_requires_retrievals(outputs, tmp_path, monkeypatch):
+    """Explain that --all includes posteriors and requires retrievals."""
+    from taurex.plot.plotter import main
+
+    with h5py.File(outputs[0], "r+") as fd:
+        fd.copy("Output/Solutions/solution0/Profiles", "Output/Profiles")
+        del fd["Output/Solutions"]
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "taurex-plot",
+            "-i",
+            *map(str, outputs),
+            "-o",
+            str(tmp_path / "plots"),
+            "--all",
+        ],
+    )
+    with pytest.raises(SystemExit) as error:
+        main()
+    assert error.value.code == 2
+    assert not (tmp_path / "plots").exists()

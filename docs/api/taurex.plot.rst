@@ -154,3 +154,50 @@ also receive a contribution-name label, making them visible in the legend.
 
 .. automodule:: taurex.plot
    :members:
+
+Comparing output files
+----------------------
+
+The ``*_files`` adapters accept a nonempty sequence of HDF5 paths and optional
+matching labels. They read forward outputs or every retrieval solution, close
+the files, and return artists without saving or showing figures. Multimodal
+retrievals include solution names in their labels.
+
+.. code-block:: python
+
+   files = ["target_a.h5", "target_b.h5"]
+   labels = ["Target A", "Target B"]
+   fig, ax = plt.subplots()
+   tplot.plot_temperature_pressure_files(ax, files, labels=labels)
+   ax.legend()
+
+   fig, ax = plt.subplots()
+   tplot.plot_gas_profile_files(ax, files, labels=labels, gases=["H2O"])
+   ax.legend()
+
+   fig, ax = plt.subplots()
+   tplot.plot_spectrum_files(ax, files, labels=labels, observed=True)
+   ax.set_ylabel("Transit depth")
+   ax.legend()
+
+   fig = tplot.plot_posterior_files(
+       files, labels=labels, parameters=["planet_radius", "T"],
+   )
+
+Profile limits cover the union of the plotted pressure grids, including when
+calling the array functions repeatedly. Set custom limits after plotting.
+Uncertainty bands are optional. Spectra use existing binned samples (including
+legacy dataset names) or native samples without rebinning or positive-value
+filtering. Observations are drawn once per file. Compare spectra with compatible
+physical meanings and units; the adapter leaves the ordinate label to you.
+
+Corner comparisons require retrieval outputs. Selected fitting parameters are
+aligned by name and ordered as requested, even if stored in different column
+orders. By default, all parameters in the first retrieval are selected; missing
+parameters raise an error. Derived parameters are not included. Weights are
+normalized separately per solution, and default parameter ranges cover all
+samples across files and solutions. Thus overlaid posterior shapes compare
+each solution independently, without encoding relative solution evidences.
+The returned corner figure includes a file/solution legend. Additional keyword
+arguments configure the bundled corner plotter, for example ``bins`` or
+``range``. Parameter names in the example must match those in your files.

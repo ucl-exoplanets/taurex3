@@ -18,9 +18,9 @@ and may have precompiled binary wheels for Windows, MacOS and/or manylinux
 
    * **taurex-instrumentsystematics** — the ``spectra_w_offsets`` and
      ``spectra_instr`` observation types (see :ref:`userobservation`).
-   * **Phoenix4All** — the ``phoenix4all`` star type, provided by the
-     ``phoenix4all`` package that is installed as a TauREx dependency and loaded
-     as a plugin (see :ref:`userstar`).
+   * **Phoenix4All** — fully integrated into TauREx 3: the ``phoenix4all``
+     package is a required dependency and its ``phoenix4all`` star type is
+     loaded automatically (see :ref:`userstar`).
    * **taurex-catalogue** — The catalogue mixins in :mod:`taurex.mixin` provide
      automatic planet/star parameter loading from local files or the ExoMAST
      API (see :doc:`api/taurex.mixin`).

@@ -29,8 +29,9 @@ Using Plugins
         - ``taurex-instrumentsystematics`` is available through the built-in
           ``spectra_w_offsets`` and ``spectra_instr`` observation types documented
           in :ref:`userobservation`.
-        - ``Phoenix4All`` is installed as a TauREx dependency and registers the
-          ``phoenix4all`` star type automatically, documented in :ref:`userstar`.
+        - ``Phoenix4All`` is fully integrated into TauREx 3: it is installed as a
+          required dependency and registers the ``phoenix4all`` star type
+          automatically, documented in :ref:`userstar`.
         - ``taurex-catalogue`` is available through the built-in
           catalogue mixins documented in :ref:`mixin` and
           :doc:`../api/taurex.mixin`.

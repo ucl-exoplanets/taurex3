@@ -23,6 +23,14 @@ For example, we can enable fitting of the planet radius using the ``fit`` option
     [Fitting]
     planet_radius:fit = True
 
+A parameter that is not fitted keeps its current default value. That value can
+be changed with the ``value`` option, which works for every fitting parameter,
+including the ones created dynamically by plugins::
+
+    [Fitting]
+    planet_radius:fit = False
+    planet_radius:value = 1.2
+
 
 New-style priors
 ================
@@ -185,6 +193,8 @@ A summary all valid ``option`` is given here:
 | Option     | Description                       | Values                |
 +------------+-----------------------------------+-----------------------+
 | ``fit``    | Enable or disable fitting         | ``True`` or ``False`` |
++------------+-----------------------------------+-----------------------+
+| ``value``  | Set the value in linear space     | *value*               |
 +------------+-----------------------------------+-----------------------+
 | ``bounds`` | Prior boundaries in linear space  | *min*, *max*          |
 +------------+-----------------------------------+-----------------------+

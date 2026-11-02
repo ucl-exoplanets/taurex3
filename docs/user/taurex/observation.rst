@@ -103,6 +103,19 @@ files containing ``WAVELENGTH`` and ``R`` columns, or to two-column text files
 containing wavelength and resolving power. ``wlshift`` accepts either a single
 shift applied to every input spectrum or one shift per spectrum.
 
+When ``broadening_basis = resolution_poly`` (or ``sigma_poly``), the
+coefficients ``Broadening_i_k`` are ordinary polynomial coefficients. They are
+created as fitting parameters, so they can be sampled or held fixed from the
+``[Fitting]`` block. To keep a coefficient at a given value, disable fitting
+and set the value::
+
+    [Fitting]
+    Broadening_1_0:fit = True
+    Broadening_1_0:prior = "Uniform(bounds=(-14, -8))"
+
+    Broadening_1_1:fit = False
+    Broadening_1_1:value = 255
+
 If you are migrating an older setup, ``observation = spectra_instr`` remains
 available and creates the same convolution-aware binner directly from the
 ``[Observation]`` block.

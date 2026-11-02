@@ -3649,6 +3649,30 @@ files = [
 ptyprocess = ">=0.5"
 
 [[package]]
+name = "phoenix4all"
+version = "0.0.6"
+description = "All in one library for loading and using phoenix spectra"
+optional = false
+python-versions = "<4.0,>=3.10"
+groups = ["main"]
+files = [
+    {file = "phoenix4all-0.0.6-py3-none-any.whl", hash = "sha256:08143df8554ff745f1082b79be3ef63594c8d161096d57b0829e6c884d8f15a3"},
+    {file = "phoenix4all-0.0.6.tar.gz", hash = "sha256:e6e6caee26bb8d2ced96433ffa16e6d7bae58f6abd58fee9c5580f1fc5c9d7c5"},
+]
+
+[package.dependencies]
+astropy = ">=6.1.7"
+beautifulsoup4 = ">=4.14.2"
+click = ">=8.1.8"
+numpy = ">=1.26.4"
+pandas = ">=2.3.3"
+pypdl = ">=1.5.7"
+requests = ">=2.32.5"
+
+[package.extras]
+taurex = ["taurex (>=3.3.2)"]
+
+[[package]]
 name = "pillow"
 version = "11.2.1"
 description = "Python Imaging Library (Fork)"
@@ -4771,25 +4795,25 @@ files = [
 
 [[package]]
 name = "requests"
-version = "2.32.3"
+version = "2.34.2"
 description = "Python HTTP for Humans."
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.10"
 groups = ["main", "dev"]
 files = [
-    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
-    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
+    {file = "requests-2.34.2-py3-none-any.whl", hash = "sha256:2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0"},
+    {file = "requests-2.34.2.tar.gz", hash = "sha256:f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed"},
 ]
 
 [package.dependencies]
-certifi = ">=2017.4.17"
-charset-normalizer = ">=2,<4"
+certifi = ">=2023.5.7"
+charset_normalizer = ">=2,<4"
 idna = ">=2.5,<4"
-urllib3 = ">=1.21.1,<3"
+urllib3 = ">=1.26,<3"
 
 [package.extras]
 socks = ["PySocks (>=1.5.6,!=1.5.7)"]
-use-chardet-on-py3 = ["chardet (>=3.0.2,<6)"]
+use-chardet-on-py3 = ["chardet (>=3.0.2,<8)"]
 
 [[package]]
 name = "restructuredtext-lint"
@@ -6254,4 +6278,4 @@ test = ["coverage", "hypothesis", "pygments", "pytest"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "e7f3c63a67f8bcc1aaccfeff6d71f7f73c1e91eef16ed9362b932c3ff2546845"
+content-hash = "fab4c17ae2334d225ffd0195d4bfc9df0bcb136d2c86e08b9af22a24f9c453f4"

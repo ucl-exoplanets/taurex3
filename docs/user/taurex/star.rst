@@ -16,7 +16,7 @@ The ``star_type`` available are:
         - :class:`~taurex.data.stellar.phoenix.PhoenixStar`
     - ``phoenix4all``
         - Uses the ``phoenix4all`` library for PHOENIX spectra with auto-download
-        - :class:`~taurex.data.stellar.phoenix4all.Phoenix4AllStar`
+        - Class ``phoenix4all.taurex.Phoenix4AllStar``
     - ``custom``
         - User-provided star model. See :ref:`customtypes`
 
@@ -130,7 +130,10 @@ Phoenix4All
 Stellar emission spectrum is obtained from the ``phoenix4all`` library, which
 automatically downloads (or loads from cache) high-resolution PHOENIX stellar
 atmosphere spectra from multiple back-end sources. This is the recommended
-replacement for the legacy ``phoenix`` star type.
+replacement for the legacy ``phoenix`` star type. The ``phoenix4all`` package is
+a dependency of TauREx and its
+``phoenix4all.taurex.Phoenix4AllStar`` class is loaded automatically as a
+plugin.
 
 The ``phoenix4all`` package supports several sources:
 

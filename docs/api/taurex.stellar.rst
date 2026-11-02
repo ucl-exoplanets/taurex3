@@ -28,7 +28,7 @@ PHOENIX (legacy)
 Phoenix4All
 -----------
 
-.. automodule:: taurex.data.stellar.phoenix4all
-   :members:
-   :undoc-members:
-   :show-inheritance:
+The ``phoenix4all`` star is provided by the
+`phoenix4all <https://github.com/taurex-space/phoenix4all>`_ package, which is
+installed with TauREx and registers itself automatically through the
+``taurex.plugins`` entry point.

@@ -80,8 +80,8 @@ class PhoenixStar(BlackbodyStar):
 
         warnings.warn(
             "Phoenix Model will be deprecated soon. "
-            "Use the built-in Phoenix4All star (star_type = phoenix4all) "
-            "instead.",
+            "Use the Phoenix4All star from the phoenix4all package "
+            "(star_type = phoenix4all) instead.",
             DeprecationWarning,
             stacklevel=2,
         )

@@ -14,12 +14,13 @@ and may have precompiled binary wheels for Windows, MacOS and/or manylinux
 .. note::
 
    Since |version|, the functionality of several previously external plugins has
-   been integrated directly into TauREx:
+   been integrated directly into TauREx or installed with it:
 
    * **taurex-instrumentsystematics** — the ``spectra_w_offsets`` and
      ``spectra_instr`` observation types (see :ref:`userobservation`).
-   * **Phoenix4All** — :class:`~taurex.data.stellar.phoenix4all.Phoenix4AllStar`
-     replaces the legacy ``PhoenixStar`` (see :ref:`userstar`).
+   * **Phoenix4All** — the ``phoenix4all`` star type, provided by the
+     ``phoenix4all`` package that is installed as a TauREx dependency and loaded
+     as a plugin (see :ref:`userstar`).
    * **taurex-catalogue** — The catalogue mixins in :mod:`taurex.mixin` provide
      automatic planet/star parameter loading from local files or the ExoMAST
      API (see :doc:`api/taurex.mixin`).

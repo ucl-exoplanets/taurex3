@@ -23,13 +23,14 @@ Using Plugins
 
 .. note::
 
-        Some former plugins are now built into TauREx itself:
+        Some former plugins are now provided by TauREx itself or its
+        dependencies:
 
         - ``taurex-instrumentsystematics`` is available through the built-in
           ``spectra_w_offsets`` and ``spectra_instr`` observation types documented
           in :ref:`userobservation`.
-        - ``Phoenix4All`` is available through the built-in
-          ``phoenix4all`` star type documented in :ref:`userstar`.
+        - ``Phoenix4All`` is installed as a TauREx dependency and registers the
+          ``phoenix4all`` star type automatically, documented in :ref:`userstar`.
         - ``taurex-catalogue`` is available through the built-in
           catalogue mixins documented in :ref:`mixin` and
           :doc:`../api/taurex.mixin`.
@@ -46,9 +47,10 @@ correct point in the pipeline
 Some functionality that originally shipped as standalone plugins has since been
 promoted into the main TauREx codebase. At the moment this includes the
 multimodel composite forward models, the PCQ precomputed-grid Mie cloud
-contribution, the instrument-systematics observation loaders, Phoenix4All, and
-the taurex-catalogue mixins. Those features no longer require a separate plugin
-installation.
+contribution, the instrument-systematics observation loaders, and the
+taurex-catalogue mixins. Those features no longer require a separate plugin
+installation. Phoenix4All is kept as a separate package, but it is installed as
+a TauREx dependency and its ``phoenix4all`` star type is loaded automatically.
 
 Lets take chemistry for example. Assuming a fresh install,
 we can see what is available to use in TauREx 3 by writing in the command prompt::

@@ -18,7 +18,6 @@ If you want the fastest path to a working run, start with
     taurex Program Reference <taurex/index>
     MPI <mpi>
     Plugins <plugins>
-    Library <library/index>
 
 
 * :ref:`genindex`

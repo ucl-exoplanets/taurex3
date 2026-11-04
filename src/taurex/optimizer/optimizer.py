@@ -528,6 +528,22 @@ class Optimizer(Logger, Citable):
         """
         self.avail_fit_parameters[parameter].bounds = new_boundaries
 
+    def set_value(self, parameter: str, value: float) -> None:
+        """Sets the current value of the parameter.
+
+        The value is written in linear space, like ``bounds``. This is used
+        to fix a parameter that is not fitted to a specific value.
+
+        Parameters
+        ----------
+        parameter : str
+            Parameter name to set the value for.
+        value : float
+            New value in linear space.
+
+        """
+        self.avail_fit_parameters[parameter].fset(value)
+
     def set_factor_boundary(self, parameter: str, factors: t.List[float]) -> None:
         """Sets the boundary of the parameter based on a factor.
 

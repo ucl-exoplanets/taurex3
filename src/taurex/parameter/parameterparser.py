@@ -217,29 +217,7 @@ class ParameterParser(Logger):
         self.info("Setting up optimizer")
 
         for key, value in fitting_parameters.items():
-            fit = value["fit"]
-            bounds = value["bounds"]
-            mode = value["mode"]
-            factor = value["factor"]
-            prior = value["prior"]
-
-            if fit:
-                self.info("Fitting: %s", key)
-                optimizer.enable_fit(key)
-            else:
-                optimizer.disable_fit(key)
-
-            if factor:
-                optimizer.set_factor_boundary(key, factor)
-
-            if bounds:
-                optimizer.set_boundary(key, bounds)
-
-            if mode:
-                optimizer.set_mode(key, mode.lower())
-
-            if prior is not None:
-                optimizer.set_prior(key, prior)
+            self._apply_fitting_parameter(optimizer, key, value)
 
         fitting_parameters = self.generate_derived_parameters()
 
@@ -252,6 +230,32 @@ class ParameterParser(Logger):
                     optimizer.enable_derived(key)
                 else:
                     optimizer.disable_derived(key)
+
+    def _apply_fitting_parameter(
+        self, optimizer: Optimizer, key: str, value: t.Dict[str, t.Any]
+    ) -> None:
+        """Apply the options of one fitting parameter to the optimizer."""
+        if value["fit"]:
+            self.info("Fitting: %s", key)
+            optimizer.enable_fit(key)
+        else:
+            optimizer.disable_fit(key)
+
+        if value["value"] is not None:
+            self.info("Setting %s to %s", key, value["value"])
+            optimizer.set_value(key, value["value"])
+
+        if value["factor"]:
+            optimizer.set_factor_boundary(key, value["factor"])
+
+        if value["bounds"]:
+            optimizer.set_boundary(key, value["bounds"])
+
+        if value["mode"]:
+            optimizer.set_mode(key, value["mode"].lower())
+
+        if value["prior"] is not None:
+            optimizer.set_prior(key, value["prior"])
 
     def generate_observation(self):
         """Generate observation from input file."""
@@ -468,6 +472,7 @@ class ParameterParser(Logger):
                         "mode": None,
                         "factor": None,
                         "prior": None,
+                        "value": None,
                     }
 
                 if fit_type == "prior":

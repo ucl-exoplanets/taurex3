@@ -79,7 +79,9 @@ class PhoenixStar(BlackbodyStar):
         self._phoenix_path = phoenix_path
 
         warnings.warn(
-            "Phoenix Model will be deprecated soon. " "Use plugin phoenix4all instead.",
+            "Phoenix Model will be deprecated soon. "
+            "Use the Phoenix4All star from the phoenix4all package "
+            "(star_type = phoenix4all) instead.",
             DeprecationWarning,
             stacklevel=2,
         )

@@ -1,29 +1,43 @@
 name: Release
 
+# Publishes taurex to PyPI when a GitHub Release is published.
+#
+# The version is the one in pyproject.toml and must be bumped in a normal
+# pull request before the release is made; the release tag must be vX.Y.Z and
+# match it. Authentication uses PyPI Trusted Publishing (OIDC), so no API
+# token is stored anywhere. The trusted publisher registered on PyPI must
+# match exactly:
+#   owner ucl-exoplanets / repository taurex3 / workflow release.yml
+#   environment pypi
 on:
-  workflow_dispatch:
-  # push:
-  #   branches:
-  #     - main
-  #     - master
+  release:
+    types:
+      - published
+
+permissions:
+  contents: read
+  id-token: write # required for Trusted Publishing
+
+concurrency:
+  group: release-${{ github.event.release.tag_name }}
+  cancel-in-progress: false
 
 jobs:
-  release:
-    permissions:
-      id-token: write # IMPORTANT: this permission is mandatory for trusted publishing
-      contents: write
-    name: Release
+  publish:
+    name: Publish taurex to PyPI
     runs-on: ubuntu-latest
+    environment: pypi
     steps:
-      - name: Check out the repository
+      - name: Check out the released tag
         uses: actions/checkout@v7
         with:
-          fetch-depth: 2
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.10"
+          python-version: "3.13"
 
       - name: Upgrade pip
         run: |
@@ -32,52 +46,54 @@ jobs:
 
       - name: Install Poetry
         run: |
-          pip install --constraint=.github/workflows/constraints.txt poetry
+          pip install --constraint=.github/workflows/constraints.txt poetry packaging
           poetry --version
 
-      - name: Check if there is a parent commit
-        id: check-parent-commit
+      - name: Validate tag against the package version
+        id: version
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
-          echo "::set-output name=sha::$(git rev-parse --verify --quiet HEAD^)"
+          case "$TAG_NAME" in
+            v[0-9]*.[0-9]*) ;;
+            *)
+              echo "::error::Release tag '$TAG_NAME' is not of the form vX.Y or vX.Y.Z"
+              exit 1
+              ;;
+          esac
+          tag_version="${TAG_NAME#v}"
+          package_version="$(poetry version --short)"
+          # Compare PEP 440 versions so that v3.4 and 3.4.0 are the same release.
+          if ! python -c 'import sys; from packaging.version import Version; sys.exit(Version(sys.argv[1]) != Version(sys.argv[2]))' "$tag_version" "$package_version"; then
+            echo "::error::Tag version '$tag_version' does not match pyproject.toml version '$package_version'. Bump with 'poetry version' and publish a new release."
+            exit 1
+          fi
+          pypi_status="$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/taurex/${tag_version}/json")"
+          case "$pypi_status" in
+            404) ;;
+            200)
+              echo "::error::taurex ${tag_version} already exists on PyPI. Versions are immutable, bump the version and publish a new release."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected HTTP ${pypi_status} from PyPI while checking for an existing release; refusing to publish."
+              exit 1
+              ;;
+          esac
+          echo "version=${tag_version}" >> "$GITHUB_OUTPUT"
 
-      - name: Detect and tag new version
-        id: check-version
-        if: steps.check-parent-commit.outputs.sha
-        uses: salsify/action-detect-and-tag-new-version@v2.0.1
-        with:
-          version-command: |
-            bash -o pipefail -c "poetry version | awk '{ print \$2 }'"
-
-      - name: Bump version for developmental release
-        if: "! steps.check-version.outputs.tag"
+      - name: Check the tag is on main
         run: |
-          poetry version patch &&
-          version=$(poetry version | awk '{ print $2 }') &&
-          poetry version $version.dev.$(date +%s)
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
+            echo "::error::Tag v${{ steps.version.outputs.version }} does not point to a commit on main"
+            exit 1
+          fi
 
-      - name: Build package
+      - name: Build sdist and wheel
         run: |
           poetry build --ansi
+          ls -l dist
 
       - name: Publish package on PyPI
-        if: steps.check-version.outputs.tag
         uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
-
-      - name: Publish package on TestPyPI
-        if: "! steps.check-version.outputs.tag"
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-
-      - name: Publish the release notes
-        uses: release-drafter/release-drafter@v7.10.0
-        with:
-          publish: ${{ steps.check-version.outputs.tag != '' }}
-          tag: ${{ steps.check-version.outputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

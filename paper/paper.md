@@ -53,7 +53,7 @@ bibliography: paper.bib
 
 TauREx 3 [@alrefaie2021] is an open-source Python framework for modelling and retrieving the atmospheres of exoplanets. It builds self-consistent forward models of transit, eclipse, and phase-curve observations from a pressure–temperature profile, a chemical composition, and a set of opacity and scattering contributions, and it compares these models against observed spectra within a Bayesian retrieval loop. TauREx 3 is used to interpret observations from HST, Spitzer, and JWST, and its plugin system lets users add forward models, chemistry, opacities, and samplers without modifying the core code.
 
-TauREx 3.4, released alongside this paper, builds on 3.3.2. It reduces the memory footprint of high-resolution retrievals, accepts physical units on model inputs, promotes three formerly external plugins (multimodel forward models, instrument systematics, and precomputed Mie grids) into the core package, and adds a wavelength-aware flux binner. The memory improvements are the headline change: they allow retrievals with ExoMol line lists sampled at a resolving power of $R = 50{,}000$ to run on cluster nodes that previously exhausted their memory.
+TauREx 3.4, released alongside this paper, builds on 3.3.2. It reduces the memory footprint of high-resolution retrievals, accepts physical units on model inputs, replaces five formerly external plugins with functionality that a plain `pip install taurex` provides (multimodel forward models, instrument systematics, precomputed Mie grids, catalogue-driven planet and star parameters, and the Phoenix4All stellar library), and adds a wavelength-aware flux binner. The memory improvements are the headline change: they allow retrievals with ExoMol line lists sampled at a resolving power of $R = 50{,}000$ to run on cluster nodes that previously exhausted their memory.
 
 # Statement of need
 
@@ -61,9 +61,11 @@ High-resolution opacity data are now the limiting resource in exoplanet atmosphe
 
 The same release also improves the correctness and ergonomics of the framework. Physical units are now accepted throughout the input layer: planet radii, temperatures, pressures, orbital separations, and cloud-deck pressures can be given as Astropy quantities or unit-aware strings [@astropy2022], which removes a common source of unit errors in retrieval setups. The multimodel and instrument-systematics plugins [@changeat2025] and the precomputed-grid Mie contribution [@voyer2026] are now part of the core package, so composite forward models, systematic-error terms, and cheap multi-cloud retrievals no longer require separate plugin installations.
 
+The catalogue mixins and Phoenix4All [@phoenix4all] join them in the same base install. A retrieval target is then specified by name: its planet and stellar parameters are read from a CSV table or from the ExoMAST archive [@exomast], and the stellar spectrum is downloaded, cached, and interpolated on first use instead of being assembled by the user from a manually curated directory of PHOENIX files. Both plugins remove setup work that previously sat outside the reproducibility of a retrieval run: a transcribed orbital solution and a hand-assembled stellar library are no longer part of the input.
+
 # State of the field
 
-TauREx 3 sits alongside other open-source retrieval codes such as NEMESIS, CHIMERA, petitRADTRANS, and POSEIDON, which differ in their opacity handling, chemistry flexibility, and sampler support. TauREx 3 distinguishes itself by its plugin system, which allows new forward models, chemistry schemes, opacity formats, and samplers to be added without modifying the core code, and by its support for MPI-parallel retrievals with shared-memory opacity storage. Version 3.4 consolidates three widely used plugins into the core package and extends the framework to high-resolution opacity data, as described below.
+TauREx 3 sits alongside other open-source retrieval codes such as NEMESIS, CHIMERA, petitRADTRANS, and POSEIDON, which differ in their opacity handling, chemistry flexibility, and sampler support. TauREx 3 distinguishes itself by its plugin system, which allows new forward models, chemistry schemes, opacity formats, and samplers to be added without modifying the core code, and by its support for MPI-parallel retrievals with shared-memory opacity storage. Version 3.4 consolidates five widely used plugins into the base installation — four as modules of the core package and Phoenix4All as a required dependency that registers itself through the plugin entry point — and extends the framework to high-resolution opacity data, as described below.
 
 # Software design
 
@@ -83,13 +85,21 @@ Input values that carry an Astropy unit are normalised through a single helper, 
 
 Composite forward models (weighted combinations of several forward models) and instrument-systematic observation loaders are now built into TauREx 3, so users can fit multiple atmospheric scenarios or add wavelength offsets and instrument models without installing separate plugins.
 
+## Catalogue-driven planet and star parameters
+
+The former `taurex-catalogue` plugin is now part of `taurex.mixin`. `PlanetCatalogueFile` and `StarCatalogueFile` fill the planet parameters (mass, radius, semi-major axis, period, inclination, eccentricity, transit duration) and the stellar parameters (effective temperature, radius, mass, metallicity, distance) from a CSV table, for a row selected by index or by planet name; columns are matched to parameters by name, so one file can drive a grid of targets. `PlanetCatalogueExomast` and `StarCatalogueExomast` take a planet name, query the ExoMAST properties API, and use its NExScI catalogue row. Both variants are mixins applied with `enhance_class` to the existing `Planet` and `Star` classes, and a value given explicitly in the input still takes precedence over the catalogue, so a retrieved radius can be overridden without editing the table.
+
+## Phoenix4All stellar spectra
+
+`phoenix4all` [@phoenix4all] is added to the dependencies of TauREx 3.4 and replaces the manual PHOENIX download that the `phoenix` star type required: it retrieves, caches, and interpolates PHOENIX model spectra from the SVO, Synphot, or HiResFITS servers, and falls back to a Planck spectrum outside the model grid. Its code does not live in the TauREx source tree. `Phoenix4AllStar` registers itself through the `taurex.plugins` entry-point group, so `star_type = phoenix4all` is available in an input file after installation, with no separate plugin install and no explicit import; the legacy `phoenix` star type is kept for backwards compatibility.
+
 ## Wavelength-aware flux binning
 
 The flux binner was rewritten so that a single `FluxBinner` class bins spectra in either wavenumber or wavelength, replacing the previous wavenumber-only implementation while keeping the old behaviour available for backwards compatibility.
 
 ## Additional fixes
 
-Version 3.4 also fixes a number of defects: pressure-unit handling in the ExoTransmit opacity reader, a log-transformation bug in the flat-Mie cloud parameter, a bug in the emission model, broken posterior PDFs for Guillot retrievals, and an inheritance bug in the optimiser mixin that could shadow fitting parameters.
+Version 3.4 also fixes a number of defects: pressure-unit handling in the ExoTransmit opacity reader, pair names in the header of the current HITRAN CIA files, a log-transformation bug in the flat-Mie cloud parameter, a bug in the emission model, broken posterior PDFs for Guillot retrievals, an inheritance bug in the optimiser mixin that could shadow fitting parameters, and `value` entries for fixed fitting parameters, which the input parser accepted but never applied to the optimiser.
 
 # Research impact statement
 
@@ -127,7 +137,7 @@ The retrieval converges to a Bayesian log-evidence of $\ln Z = 229.1 \pm 0.2$. T
 
 # Software implementation and availability
 
-TauREx 3 is implemented in Python and depends on NumPy [@numpy], SciPy [@scipy], Astropy [@astropy2022], and h5py. It is distributed on PyPI (`pip install taurex`) and supports Linux, macOS, and Windows. Documentation is published at https://taurex3.readthedocs.io, with example notebooks covering setup, forward modelling, clouds, binning, retrievals, multimodel fitting, and instruments. The source code is hosted at https://github.com/ucl-exoplanets/TauREx3 under the BSD-3-Clause licence and is developed under continuous integration with a pytest test suite.
+TauREx 3 is implemented in Python and depends on NumPy [@numpy], SciPy [@scipy], Astropy [@astropy2022], h5py, and Phoenix4All [@phoenix4all]. It is distributed on PyPI (`pip install taurex`) and supports Linux, macOS, and Windows. Documentation is published at https://taurex3.readthedocs.io, with example notebooks covering setup, forward modelling, clouds, binning, retrievals, multimodel fitting, instruments, and the Phoenix4All and catalogue interfaces. The source code is hosted at https://github.com/ucl-exoplanets/TauREx3 under the BSD-3-Clause licence and is developed under continuous integration with a pytest test suite.
 
 # Conclusion
 

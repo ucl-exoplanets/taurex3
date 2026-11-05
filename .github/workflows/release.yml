@@ -3,10 +3,10 @@ name: Release
 # Publishes taurex to PyPI when a GitHub Release is published.
 #
 # The version is the one in pyproject.toml and must be bumped in a normal
-# pull request before the release is made; the release tag must be vX.Y.Z and
-# match it. Authentication uses PyPI Trusted Publishing (OIDC), so no API
-# token is stored anywhere. The trusted publisher registered on PyPI must
-# match exactly:
+# pull request before the release is made; the release tag must be X.Y.Z or
+# vX.Y.Z and match it. Authentication uses PyPI Trusted Publishing (OIDC), so
+# no API token is stored anywhere. The trusted publisher registered on PyPI
+# must match exactly:
 #   owner ucl-exoplanets / repository taurex3 / workflow release.yml
 #   environment pypi
 on:
@@ -54,14 +54,12 @@ jobs:
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}
         run: |
-          case "$TAG_NAME" in
-            v[0-9]*.[0-9]*) ;;
-            *)
-              echo "::error::Release tag '$TAG_NAME' is not of the form vX.Y or vX.Y.Z"
-              exit 1
-              ;;
-          esac
           tag_version="${TAG_NAME#v}"
+          # Both 'X.Y.Z' and 'vX.Y.Z' tags are accepted; the 'v' prefix is optional.
+          if ! python -c 'import sys; from packaging.version import Version; Version(sys.argv[1])' "$tag_version"; then
+            echo "::error::Release tag '$TAG_NAME' is not a PEP 440 version (expected X.Y.Z or vX.Y.Z)"
+            exit 1
+          fi
           package_version="$(poetry version --short)"
           # Compare PEP 440 versions so that v3.4 and 3.4.0 are the same release.
           if ! python -c 'import sys; from packaging.version import Version; sys.exit(Version(sys.argv[1]) != Version(sys.argv[2]))' "$tag_version" "$package_version"; then
@@ -86,7 +84,7 @@ jobs:
         run: |
           git fetch --no-tags origin main
           if ! git merge-base --is-ancestor HEAD FETCH_HEAD; then
-            echo "::error::Tag v${{ steps.version.outputs.version }} does not point to a commit on main"
+            echo "::error::Tag ${{ github.event.release.tag_name }} does not point to a commit on main"
             exit 1
           fi
 

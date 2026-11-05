@@ -9,6 +9,7 @@
 /docs/_build/
 /src/*.egg-info/
 __pycache__/
+*.pyc
 .hypothesis
 .vscode
 .ipynb_checkpoints

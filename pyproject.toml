@@ -5,8 +5,8 @@ description = "TauREx3"
 authors = ["Ahmed Faris Al-Refaie <ahmed.al-refaie.12@ucl.ac.uk>"]
 license = "BSDv3"
 readme = "README.md"
-homepage = "https://github.com/ahmed-f-alrefaie/taurex3"
-repository = "https://github.com/ahmed-f-alrefaie/taurex3"
+homepage = "https://github.com/ucl-exoplanets/taurex3"
+repository = "https://github.com/ucl-exoplanets/taurex3"
 documentation = "https://taurex3.readthedocs.io"
 packages = [
     { include = "taurex", from = "src" },
@@ -28,7 +28,7 @@ classifiers = [
 ]
 
 [tool.poetry.urls]
-Changelog = "https://github.com/ahmed-f-alrefaie/taurex3/releases"
+Changelog = "https://github.com/ucl-exoplanets/taurex3/releases"
 
 [tool.poetry.dependencies]
 python = "^3.10"

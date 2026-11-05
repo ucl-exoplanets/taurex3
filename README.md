@@ -8,7 +8,7 @@
 [![Read the documentation at https://taurex3.readthedocs.io/](https://img.shields.io/readthedocs/taurex3/latest.svg?label=Read%20the%20Docs)][read the docs]
 [![docs (dev)](https://img.shields.io/badge/docs-%28dev%29-4f6d8a?style=flat-square)][dev-docs]
 [![Tests](https://github.com/ucl-exoplanets/taurex3/workflows/Tests/badge.svg)][tests]
-[![Codecov](https://codecov.io/gh/ahmed-f-alrefaie/taurex3/branch/main/graph/badge.svg)][codecov]
+[![Codecov](https://codecov.io/gh/ucl-exoplanets/taurex3/branch/main/graph/badge.svg)][codecov]
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]

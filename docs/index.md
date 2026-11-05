@@ -19,5 +19,5 @@ reference
 contributing
 Code of Conduct <codeofconduct>
 License <license>
-Changelog <https://github.com/ahmed-f-alrefaie/taurex3/releases>
+Changelog <https://github.com/ucl-exoplanets/taurex3/releases>
 ```

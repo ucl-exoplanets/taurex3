@@ -1,0 +1,66 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: TauREx 3
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file and the TauREx 3 paper below.
+type: software
+authors:
+  - given-names: Ahmed F.
+    family-names: Al-Refaie
+    email: ahmed.al-refaie.12@ucl.ac.uk
+    affiliation: University College London
+  - given-names: Quentin
+    family-names: Changeat
+    affiliation: University College London
+  - given-names: Ingo P.
+    family-names: Waldmann
+    affiliation: University College London
+  - given-names: Giovanna
+    family-names: Tinetti
+    affiliation: University College London
+  - given-names: Sushuang
+    family-names: Ma
+  - given-names: Kai Hou
+    family-names: Yip
+  - given-names: Simone
+    family-names: Ciarella
+    email: s.ciarella@esciencecenter.nl
+    affiliation: Netherlands eScience Center
+    orcid: "https://orcid.org/0000-0002-9247-139X"
+repository-code: "https://github.com/ucl-exoplanets/taurex3"
+url: "https://taurex3.readthedocs.io"
+abstract: >-
+  TauREx 3 is a fast, dynamic and extendable framework for
+  atmospheric retrievals of exoplanets, combining forward models,
+  opacity and chemistry plugins with Bayesian parameter estimation.
+keywords:
+  - exoplanet atmospheres
+  - atmospheric retrievals
+  - bayesian inference
+  - radiative transfer
+  - astronomy software
+license: BSD-3-Clause
+version: 3.3.3
+preferred-citation:
+  type: article
+  title: >-
+    TauREx 3: A Fast, Dynamic, and Extendable Framework for Retrievals
+  authors:
+    - given-names: Ahmed F.
+      family-names: Al-Refaie
+    - given-names: Quentin
+      family-names: Changeat
+    - given-names: Ingo P.
+      family-names: Waldmann
+    - given-names: Giovanna
+      family-names: Tinetti
+  journal: The Astrophysical Journal
+  year: 2021
+  volume: 917
+  number: 1
+  start: 37
+  end: 37
+  doi: 10.3847/1538-4357/ac0252

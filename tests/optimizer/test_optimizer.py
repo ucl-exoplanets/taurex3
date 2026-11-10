@@ -1,6 +1,7 @@
 """Test optimizer base class."""
 
 import math
+from types import SimpleNamespace
 
 import pytest
 from hypothesis import given
@@ -14,6 +15,80 @@ from taurex.optimizer import Optimizer
 from . import LineModel
 from . import LineObs
 from . import LineObsWithParams
+
+
+@pytest.mark.parametrize(("rank", "has_solution_products"), [(0, True), (1, False)])
+def test_generate_solution_only_builds_forward_products_on_master(
+    monkeypatch, rank, has_solution_products
+):
+    """Only rank 0 builds MAP and median products; all ranks compute uncertainty."""
+    import taurex.mpi
+    import taurex.util.output
+
+    monkeypatch.setattr(taurex.mpi, "get_rank", lambda: rank)
+    monkeypatch.setattr(
+        taurex.util.output, "store_contributions", lambda *args, **kwargs: {}
+    )
+
+    class Model:
+        def __init__(self):
+            self.forward_evaluations = 0
+            self.profile_generations = 0
+
+        def model(self, **kwargs):
+            self.forward_evaluations += 1
+            return "spectrum"
+
+        def generate_profiles(self):
+            self.profile_generations += 1
+            return {"temperature": {"median": 1000.0}}
+
+    class Binner:
+        def generate_spectrum_output(self, result, output_size):
+            return {"spectrum": result}
+
+    class FakeOptimizer:
+        def __init__(self):
+            self._model = Model()
+            self._binner = Binner()
+            self._observed = SimpleNamespace(wavenumberGrid=[1.0])
+            self.updated_values = []
+            self.uncertainty_calls = 0
+
+        def info(self, *args, **kwargs):
+            pass
+
+        def warning(self, *args, **kwargs):
+            pass
+
+        def get_solution(self):
+            yield (0, [1.0], [2.0], [("metadata", "value")])
+
+        def update_model(self, values):
+            self.updated_values.append(values)
+
+        def generate_profiles(self, solution, wavenumber_grid):
+            self.uncertainty_calls += 1
+            return ({"temperature": {"uncertainty": 10.0}}, {})
+
+        @property
+        def derived_names(self):
+            return []
+
+    fake = FakeOptimizer()
+    result = Optimizer.generate_solution(fake)
+
+    assert fake.uncertainty_calls == 1
+    if has_solution_products:
+        assert fake._model.forward_evaluations == 2
+        assert fake._model.profile_generations == 1
+        assert fake.updated_values == [[1.0], [2.0]]
+        assert result["solution0"]["Profiles"]["temperature"]["uncertainty"] == 10.0
+    else:
+        assert fake._model.forward_evaluations == 0
+        assert fake._model.profile_generations == 0
+        assert fake.updated_values == []
+        assert result == {}
 
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))

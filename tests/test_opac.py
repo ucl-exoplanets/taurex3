@@ -152,13 +152,13 @@ def test_interpolation(fake_interp_opac, temperature, pressure):
     # interp_bilinear_grid, which may be a view into xsecGrid.
     # Compute expected BEFORE calling opacity() to capture the
     # pre-mutation value of xsecGrid.
-    if maximum_case:
+    if minimum_case:
+        expected = fake_interp_opac.xsecGrid[0, 0] / 10000
+
+    elif maximum_case:
         expected = fake_interp_opac.xsecGrid[-1, -1] / 10000
 
     op = fake_interp_opac.opacity(temperature, pressure)
 
-    if minimum_case:
-        assert np.allclose(np.zeros_like(fake_interp_opac.wavenumberGrid), op)
-
-    elif maximum_case:
+    if minimum_case or maximum_case:
         assert np.array_equal(expected, op)

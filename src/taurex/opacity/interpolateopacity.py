@@ -194,7 +194,7 @@ class InterpolatingOpacity(Opacity):
             return self.xsecGrid[-1, -1, wngrid_filter].ravel()
 
         if check_pressure_min and check_temperature_min:
-            return np.zeros_like(self.xsecGrid[0, 0, wngrid_filter]).ravel()
+            return self.xsecGrid[0, 0, wngrid_filter].ravel()
 
         # Max pressure
         if check_pressure_max:

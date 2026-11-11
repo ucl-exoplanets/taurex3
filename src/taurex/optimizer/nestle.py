@@ -45,6 +45,7 @@ class NestleOptimizer(Optimizer):
         method: t.Optional[t.Literal["single", "multi", "mcmc"]] = "multi",
         tol: t.Optional[float] = 0.5,
         sigma_fraction: t.Optional[float] = 0.1,
+        uncertainty_max_workers_per_node: t.Optional[int] = 64,
     ):
         """Initialize and setup nestle.
 
@@ -73,8 +74,14 @@ class NestleOptimizer(Optimizer):
             Fraction of weights to use in computing the error.
             (Default: 0.1)
 
+        uncertainty_max_workers_per_node:
+            Maximum number of MPI ranks per node that evaluate posterior
+            samples concurrently. Set to None to use all ranks.
+
         """
-        super().__init__("Nestle", observed, model, sigma_fraction)
+        super().__init__(
+            "Nestle", observed, model, sigma_fraction, uncertainty_max_workers_per_node
+        )
         self._nlive = int(num_live_points)  # number of live points
         self._method = method  # use MutliNest algorithm
 

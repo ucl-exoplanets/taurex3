@@ -1,6 +1,7 @@
 """Test optimizer base class."""
 
 import math
+from types import SimpleNamespace
 
 import pytest
 from hypothesis import given
@@ -14,6 +15,220 @@ from taurex.optimizer import Optimizer
 from . import LineModel
 from . import LineObs
 from . import LineObsWithParams
+
+
+def test_generate_profiles_limits_sample_workers_per_node(monkeypatch):
+    """All ranks join reductions, but only capped ranks run model samples."""
+    import taurex.mpi
+
+    rank_state = {"rank": 0}
+    rank_count = 8
+    local_size = 4
+    worker_limit = 2
+    sample_list = [([sample], float(sample + 1)) for sample in range(10)]
+    updated_samples = []
+    compute_error_calls = []
+
+    class LocalComm:
+        def Get_rank(self):
+            return rank_state["rank"] % local_size
+
+        def Get_size(self):
+            return local_size
+
+    monkeypatch.setattr(taurex.mpi, "has_mpi", lambda: True)
+    monkeypatch.setattr(taurex.mpi, "get_rank", lambda: rank_state["rank"])
+    monkeypatch.setattr(taurex.mpi, "nprocs", lambda: rank_count)
+    monkeypatch.setattr(taurex.mpi, "shared_comm", LocalComm)
+    monkeypatch.setattr(taurex.mpi, "broadcast", lambda samples: sample_list)
+    monkeypatch.setattr(
+        taurex.mpi,
+        "allgather",
+        lambda is_worker: [
+            mpi_rank % local_size < worker_limit for mpi_rank in range(rank_count)
+        ],
+    )
+
+    class Model:
+        def compute_error(self, samples, **kwargs):
+            compute_error_calls.append(rank_state["rank"])
+            return list(samples()), {}
+
+    class FakeOptimizer:
+        _uncertainty_max_workers_per_node = worker_limit
+        _model = Model()
+        _binner = object()
+
+        def sample_parameters(self, solution):
+            yield from sample_list
+
+        def update_model(self, parameters):
+            updated_samples.append(parameters[0])
+
+        def info(self, *args, **kwargs):
+            pass
+
+        def debug(self, *args, **kwargs):
+            pass
+
+    results = []
+    for rank in range(rank_count):
+        rank_state["rank"] = rank
+        profile_result, spectrum_result = Optimizer.generate_profiles(
+            FakeOptimizer(), solution=0, binning=[]
+        )
+        results.extend(profile_result)
+        assert spectrum_result == {}
+
+    assert sorted(updated_samples) == list(range(len(sample_list)))
+    assert len(set(updated_samples)) == len(sample_list)
+    assert compute_error_calls == list(range(rank_count))
+    assert sorted(results) == [weight for _, weight in sample_list]
+
+
+def test_generate_profiles_runs_without_mpi(monkeypatch):
+    """Posterior profiles use one local worker when MPI is unavailable."""
+    import taurex.mpi
+
+    sample_list = [([sample], float(sample + 1)) for sample in range(3)]
+    updated_samples = []
+
+    monkeypatch.setattr(taurex.mpi, "has_mpi", lambda: False)
+    monkeypatch.setattr(taurex.mpi, "get_rank", lambda: 0)
+    monkeypatch.setattr(taurex.mpi, "nprocs", lambda: 1)
+    monkeypatch.setattr(
+        taurex.mpi, "shared_comm", lambda: pytest.fail("shared MPI comm requested")
+    )
+    monkeypatch.setattr(taurex.mpi, "broadcast", lambda samples: sample_list)
+    monkeypatch.setattr(taurex.mpi, "allgather", lambda is_worker: [is_worker])
+
+    class Model:
+        def compute_error(self, samples, **kwargs):
+            return list(samples()), {}
+
+    class FakeOptimizer:
+        _uncertainty_max_workers_per_node = 64
+        _model = Model()
+        _binner = object()
+
+        def sample_parameters(self, solution):
+            yield from sample_list
+
+        def update_model(self, parameters):
+            updated_samples.append(parameters[0])
+
+        def info(self, *args, **kwargs):
+            pass
+
+        def debug(self, *args, **kwargs):
+            pass
+
+    profile_result, spectrum_result = Optimizer.generate_profiles(
+        FakeOptimizer(), solution=0, binning=[]
+    )
+
+    assert updated_samples == list(range(len(sample_list)))
+    assert profile_result == [weight for _, weight in sample_list]
+    assert spectrum_result == {}
+
+
+@pytest.mark.parametrize("worker_limit", [0, -1, True, 1.5, "invalid"])
+def test_optimizer_rejects_invalid_uncertainty_worker_limit(worker_limit):
+    """The per-node worker limit must be a positive integer or None."""
+    with pytest.raises(ValueError, match="uncertainty_max_workers_per_node"):
+        Optimizer("test", uncertainty_max_workers_per_node=worker_limit)
+
+
+def test_optimizer_accepts_parameter_file_worker_limit_values():
+    """Convert ConfigObj string values to the configured worker limit."""
+    optimizer = Optimizer("test")
+    assert optimizer._uncertainty_max_workers_per_node == 64
+
+    optimizer = Optimizer("test", uncertainty_max_workers_per_node=64.0)
+    assert optimizer._uncertainty_max_workers_per_node == 64
+
+    optimizer = Optimizer("test", uncertainty_max_workers_per_node="32")
+    assert optimizer._uncertainty_max_workers_per_node == 32
+
+    optimizer = Optimizer("test", uncertainty_max_workers_per_node="None")
+    assert optimizer._uncertainty_max_workers_per_node is None
+
+
+class _SolutionModel:
+    def __init__(self):
+        self.forward_evaluations = 0
+        self.profile_generations = 0
+
+    def model(self, **kwargs):
+        self.forward_evaluations += 1
+        return "spectrum"
+
+    def generate_profiles(self):
+        self.profile_generations += 1
+        return {"temperature": {"median": 1000.0}}
+
+
+class _SolutionBinner:
+    def generate_spectrum_output(self, result, output_size):
+        return {"spectrum": result}
+
+
+class _FakeSolutionOptimizer:
+    def __init__(self):
+        self._model = _SolutionModel()
+        self._binner = _SolutionBinner()
+        self._observed = SimpleNamespace(wavenumberGrid=[1.0])
+        self.updated_values = []
+        self.uncertainty_calls = 0
+
+    def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
+        pass
+
+    def get_solution(self):
+        yield (0, [1.0], [2.0], [("metadata", "value")])
+
+    def update_model(self, values):
+        self.updated_values.append(values)
+
+    def generate_profiles(self, solution, wavenumber_grid):
+        self.uncertainty_calls += 1
+        return ({"temperature": {"uncertainty": 10.0}}, {})
+
+    @property
+    def derived_names(self):
+        return []
+
+
+@pytest.mark.parametrize(("rank", "has_solution_products"), [(0, True), (1, False)])
+def test_generate_solution_only_builds_forward_products_on_master(
+    monkeypatch, rank, has_solution_products
+):
+    """Only rank 0 builds MAP and median products; all ranks compute uncertainty."""
+    import taurex.mpi
+    import taurex.util.output
+
+    monkeypatch.setattr(taurex.mpi, "get_rank", lambda: rank)
+    monkeypatch.setattr(
+        taurex.util.output, "store_contributions", lambda *args, **kwargs: {}
+    )
+
+    fake = _FakeSolutionOptimizer()
+    result = Optimizer.generate_solution(fake)
+
+    assert fake.uncertainty_calls == 1
+    if has_solution_products:
+        assert fake._model.forward_evaluations == 2
+        assert fake._model.profile_generations == 1
+        assert fake.updated_values == [[1.0], [2.0]]
+        assert result["solution0"]["Profiles"]["temperature"]["uncertainty"] == 10.0
+    else:
+        assert fake._model.forward_evaluations == 0
+        assert fake._model.profile_generations == 0
+        assert fake.updated_values == []
+        assert result == {}
 
 
 @given(m=st.floats(0.1, 100, allow_nan=False), c=st.floats(0.1, 100, allow_nan=False))

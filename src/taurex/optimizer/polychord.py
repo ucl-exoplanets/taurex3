@@ -34,7 +34,13 @@ class PolyChordOptimizer(Optimizer):
         sigma_fraction=0.1,
         uncertainty_max_workers_per_node=64,
     ):
-        super().__init__("Multinest", observed, model, sigma_fraction, uncertainty_max_workers_per_node)
+        super().__init__(
+            "Multinest",
+            observed,
+            model,
+            sigma_fraction,
+            uncertainty_max_workers_per_node,
+        )
 
         # number of live points
         self.n_live_points = int(num_live_points)

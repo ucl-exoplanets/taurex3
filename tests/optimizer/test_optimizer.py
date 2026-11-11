@@ -87,7 +87,7 @@ def test_generate_profiles_limits_sample_workers_per_node(monkeypatch):
 
 
 def test_generate_profiles_runs_without_mpi(monkeypatch):
-    """Posterior profiles use one local worker when MPI is unavailable (test for local submission)."""
+    """Posterior profiles use one local worker when MPI is unavailable."""
     import taurex.mpi
 
     sample_list = [([sample], float(sample + 1)) for sample in range(3)]
@@ -140,7 +140,7 @@ def test_optimizer_rejects_invalid_uncertainty_worker_limit(worker_limit):
 
 
 def test_optimizer_accepts_parameter_file_worker_limit_values():
-    """ConfigObj string values are converted to the configured worker limit."""
+    """Convert ConfigObj string values to the configured worker limit."""
     optimizer = Optimizer("test")
     assert optimizer._uncertainty_max_workers_per_node == 64
 
@@ -152,6 +152,54 @@ def test_optimizer_accepts_parameter_file_worker_limit_values():
 
     optimizer = Optimizer("test", uncertainty_max_workers_per_node="None")
     assert optimizer._uncertainty_max_workers_per_node is None
+
+
+class _SolutionModel:
+    def __init__(self):
+        self.forward_evaluations = 0
+        self.profile_generations = 0
+
+    def model(self, **kwargs):
+        self.forward_evaluations += 1
+        return "spectrum"
+
+    def generate_profiles(self):
+        self.profile_generations += 1
+        return {"temperature": {"median": 1000.0}}
+
+
+class _SolutionBinner:
+    def generate_spectrum_output(self, result, output_size):
+        return {"spectrum": result}
+
+
+class _FakeSolutionOptimizer:
+    def __init__(self):
+        self._model = _SolutionModel()
+        self._binner = _SolutionBinner()
+        self._observed = SimpleNamespace(wavenumberGrid=[1.0])
+        self.updated_values = []
+        self.uncertainty_calls = 0
+
+    def info(self, *args, **kwargs):
+        pass
+
+    def warning(self, *args, **kwargs):
+        pass
+
+    def get_solution(self):
+        yield (0, [1.0], [2.0], [("metadata", "value")])
+
+    def update_model(self, values):
+        self.updated_values.append(values)
+
+    def generate_profiles(self, solution, wavenumber_grid):
+        self.uncertainty_calls += 1
+        return ({"temperature": {"uncertainty": 10.0}}, {})
+
+    @property
+    def derived_names(self):
+        return []
 
 
 @pytest.mark.parametrize(("rank", "has_solution_products"), [(0, True), (1, False)])
@@ -167,52 +215,7 @@ def test_generate_solution_only_builds_forward_products_on_master(
         taurex.util.output, "store_contributions", lambda *args, **kwargs: {}
     )
 
-    class Model:
-        def __init__(self):
-            self.forward_evaluations = 0
-            self.profile_generations = 0
-
-        def model(self, **kwargs):
-            self.forward_evaluations += 1
-            return "spectrum"
-
-        def generate_profiles(self):
-            self.profile_generations += 1
-            return {"temperature": {"median": 1000.0}}
-
-    class Binner:
-        def generate_spectrum_output(self, result, output_size):
-            return {"spectrum": result}
-
-    class FakeOptimizer:
-        def __init__(self):
-            self._model = Model()
-            self._binner = Binner()
-            self._observed = SimpleNamespace(wavenumberGrid=[1.0])
-            self.updated_values = []
-            self.uncertainty_calls = 0
-
-        def info(self, *args, **kwargs):
-            pass
-
-        def warning(self, *args, **kwargs):
-            pass
-
-        def get_solution(self):
-            yield (0, [1.0], [2.0], [("metadata", "value")])
-
-        def update_model(self, values):
-            self.updated_values.append(values)
-
-        def generate_profiles(self, solution, wavenumber_grid):
-            self.uncertainty_calls += 1
-            return ({"temperature": {"uncertainty": 10.0}}, {})
-
-        @property
-        def derived_names(self):
-            return []
-
-    fake = FakeOptimizer()
+    fake = _FakeSolutionOptimizer()
     result = Optimizer.generate_solution(fake)
 
     assert fake.uncertainty_calls == 1

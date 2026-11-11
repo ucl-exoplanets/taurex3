@@ -223,8 +223,7 @@ class Optimizer(Logger, Citable):
             or uncertainty_max_workers_per_node < 1
         ):
             raise ValueError(
-                "uncertainty_max_workers_per_node must be a positive integer or "
-                "None"
+                "uncertainty_max_workers_per_node must be a positive integer or " "None"
             )
         self._uncertainty_max_workers_per_node = uncertainty_max_workers_per_node
         self._fit_priors = {}
@@ -963,8 +962,8 @@ class Optimizer(Logger, Citable):
             Solution dictionary.
 
         """
-        from taurex.util.output import store_contributions
         from taurex.mpi import get_rank
+        from taurex.util.output import store_contributions
 
         solution_dict = {}
         is_master = get_rank() == 0
@@ -1050,9 +1049,9 @@ class Optimizer(Logger, Citable):
                 if derived_dict is None:
                     continue
                 if is_master:
-                    solution_dict[f"solution{solution}"]["derived_params"] = (
-                        derived_dict
-                    )
+                    solution_dict[f"solution{solution}"][
+                        "derived_params"
+                    ] = derived_dict
 
         enableLogging()
         self.info("Post-processing - Complete")

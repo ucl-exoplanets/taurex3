@@ -220,7 +220,13 @@ class MultiNestOptimizer(Optimizer):
             Maximum number of MPI ranks per node that evaluate posterior
             samples concurrently. Set to None to use all ranks.
         """
-        super().__init__("Multinest", observed, model, sigma_fraction, uncertainty_max_workers_per_node)
+        super().__init__(
+            "Multinest",
+            observed,
+            model,
+            sigma_fraction,
+            uncertainty_max_workers_per_node,
+        )
 
         multi_nest_path = pathlib.Path(multi_nest_path)
         # sampling chains directory

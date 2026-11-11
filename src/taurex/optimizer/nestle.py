@@ -79,7 +79,9 @@ class NestleOptimizer(Optimizer):
             samples concurrently. Set to None to use all ranks.
 
         """
-        super().__init__("Nestle", observed, model, sigma_fraction, uncertainty_max_workers_per_node)
+        super().__init__(
+            "Nestle", observed, model, sigma_fraction, uncertainty_max_workers_per_node
+        )
         self._nlive = int(num_live_points)  # number of live points
         self._method = method  # use MutliNest algorithm
 

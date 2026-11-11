@@ -168,6 +168,7 @@ class MultiNestOptimizer(Optimizer):
         multinest_prefix: t.Optional[str] = "1-",
         verbose_output: t.Optional[bool] = True,
         sigma_fraction: t.Optional[float] = 0.1,
+        uncertainty_max_workers_per_node: t.Optional[int] = 64,
     ):
         r"""Setup multinest optimizer.
 
@@ -215,8 +216,11 @@ class MultiNestOptimizer(Optimizer):
             Verbose output
         sigma_fraction:
             Fraction of sigma to use for prior. Default is 10%
+        uncertainty_max_workers_per_node:
+            Maximum number of MPI ranks per node that evaluate posterior
+            samples concurrently. Set to None to use all ranks.
         """
-        super().__init__("Multinest", observed, model, sigma_fraction)
+        super().__init__("Multinest", observed, model, sigma_fraction, uncertainty_max_workers_per_node)
 
         multi_nest_path = pathlib.Path(multi_nest_path)
         # sampling chains directory

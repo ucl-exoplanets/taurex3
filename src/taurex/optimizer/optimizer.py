@@ -170,6 +170,7 @@ class Optimizer(Logger, Citable):
         observed: t.Optional[BaseSpectrum] = None,
         model: t.Optional[ForwardModel] = None,
         sigma_fraction: t.Optional[float] = 0.1,
+        uncertainty_max_workers_per_node: t.Optional[int] = 64,
     ) -> None:
         """Initilize optimizer.
 
@@ -188,12 +189,44 @@ class Optimizer(Logger, Citable):
             Fraction of weights to use in computing the error.
             (Default: 10%)
 
+        uncertainty_max_workers_per_node:
+            Maximum number of MPI ranks per node that evaluate posterior
+            samples concurrently. Other ranks still participate in MPI
+            reductions. Set to None to use all ranks.
 
         """
         super().__init__(name)
 
         self._model_callback = None
         self._sigma_fraction = sigma_fraction
+        if isinstance(uncertainty_max_workers_per_node, str):
+            if uncertainty_max_workers_per_node.lower() == "none":
+                uncertainty_max_workers_per_node = None
+            else:
+                try:
+                    uncertainty_max_workers_per_node = int(
+                        uncertainty_max_workers_per_node
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "uncertainty_max_workers_per_node must be a positive "
+                        "integer or None"
+                    ) from exc
+        if (
+            isinstance(uncertainty_max_workers_per_node, float)
+            and uncertainty_max_workers_per_node.is_integer()
+        ):
+            uncertainty_max_workers_per_node = int(uncertainty_max_workers_per_node)
+        if uncertainty_max_workers_per_node is not None and (
+            isinstance(uncertainty_max_workers_per_node, bool)
+            or not isinstance(uncertainty_max_workers_per_node, int)
+            or uncertainty_max_workers_per_node < 1
+        ):
+            raise ValueError(
+                "uncertainty_max_workers_per_node must be a positive integer or "
+                "None"
+            )
+        self._uncertainty_max_workers_per_node = uncertainty_max_workers_per_node
         self._fit_priors = {}
         self.avail_fit_parameters: t.Dict[str, FitParam] = {}
         self.avail_derived_parameters: t.Dict[str, DerivedParam] = {}
@@ -851,26 +884,56 @@ class Optimizer(Logger, Citable):
 
         rank = mpi.get_rank()
         size = mpi.nprocs()
+        if mpi.has_mpi():
+            local_comm = mpi.shared_comm()
+            local_rank = local_comm.Get_rank()
+            local_size = local_comm.Get_size()
+        else:
+            local_rank = 0
+            local_size = 1
+
+        worker_limit = self._uncertainty_max_workers_per_node
+        if worker_limit is None:
+            worker_limit = local_size
+        worker_limit = min(worker_limit, local_size)
+
+        is_worker = local_rank < worker_limit
+        worker_ranks = [
+            worker_rank
+            for worker_rank, active in enumerate(mpi.allgather(is_worker))
+            if active
+        ]
+        if not worker_ranks:
+            raise RuntimeError("No MPI ranks are available for uncertainty samples")
+
+        if is_worker:
+            worker_index = worker_ranks.index(rank)
+            rank_samples = sample_list[worker_index :: len(worker_ranks)]
+        else:
+            rank_samples = []
 
         enableLogging()
 
         self.info(
-            "I will only iterate through partitioned %s "
-            "points (the rest is in parallel)",
-            len(sample_list) // size,
+            "Distributing %s posterior samples across %s active ranks "
+            "(%s MPI ranks total, at most %s per node)",
+            len(sample_list),
+            len(worker_ranks),
+            size,
+            worker_limit,
         )
 
         disableLogging()
 
         def sample_iter():
             count = 0
-            for parameters, weight in sample_list[rank::size]:
+            for parameters, weight in rank_samples:
                 self.update_model(parameters)
                 enableLogging()
                 if rank == 0 and count % 10 == 0 and count > 0:
                     self.info(
                         "Progress %.3f",
-                        count * 100.0 / (len(sample_list) / size),
+                        count * 100.0 / len(rank_samples),
                     )
                 disableLogging()
                 yield weight

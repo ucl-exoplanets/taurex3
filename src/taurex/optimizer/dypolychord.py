@@ -25,6 +25,7 @@ class DyPolyChordOptimizer(PolyChordOptimizer):
         resume=False,
         verbosity=1,
         sigma_fraction=0.1,
+        uncertainty_max_workers_per_node=64,
     ):
         """Initialize DyPolyChordOptimizer."""
         super().__init__(
@@ -40,6 +41,7 @@ class DyPolyChordOptimizer(PolyChordOptimizer):
             resume=resume,
             verbosity=verbosity,
             sigma_fraction=sigma_fraction,
+            uncertainty_max_workers_per_node=uncertainty_max_workers_per_node,
         )
 
     def compute_fit(self):

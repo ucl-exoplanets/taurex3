@@ -172,6 +172,25 @@ be shared by instruments as well as retrieval binning::
 The legacy ``observation = spectra_instr`` form remains available as a
 backwards-compatible shortcut for the same observation-plus-binner setup.
 
+Optimizer uncertainty workers
+-----------------------------
+
+The ``[Optimizer]`` section accepts ``uncertainty_max_workers_per_node`` to
+limit how many MPI ranks per node evaluate posterior samples when calculating
+profile and spectrum uncertainties. For example::
+
+    [Optimizer]
+    optimizer = nestle
+    uncertainty_max_workers_per_node = 8
+
+The default is ``64`` workers per node, which limits the memory used for
+uncertainty calculations on each node. Set a lower value to reduce the number
+of concurrent sample evaluations, or set it to ``None`` to allow all ranks on
+each node to evaluate samples. This setting only limits the uncertainty
+calculation after sampling; it does not limit the optimizer's main retrieval
+run. Without MPI, the uncertainty calculation runs locally on the single
+process.
+
 
 Mixins
 ------

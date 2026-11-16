@@ -170,6 +170,7 @@ class Optimizer(Logger, Citable):
         observed: t.Optional[BaseSpectrum] = None,
         model: t.Optional[ForwardModel] = None,
         sigma_fraction: t.Optional[float] = 0.1,
+        uncertainty_max_workers_per_node: t.Optional[int] = 64,
     ) -> None:
         """Initilize optimizer.
 
@@ -188,12 +189,43 @@ class Optimizer(Logger, Citable):
             Fraction of weights to use in computing the error.
             (Default: 10%)
 
+        uncertainty_max_workers_per_node:
+            Maximum number of MPI ranks per node that evaluate posterior
+            samples concurrently. Other ranks still participate in MPI
+            reductions. Set to None to use all ranks.
 
         """
         super().__init__(name)
 
         self._model_callback = None
         self._sigma_fraction = sigma_fraction
+        if isinstance(uncertainty_max_workers_per_node, str):
+            if uncertainty_max_workers_per_node.lower() == "none":
+                uncertainty_max_workers_per_node = None
+            else:
+                try:
+                    uncertainty_max_workers_per_node = int(
+                        uncertainty_max_workers_per_node
+                    )
+                except ValueError as exc:
+                    raise ValueError(
+                        "uncertainty_max_workers_per_node must be a positive "
+                        "integer or None"
+                    ) from exc
+        if (
+            isinstance(uncertainty_max_workers_per_node, float)
+            and uncertainty_max_workers_per_node.is_integer()
+        ):
+            uncertainty_max_workers_per_node = int(uncertainty_max_workers_per_node)
+        if uncertainty_max_workers_per_node is not None and (
+            isinstance(uncertainty_max_workers_per_node, bool)
+            or not isinstance(uncertainty_max_workers_per_node, int)
+            or uncertainty_max_workers_per_node < 1
+        ):
+            raise ValueError(
+                "uncertainty_max_workers_per_node must be a positive integer or " "None"
+            )
+        self._uncertainty_max_workers_per_node = uncertainty_max_workers_per_node
         self._fit_priors = {}
         self.avail_fit_parameters: t.Dict[str, FitParam] = {}
         self.avail_derived_parameters: t.Dict[str, DerivedParam] = {}
@@ -851,26 +883,56 @@ class Optimizer(Logger, Citable):
 
         rank = mpi.get_rank()
         size = mpi.nprocs()
+        if mpi.has_mpi():
+            local_comm = mpi.shared_comm()
+            local_rank = local_comm.Get_rank()
+            local_size = local_comm.Get_size()
+        else:
+            local_rank = 0
+            local_size = 1
+
+        worker_limit = self._uncertainty_max_workers_per_node
+        if worker_limit is None:
+            worker_limit = local_size
+        worker_limit = min(worker_limit, local_size)
+
+        is_worker = local_rank < worker_limit
+        worker_ranks = [
+            worker_rank
+            for worker_rank, active in enumerate(mpi.allgather(is_worker))
+            if active
+        ]
+        if not worker_ranks:
+            raise RuntimeError("No MPI ranks are available for uncertainty samples")
+
+        if is_worker:
+            worker_index = worker_ranks.index(rank)
+            rank_samples = sample_list[worker_index :: len(worker_ranks)]
+        else:
+            rank_samples = []
 
         enableLogging()
 
         self.info(
-            "I will only iterate through partitioned %s "
-            "points (the rest is in parallel)",
-            len(sample_list) // size,
+            "Distributing %s posterior samples across %s active ranks "
+            "(%s MPI ranks total, at most %s per node)",
+            len(sample_list),
+            len(worker_ranks),
+            size,
+            worker_limit,
         )
 
         disableLogging()
 
         def sample_iter():
             count = 0
-            for parameters, weight in sample_list[rank::size]:
+            for parameters, weight in rank_samples:
                 self.update_model(parameters)
                 enableLogging()
                 if rank == 0 and count % 10 == 0 and count > 0:
                     self.info(
                         "Progress %.3f",
-                        count * 100.0 / (len(sample_list) / size),
+                        count * 100.0 / len(rank_samples),
                     )
                 disableLogging()
                 yield weight
@@ -900,9 +962,11 @@ class Optimizer(Logger, Citable):
             Solution dictionary.
 
         """
+        from taurex.mpi import get_rank
         from taurex.util.output import store_contributions
 
         solution_dict = {}
+        is_master = get_rank() == 0
 
         self.info("Post-processing - Generating spectra and profiles")
 
@@ -916,56 +980,61 @@ class Optimizer(Logger, Citable):
         ) in self.get_solution():
             enableLogging()
             self.info("Computing solution %s", solution)
-            sol_values = {}
+            if is_master:
+                sol_values = {}
 
-            # Include extra stuff we might want to store (provided
-            # by the child)
-            for k, v in values:
-                sol_values[k] = v
+                # Include extra stuff we might want to store (provided
+                # by the child)
+                for k, v in values:
+                    sol_values[k] = v
 
-            # Update the model with optimized map values
-            self.update_model(optimized_map)
+                # Update the model with optimized map values
+                self.update_model(optimized_map)
 
-            opt_result = self._model.model(cutoff_grid=False)  # Run the model
+                opt_result = self._model.model(cutoff_grid=False)  # Run the model
 
-            sol_values["Spectra"] = self._binner.generate_spectrum_output(
-                opt_result, output_size=output_size
-            )
-
-            try:
-                sol_values["Spectra"]["Contributions"] = store_contributions(
-                    self._binner,
-                    self._model,
-                    output_size=output_size - 3,
+                sol_values["Spectra"] = self._binner.generate_spectrum_output(
+                    opt_result, output_size=output_size
                 )
-            except Exception as e:
-                self.warning("Not bothering to store contributions " "since its broken")
-                self.warning("%s ", str(e))
 
-            # Update with the optimized median
-            self.update_model(optimized_median)
+                try:
+                    sol_values["Spectra"]["Contributions"] = store_contributions(
+                        self._binner,
+                        self._model,
+                        output_size=output_size - 3,
+                    )
+                except Exception as e:
+                    self.warning(
+                        "Not bothering to store contributions " "since its broken"
+                    )
+                    self.warning("%s ", str(e))
 
-            self._model.model(cutoff_grid=False)
+                # Update with the optimized median
+                self.update_model(optimized_median)
 
-            # Store profiles here
-            sol_values["Profiles"] = self._model.generate_profiles()
+                self._model.model(cutoff_grid=False)
+
+                # Store profiles here
+                sol_values["Profiles"] = self._model.generate_profiles()
+
             profile_dict, spectrum_dict = self.generate_profiles(
                 solution, self._observed.wavenumberGrid
             )
 
-            for k, v in profile_dict.items():
-                if k in sol_values["Profiles"]:
-                    sol_values["Profiles"][k].update(v)
-                else:
-                    sol_values["Profiles"][k] = v
+            if is_master:
+                for k, v in profile_dict.items():
+                    if k in sol_values["Profiles"]:
+                        sol_values["Profiles"][k].update(v)
+                    else:
+                        sol_values["Profiles"][k] = v
 
-            for k, v in spectrum_dict.items():
-                if k in sol_values["Spectra"]:
-                    sol_values["Spectra"][k].update(v)
-                else:
-                    sol_values["Spectra"][k] = v
+                for k, v in spectrum_dict.items():
+                    if k in sol_values["Spectra"]:
+                        sol_values["Spectra"][k].update(v)
+                    else:
+                        sol_values["Spectra"][k] = v
 
-            solution_dict[f"solution{solution}"] = sol_values
+                solution_dict[f"solution{solution}"] = sol_values
 
         if len(self.derived_names) > 0:
             # solution_dict[f'solution{solution}']['derived_params'] = {}
@@ -976,13 +1045,13 @@ class Optimizer(Logger, Citable):
                 _,
                 _,
             ) in self.get_solution():
-                solution_dict[f"solution{solution}"]["derived_params"] = {}
                 derived_dict = self.compute_derived_trace(solution)
                 if derived_dict is None:
                     continue
-                solution_dict[f"solution{solution}"]["derived_params"].update(
-                    derived_dict
-                )
+                if is_master:
+                    solution_dict[f"solution{solution}"][
+                        "derived_params"
+                    ] = derived_dict
 
         enableLogging()
         self.info("Post-processing - Complete")

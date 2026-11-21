@@ -1,8 +1,8 @@
 .. _userderived:
 
-=============
-``[Derive]``
-=============
+==========
+``Derive``
+==========
 
 .. versionadded:: 3.1
 
@@ -10,26 +10,28 @@ This section deals with post-processed values from a retrieval.
 
 The format for enabling post-processed values are::
 
-    derived_param:compute = value
+    derived_param:compute: value
 
-Only ``compute`` is available as an option. Setting to ``True`` will
+Only ``compute`` is available as an option. Setting it to ``true`` will
 ask TauREx to generate posteriors at the end of a retrieval
 for the parameter using the sample points.
 
 By default, the chemistry mean molecular mass (:math:`\mu`) at the surface is computed.
 We can disable this and instead compute the :math:`log(g)` of the planet surface
-and average temperature like so::
+and average temperature like so:
 
-    [Derive]
-    mu:compute = False
-    logg:compute = True
-    avg_T:compute = True
+.. code-block:: yaml
+
+    Derive:
+      mu:compute: false
+      logg:compute: true
+      avg_T:compute: true
 
 Refer to the documentation or plugin documentation to find out what derived parameters
 are available. You can pass your input file with the ``--fitparam`` option to list
 available parameters::
 
-    > taurex -i myinput.par --fitparam
+    taurex -i myinput.yaml --fitparam
 
 With the derived paramaters listed under ``Available Computable Parameters``::
 

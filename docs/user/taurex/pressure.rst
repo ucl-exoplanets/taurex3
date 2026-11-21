@@ -1,12 +1,12 @@
 .. _userpressure:
 
-===============
-``[Pressure]``
-===============
+============
+``Pressure``
+============
 
 The header describes pressure profiles for the atmosphere.
-Currently only one type of profile is supported, so ``profile_type=simple`` or ``profile_type=hydrostatic`` must be included.
-``profile_type = custom`` is also valid, See :ref:`customtypes`
+Currently only one type of profile is supported, so ``profile_type: simple`` or ``profile_type: hydrostatic`` must be included.
+``profile_type: custom`` is also valid, See :ref:`customtypes`
 
 :Class: :class:`~taurex.data.profiles.pressure.SimplePressureProfile`
 
@@ -48,10 +48,12 @@ Fitting Parameters
 Examples
 --------
 
-A basic pressure profile::
+A basic pressure profile:
 
-    [Pressure]
-    profile_type = simple
-    atm_min_pressure = 1e-3
-    atm_max_pressure = 1e6
-    nlayers = 100
+.. code-block:: yaml
+
+    Pressure:
+      profile_type: simple
+      atm_min_pressure: 1e-3
+      atm_max_pressure: 1e6
+      nlayers: 100

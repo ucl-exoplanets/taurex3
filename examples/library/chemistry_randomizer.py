@@ -18,7 +18,7 @@ from taurex.util.output import store_contributions
 # This even includes custom profiles
 pp = ParameterParser()
 
-pp.read("chemistry_randomizer.par")
+pp.read("chemistry_randomizer.yaml")
 
 # Read profiles from file
 pp.setup_globals()

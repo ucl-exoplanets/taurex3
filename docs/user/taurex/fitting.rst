@@ -1,14 +1,14 @@
 .. _userfitting:
 
-=============
-``[Fitting]``
-=============
+===========
+``Fitting``
+===========
 
 This header deals with controlling the fitting procedure.
 
 The format for altering and controlling fitting parameters is of the form::
 
-    fit_param:option = value
+    fit_param:option: value
 
 Here ``fit_param`` is the name of the fitting parameter as is given
 under the *Fitting Parameters* headers in the user documentation. This also
@@ -18,10 +18,12 @@ any other parameter will yield an error.
 
 
 ``option`` defines a set of control key words that alter what the fitting parameter does.
-For example, we can enable fitting of the planet radius using the ``fit`` option::
+For example, we can enable fitting of the planet radius using the ``fit`` option:
 
-    [Fitting]
-    planet_radius:fit = True
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: true
 
 
 New-style priors
@@ -36,42 +38,57 @@ They are expandable with new ones implemented through plugins or custom code.
 
 Its syntax is very no similar to creating an object in python, for
 example to define a uniform prior of bounds 0.8--5.0 Jupiter masses
-we can do::
+we can do:
 
-    [Fitting]
-    planet_radius:fit = True
-    planet_radius:prior = "Uniform(bounds=(0.8, 5.0))"
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: true
+      planet_radius:prior: "Uniform(bounds=(0.8, 5.0))"
 
 It is **important** that the prior definition is surrounded by quotation
 marks. The prior definitions can contain multiple and distinct arguments,
-and have seperate ``Log`` forms as well with arguments in log-space::
+and have seperate ``Log`` forms as well with arguments in log-space:
 
-    [Fitting]
-    H2O:fit = True
-    H2O:prior = "LogUniform(bounds=(-12, -2))"
+.. code-block:: yaml
+
+    Fitting:
+      H2O:fit: true
+      H2O:prior: "LogUniform(bounds=(-12, -2))"
 
 Often these log-forms have extra linear (``lin``) arguments where
 they are defined in linear space instead, for example, the
-prior space::
+prior space:
 
-    [Fitting]
-    H2O:fit = True
-    H2O:prior = "LogUniform(lin_bounds=(1e-12, 1e-2))"
+.. code-block:: yaml
+
+    Fitting:
+      H2O:fit: true
+      H2O:prior: "LogUniform(lin_bounds=(1e-12, 1e-2))"
 
 is equivalent to the previous example.
 The second included prior is the ``Gaussian`` prior which
-has mean and standard deviation arguments::
+has mean and standard deviation arguments:
 
-    planet_radius:prior = "Gaussian(mean=1.0,std=0.3)"
+.. code-block:: yaml
 
-as well as log versions::
+    Fitting:
+      planet_radius:prior: "Gaussian(mean=1.0,std=0.3)"
 
-    H2O:prior = "LogGaussian(mean=-4,std=2)"
+as well as log versions:
+
+.. code-block:: yaml
+
+    Fitting:
+      H2O:prior: "LogGaussian(mean=-4,std=2)"
 
 The mean can be defined in linear space with the ``lin_mean``
-argument::
+argument:
 
-    H2O:prior = "LogGaussian(lin_mean=1e-4,std=2)"
+.. code-block:: yaml
+
+    Fitting:
+      H2O:prior: "LogGaussian(lin_mean=1e-4,std=2)"
 
 Discovery
 =========
@@ -80,7 +97,7 @@ Refer to the documentation or plugin documentation to find out what fitting para
 are available. You can pass your input file with the ``--fitparam`` option to list
 available parameters::
 
-    > taurex -i myinput.par --fitparam
+    taurex -i myinput.yaml --fitparam
 
 With the fitting paramaters listed under ``Available Retrieval Parameters``::
 
@@ -144,18 +161,22 @@ Old-Style priors
     the next major version of TauREx
 
 We can set the prior boundaries between 1.0 - 5.0 Jupiter masses
-using the ``bounds`` option::
+using the ``bounds`` option:
 
-    [Fitting]
-    planet_radius:fit = True
-    planet_radius:bounds = 1.0, 5.0
+.. code-block:: yaml
 
-And fit it in log space using the ``mode`` option::
+    Fitting:
+      planet_radius:fit: true
+      planet_radius:bounds: [1.0, 5.0]
 
-    [Fitting]
-    planet_radius:fit = True
-    planet_radius:bounds = 1.0, 5.0
-    planet_radius:mode = log
+And fit it in log space using the ``mode`` option:
+
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: true
+      planet_radius:bounds: [1.0, 5.0]
+      planet_radius:mode: log
 
 .. caution::
 
@@ -164,15 +185,17 @@ And fit it in log space using the ``mode`` option::
     the correct fitting space.
 
 If we have a constant H2O chemistry in the atmosphere we can
-fit it in linear space instead of the default log::
+fit it in linear space instead of the default log:
 
-    [Fitting]
-    planet_radius:fit = True
-    planet_radius:bounds = 1.0, 5.0
-    planet_radius:mode = log
-    H2O:fit = True
-    H2O:mode = linear
-    H2O:bounds = 1e-12, 1e-1
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: true
+      planet_radius:bounds: [1.0, 5.0]
+      planet_radius:mode: log
+      H2O:fit: true
+      H2O:mode: linear
+      H2O:bounds: [1e-12, 1e-1]
 
 
 

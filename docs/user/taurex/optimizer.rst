@@ -1,8 +1,8 @@
 .. _useroptimizer:
 
-===============
-``[Optimizer]``
-===============
+=============
+``Optimizer``
+=============
 
 This section deals with the type of optimizer used.
 

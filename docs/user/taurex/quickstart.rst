@@ -5,7 +5,7 @@ Quickstart
 ==========
 
 
-To get quickly up to speed lets try an example run using TauREx3. We will be using the ``examples/parfiles/quickstart.par``
+To get quickly up to speed lets try an example run using TauREx3. We will be using the ``examples/parfiles/quickstart.yaml``
 file as a starting point and ``examples/parfiles/quickstart.dat`` as our observation. Copy these to a new folder somewhere.
 
 If you would rather work through the same ideas interactively, see the
@@ -27,11 +27,13 @@ Setup
 ------
 In order to begin running forward models we need to tell *TauREx3* where our cross-sections are.
 We can do this by defining an ``xsec_path`` for cross sections and ``cia_path`` for CIA cross-sections under the
-``[Global]`` header in our ``quickstart.par`` files like so::
+``Global`` section in ``quickstart.yaml`` like so:
 
-    [Global]
-    xsec_path = /path/to/xsec/xsec_sampled_R15000_0.3-15
-    cia_path = /path/to/cia/HITRAN
+.. code-block:: yaml
+
+    Global:
+      xsec_path: /path/to/xsec/xsec_sampled_R15000_0.3-15
+      cia_path: /path/to/cia/HITRAN
 
 
 Forward Model
@@ -39,7 +41,7 @@ Forward Model
 
 Using our input we can run and plot the forward model by doing::
 
-    taurex -i quickstart.par --plot
+    taurex -i quickstart.yaml --plot
 
 And we should get:
 
@@ -48,11 +50,13 @@ And we should get:
 
    Our first forward model
 
-Lets try plotting it against our observation. Under the ``[Observation]`` header
-we can add in the ``observed_spectrum`` keyword and point it to our ``quickstart.dat`` file like so::
+Lets try plotting it against our observation. Under the ``Observation`` header
+we can add in the ``observed_spectrum`` keyword and point it to our ``quickstart.dat`` file like so:
 
-    [Observation]
-    observed_spectrum = /path/to/quickstart.dat
+.. code-block:: yaml
+
+    Observation:
+      observed_spectrum: /path/to/quickstart.dat
 
 Now the spectrum will be binned to our observation:
 
@@ -70,50 +74,54 @@ Chemistry
 ---------
 
 As we've seen, ``CO2`` doesn't fit the observation very well, we should try adding in another molecule.
-Underneath the ``[Chemistry]`` section we can add another sub-header with the name of our molecule, for this
+Underneath the ``Chemistry`` section we can add another sub-header with the name of our molecule, for this
 example we will use a ``constant`` gas profile which keeps it abundance constant throughout the atmosphere,
-there are other more complex profiles but for now we'll keep it simple::
+there are other more complex profiles but for now we'll keep it simple:
 
-    [Chemistry]
-    chemistry_type = taurex
-    fill_gases = H2,He
-    ratio=4.8962e-2
+.. code-block:: yaml
 
-        [[H2O]]
-        gas_type = constant
-        mix_ratio=1.1185e-4
+    Chemistry:
+      chemistry_type: taurex
+      fill_gases: [H2, He]
+      ratio: 4.8962e-2
 
-        [[CO2]]
-        gas_type=constant
-        mix_ratio=1.1185e-4
+      H2O:
+        gas_type: constant
+        mix_ratio: 1.1185e-4
 
-        [[N2]]
-        gas_type = constant
-        mix_ratio = 3.00739e-9
+      CO2:
+        gas_type: constant
+        mix_ratio: 1.1185e-4
+
+      N2:
+        gas_type: constant
+        mix_ratio: 3.00739e-9
 
 Plotting it gives:
 
 .. image::  _static/co2_and_h2o.png
 
 We're getting there. It looks like H2O is definately there but maybe ``CO2`` isn't? Lets try it
-by commenting it out::
+by commenting it out:
 
-    [Chemistry]
-    chemistry_type = taurex
-    fill_gases = H2,He
-    ratio=4.8962e-2
+.. code-block:: yaml
 
-        [[H2O]]
-        gas_type = constant
-        mix_ratio=1.1185e-4
+    Chemistry:
+      chemistry_type: taurex
+      fill_gases: [H2, He]
+      ratio: 4.8962e-2
 
-        #[[CO2]]
-        #gas_type=constant
-        #mix_ratio=1.1185e-4
+      H2O:
+        gas_type: constant
+        mix_ratio: 1.1185e-4
 
-        [[N2]]
-        gas_type = constant
-        mix_ratio = 3.00739e-9
+      # CO2:
+      #   gas_type: constant
+      #   mix_ratio: 1.1185e-4
+
+      N2:
+        gas_type: constant
+        mix_ratio: 3.00739e-9
 
 .. image::  _static/h2o_only.png
 
@@ -124,34 +132,36 @@ Contributions
 
 It seems moelcular absorption is not the only process happening in the atmosphere. Looking at the shorter
 wavelengths we see the characteristic behaviour of **Rayleigh scattering** and a little from **collisionally**
-**induced** **absorption**. We can easily add these contributions under the ``[Model]`` section of the input file.
+**induced** **absorption**. We can easily add these contributions under the ``Model`` section of the input file.
 Each *contribution* is represented as a subheader with additional arguments if necessary. By default we have
-contributions from molecular ``[[Absorption]]``
-Lets add in some ``[[CIA]]`` from ``H2-H2`` and ``H2-He`` and ``[[Rayleigh]]`` scattering to the model::
+contributions from molecular ``Absorption``
+Lets add in some ``CIA`` from ``H2-H2`` and ``H2-He`` and ``Rayleigh`` scattering to the model:
 
-    [Model]
-    model_type = transmission
+.. code-block:: yaml
 
-        [[Absorption]]
+    Model:
+      model_type: transmission
 
-        [[CIA]]
-        cia_pairs = H2-He,H2-H2
+      Absorption: {}
 
-        [[Rayleigh]]
+      CIA:
+        cia_pairs: [H2-He, H2-H2]
+
+      Rayleigh: {}
 
 .. image::  _static/ray_and_cia.png
 
 Hey not bad!! It might be worth seeing how each of these processes effect the spectrum. Easy, we can run
 ``taurex`` with the ``-c`` argument which plots the basic contributions::
 
-    taurex -i quickstart.par --plot -c
+    taurex -i quickstart.yaml --plot -c
 
 .. image::  _static/contrib.png
 
 
 If you want a more detailed look of the each contribution you can use the ``-C`` option instead::
 
-    taurex -i quickstart.par --plot -C
+    taurex -i quickstart.yaml --plot -C
 
 .. image::  _static/full_contrib.png
 
@@ -163,7 +173,7 @@ Storage
 ``Taurex3`` uses the HDF5_ format to store its state and results. We can accomplish this by
 using the ``-o`` output argument::
 
-    taurex -i quickstart.par -o myfile.hdf5
+    taurex -i quickstart.yaml -o myfile.hdf5
 
 We can use this output to plot profiles spectra and even the optical depth!
 Try::
@@ -202,26 +212,30 @@ Retrieval
 
 So we're close to the observation but not quite there and I suspect its the
 temperature profile. We should try running a retrieval. We will use nestle_ as our optimizer of choice
-but other brands are available. This has already be setup under the ``[Optimizer]`` section of the input
+but other brands are available. This has already be setup under the ``Optimizer`` section of the input
 file so we will not worry about it now. We now need to inform the optimizer what parameters we need to fit.
-The ``[Fitting]`` section should list all of the parameters in our model that we want (or dont want) to fit
+The ``Fitting`` section should list all of the parameters in our model that we want (or dont want) to fit
 and *how* to go about fitting it. By default the ``planet_radius`` parameter is fit when no section is provided,
-we should start by creating our ``[Fitting]`` section and disabling the ``planet_radius`` fit::
+we should start by creating our ``Fitting`` section and disabling the ``planet_radius`` fit:
 
-    [Fitting]
-    planet_radius:fit = False
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: false
 
 the syntax is pretty simple, its essentially ``parameter_name:option`` with ``option`` being either
 ``fit``, ``bounds`` and ``mode``. ``fit`` is simply tells the optimizer whether to fit the parameter, ``bounds``
 describes the parameter space to optimize in and ``mode`` instructs the optimizer to fit in either ``linear``
 or ``log`` space.
 The parameter we are interested in is isothermal temperature which is represented as ``T``, and we will fit
-it within *1200 K* and *1400 K*::
+it within *1200 K* and *1400 K*:
 
-    [Fitting]
-    planet_radius:fit = False
-    T:fit = True
-    T:bounds = 1200.0,1400.0
+.. code-block:: yaml
+
+    Fitting:
+      planet_radius:fit: false
+      T:fit: true
+      T:bounds: [1200.0, 1400.0]
 
 We don't need to include ``mode`` as by default ``T`` fits in linear space. Some parameters such as
 abundances fit in log space by default.
@@ -229,7 +243,7 @@ abundances fit in log space by default.
 Running taurex like before will just plot our forward model. To run the retrieval we simply add
 the ``--retrieval`` keyword like so::
 
-    taurex -i quickstart.par --plot -o myfile_retrieval.hdf5 --retrieval
+    taurex -i quickstart.yaml --plot -o myfile_retrieval.hdf5 --retrieval
 
 We should now see something like this pop up::
 

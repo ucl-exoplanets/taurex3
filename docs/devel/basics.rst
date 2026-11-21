@@ -39,12 +39,14 @@ If you build a new temperature class:
             return ['myprofile']
 
 Then the keyword arguments ``mykeyword`` and ``another_keyword`` become arguments
-in the input file::
+in the input file:
 
-    [Temperature]
-    profile_type = myprofile
-    my_keyword = 5,6,7,
-    another_keyword = "Another string"
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: myprofile
+      my_keyword: [5, 6, 7]
+      another_keyword: "Another string"
 
 Which when run will produce::
 
@@ -56,7 +58,7 @@ for your components to be used through the input file. The input file only suppo
 
     - scalars or strings
     - lists of scalars and/or strings
-        - i.e ``my_arg = 1, 3.14, hello-world!``
+        - i.e ``my_arg: [1, 3.14, hello-world!]``
 
 Input keywords
 ==============
@@ -78,10 +80,12 @@ until a match is found. So, for example, if we have a new sampler:
         def input_keywords(cls):
             return ['myoptimizer', ]
 
-We can select it in the input file as::
+We can select it in the input file as:
 
-    [Optimizer]
-    optimizer = myoptimizer
+.. code-block:: yaml
+
+    Optimizer:
+      optimizer: myoptimizer
 
 You can also alias the class by including multiple words:
 
@@ -95,12 +99,14 @@ You can also alias the class by including multiple words:
             return ['myoptimizer', 'my-optimizer',
             'hello-optimizer']
 
-We can select the class using one of the three values::
+We can select the class using one of the three values:
 
-    [Optimizer]
-    optimizer = myoptimizer # Valid
-    optimizer = my-optimizer # Also Valid
-    optimizer = hello-optimizer # Valid as well
+.. code-block:: yaml
+
+    Optimizer:
+      optimizer: myoptimizer
+      # optimizer: my-optimizer
+      # optimizer: hello-optimizer
 
 Developers implementing this must follow a few rules:
 

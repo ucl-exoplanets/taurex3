@@ -92,7 +92,7 @@ Additionally these packages are also download and installed during setup:
 - numpy_
 - numba_
 - numexpr_
-- configobj_ for parsing input files
+- PyYAML_ for parsing input files
 - nestle_ for basic retrieval
 - h5py_ for output
 
@@ -112,7 +112,7 @@ installing additional dependancies:
 
 .. _numpy: http://numpy.org/
 .. _cython: https://cython.org/
-.. _configobj: https://pypi.org/project/configobj/
+.. _PyYAML: https://pypi.org/project/PyYAML/
 .. _numba: https://numba.pydata.org/
 .. _numexpr: https://github.com/pydata/numexpr
 .. _nestle: https://github.com/kbarbary/nestle

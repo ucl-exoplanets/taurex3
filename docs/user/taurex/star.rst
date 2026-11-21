@@ -1,8 +1,8 @@
 .. _userstar:
 
-===============
-``[Star]``
-===============
+========
+``Star``
+========
 
 This header describes the parent star of the exo-planet.
 The ``star_type`` informs the type of spectral emission density (SED) used in the emission and direct image forward model.
@@ -21,7 +21,7 @@ The ``star_type`` available are:
 
 Blackbody
 =========
-``star_type = blackbody``
+``star_type: blackbody``
 
 Star is considered a blackbody.
 
@@ -53,18 +53,20 @@ listed above. ``metallicity`` accepts a dimensionless Quantity.
 Examples
 --------
 
-A Sun like star as a black body::
+A Sun like star as a black body:
 
-    [Star]
-    star_type = blackbody
-    radius = 1.0
-    temperature = 5800
+.. code-block:: yaml
+
+    Star:
+      star_type: blackbody
+      radius: 1.0
+      temperature: 5800
 
 -----------------------------------
 
 PHOENIX
 ========
-``star_type = phoenix``
+``star_type: phoenix``
 
 Stellar emission spectrum is read from the PHOENIX_ library ``.fits.gz`` files and interpolated to the correct temperature.
 Any temperature outside of the range provided by PHOENIX will use a blackbody SED instead.
@@ -104,13 +106,15 @@ listed above. ``metallicity`` accepts a dimensionless Quantity.
 Examples
 --------
 
-A Sun like star using PHOENIX spectra::
+A Sun like star using PHOENIX spectra:
 
-    [Star]
-    star_type = phoenix
-    radius = 1.0
-    temperature = 5800
-    phoenix_path = /mypath/to/fitsfiles/
+.. code-block:: yaml
+
+    Star:
+      star_type: phoenix
+      radius: 1.0
+      temperature: 5800
+      phoenix_path: /mypath/to/fitsfiles/
 
 
 

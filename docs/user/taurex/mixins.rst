@@ -13,49 +13,53 @@ inclined you can see the article `here <wiki_>`_.
 ``makefree``
 ============
 
-Works under: ``[Chemistry]``
+Works under: ``Chemistry``
 
 Adds new molecules or forces specific molecules in a chemical scheme to become fittable.
 Molecules will behave like a :class:`~taurex.data.profiles.chemistry.gas.gas.Gas`
 and will add them as fitting parameters. Molecules can be defined similarly to ``free``.
 For example if we load a chemistry from file, normally we cannot retrieve any molecule.
 If add the ``makefree`` mixin we can force specific molecules and add in new molecules into the
-scheme::
+scheme:
 
-    [Chemistry]
-    chemistry_type = makefree+file
-    filename = "mychemistryprofile.dat"
-    gases = H2O, CH4, CO, CO2
+.. code-block:: yaml
 
-        [CH4]
-        gas_type = constant
+    Chemistry:
+      chemistry_type: makefree+file
+      filename: "mychemistryprofile.dat"
+      gases: [H2O, CH4, CO, CO2]
 
-        [TiO]
-        gas_type = constant
+      CH4:
+        gas_type: constant
 
-    [Fitting]
-    CH4:fit = True
-    TiO:fit = True
+      TiO:
+        gas_type: constant
+
+    Fitting:
+      CH4:fit: true
+      TiO:fit: true
 
 Here, CH4 will has become fittable and we injected TiO into the scheme. What happens is that
 each time the chemistry will run it will first run the base scheme and then modify or inject
 the molecule into the profile. Afterwhich the mixing profiles are then renormalized to unity.
-This can also work for equlibrium schemes, for example using ACE::
+This can also work for equlibrium schemes, for example using ACE:
 
-    [Chemistry]
-    chemistry_type = makefree+ace
-    metallicity = 1.0
+.. code-block:: yaml
 
-        [CH4]
-        gas_type = constant
+    Chemistry:
+      chemistry_type: makefree+ace
+      metallicity: 1.0
 
-        [TiO]
-        gas_type = constant
+      CH4:
+        gas_type: constant
 
-    [Fitting]
-    CH4:fit = True
-    TiO:fit = True
-    metallicity:fit = True
+      TiO:
+        gas_type: constant
+
+    Fitting:
+      CH4:fit: true
+      TiO:fit: true
+      metallicity:fit: true
 
 Only the ``free`` chemical scheme does not work as it is redundant.
 

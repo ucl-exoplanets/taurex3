@@ -37,7 +37,11 @@ Star:
 
 Model:
   model_type: multi_transit
-  parfiles: [examples/parfiles/multimodel_east.yaml, examples/parfiles/multimodel_west.yaml]
+  parfiles:
+    [
+      examples/parfiles/multimodel_east.yaml,
+      examples/parfiles/multimodel_west.yaml,
+    ]
   fractions: [0.65]
 
 Observation:
@@ -49,7 +53,6 @@ Optimizer:
   method: multi
 
 Fitting:
-
   fr_1:fit: true
   fr_1:bounds: [0.0, 1.0]
 

@@ -1,7 +1,7 @@
 .. _usertemperature:
 
 *****************
-``[Temperature]``
+``Temperature``
 *****************
 
 This header is used to define temperature profiles for the atmosphere.
@@ -37,7 +37,7 @@ More profiles can also be included using :ref:`plugins`
 
 Isothermal Profile
 ==================
-``profile_type = isothermal``
+``profile_type: isothermal``
 
 Constant temperature throughout atmosphere
 
@@ -70,17 +70,19 @@ Fitting Parameters
 Examples
 --------
 
-Example isothermal profile::
+Example isothermal profile:
 
-    [Temperature]
-    profile_type = isothermal
-    T = 1500
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1500
 
 ------------------------------------------
 
 Guillot 2010 Profile
 ====================
-``profile_type = guillot``
+``profile_type: guillot``
 
 TP profile from Guillot 2010, A&A, 520, A27 (equation 49)
 Using modified 2stream approx. from Line et al. 2012, ApJ, 749,93 (equation 19)
@@ -134,22 +136,24 @@ Fitting Parameters
 Examples
 --------
 
-Example Guillot profile::
+Example Guillot profile:
 
-    [Temperature]
-    profile_type = guillot
-    T_irr = 1500
-    kappa_ir = 0.01
-    kappa_v1 = 0.002
-    kappa_v2 = 0.003
-    alpha = 0.3
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: guillot
+      T_irr: 1500
+      kappa_ir: 0.01
+      kappa_v1: 0.002
+      kappa_v2: 0.003
+      alpha: 0.3
 
 
 ---------------------------------
 
 N-Point Profile
 ===============
-``profile_type = npoint``
+``profile_type: npoint``
 
 Temperature defined at various heights in the atmosphere. Smoothing is then applied.
 If no temperature and pressure points are defined, it is equivalent to a 2-point
@@ -213,7 +217,7 @@ and ``pressure_point`` defined. They start from 1 and have the form
 
 Rodgers 2000 Profile
 ====================
-``profile_type = rodgers``
+``profile_type: rodgers``
 
 Layer-by-layer temperature - pressure profile retrieval using dampening factor
 Introduced in Rodgers (2000): Inverse Methods for Atmospheric Sounding (equation 3.26)
@@ -257,7 +261,7 @@ Fitting Parameters
 
 Temperature File
 ==================
-``profile_type = file``
+``profile_type: file``
 
 Reads a text file. Can support multi column files with any units
 

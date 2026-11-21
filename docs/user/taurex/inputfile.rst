@@ -5,119 +5,103 @@ Input File Format
 =================
 
 
-Headers
--------
+Sections and values
+-------------------
 
-The input file format is fairly simple to work with. The extension
-for Taurex3 input files is ``.par`` however this is generally not enforced by the code.
-The input is defined in various *headers*, with each header having variables that can be set::
+Save TauREx input files with a ``.yaml`` or ``.yml`` extension. Each
+top-level key names a section. Indent parameters and subsections beneath
+their parent and use ``#`` for comments.
 
-    [Header]
-    parameter1 = value
-    parameter2 = anothervalue
+.. code-block:: yaml
 
-    [Header2]
-    parameter1 = adifferentvalue
-Of course comments are handled with ``#``
+    Header:
+      parameter1: value
+      Subheader:
+        parameter2: another value
 
- The available headers are:
-    - :ref:`userglobal`
-    - :ref:`userchemistry`
-    - :ref:`usertemperature`
-    - :ref:`userpressure`
-    - :ref:`userplanet`
-    - :ref:`userstar`
-    - :ref:`usermodel`
-    - :ref:`userobservation`
-    - :ref:`userbinning`
-    - :ref:`userinstrument`
-    - :ref:`useroptimizer`
-    - :ref:`userfitting`
+    Header2:
+      integer_value: 10
+      float_value: 1.5
+      list_value: [hello, how, are, you]
 
-Not all of these headers are required in an input file. Some will generate
-default profiles when not present. To perform retrievals,
-:ref:`userobservation`, :ref:`useroptimizer` and :ref:`userfitting` *MUST*
-be present
+The available sections are:
 
+- :ref:`userglobal`
+- :ref:`userchemistry`
+- :ref:`usertemperature`
+- :ref:`userpressure`
+- :ref:`userplanet`
+- :ref:`userstar`
+- :ref:`usermodel`
+- :ref:`userobservation`
+- :ref:`userbinning`
+- :ref:`userinstrument`
+- :ref:`useroptimizer`
+- :ref:`userfitting`
 
-Some of these may define additional *subheaders* given by the ``[[Name]]`` notation::
-
-    [Header]
-    parameter1 = value
-        [[Subheader]]
-        parameter2 = anothervalue
-
-Variables
----------
-
-String variables take this form::
-
-    #This is valid
-    string_variable = Astringvariable
-    #This is also valid
-    string_variable_II = "A string variable"
-
-Floats and ints are simply::
-
-    my_int_value = 10
-
-And lists/arrays are defined using commas::
-
-    my_int_list = 10,20,30
-    my_float_list = 1.1,1.4,1.6,
-    my_string_list = hello,how,are,you
-
+Some sections can be omitted to use default profiles. Retrievals require
+an observation, an optimizer and the relevant fitting settings.
 
 Dynamic variables
 -----------------
 
 The input file is actually a dynamic format and its available variables can change depending
-on the choice of certain profiles and types. For example lets take the ``[Temperature]`` header,
+on the choice of certain profiles and types. For example consider the ``Temperature`` section,
 it contains the variable ``profile_type`` which describes which temperature profile to use.
-Setting this to ``isothermal`` gives us the ``T`` variable which defines the isothermal temeprature::
+Setting this to ``isothermal`` gives us the ``T`` variable which defines the isothermal temperature:
 
-    [Temperature]
-    profile_type = isothermal
-    T = 1500.0
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: isothermal
+      T: 1500.0
 
 Now if we change the profile type to ``guillot2010`` it will use the Guillot 2010 temperature profile
 which gives access to the variables ``T_irr``, ``kappa_irr``, ``kappa_v1``, ``kappa_v2``  and ``alpha``
-instead::
+instead:
 
-    [Temperature]
-    profile_type = guillot2010
-    T_irr=1500
-    kappa_irr=0.05
-    kappa_v1=0.05
-    kappa_v2=0.05
-    alpha=0.005
+.. code-block:: yaml
 
-However setting ``T`` will throw an error as it doesn't exist anymore::
+    Temperature:
+      profile_type: guillot2010
+      T_irr: 1500
+      kappa_irr: 0.05
+      kappa_v1: 0.05
+      kappa_v2: 0.05
+      alpha: 0.005
 
-    [Temperature]
-    profile_type = guillot2010
-    #Error is thrown here
-    T=1500
-    kappa_irr=0.05
+However setting ``T`` will throw an error as it doesn't exist anymore:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: guillot2010
+      # Error is thrown here
+      T: 1500
+      kappa_irr: 0.05
 
 This also applies to fitting parameters, profiles provide certain fitting parameters
 and changing the model means that these parameters may not exist anymore.
 
-The ``[Model]`` block can also expand dynamically. A basic single-region setup
-might look like this::
+The ``Model`` block can also expand dynamically. A basic single-region setup
+might look like this:
 
-    [Model]
-    model_type = transmission
+.. code-block:: yaml
 
-        [[Absorption]]
+    Model:
+      model_type: transmission
+
+      Absorption: {}
 
 If you switch to the integrated multimodel support, the same section accepts
-composite-model keys such as ``parfiles`` and ``fractions``::
+composite-model keys such as ``parfiles`` and ``fractions``:
 
-    [Model]
-    model_type = multi_transit
-    parfiles = day.par, night.par
-    fractions = 0.7
+.. code-block:: yaml
+
+    Model:
+      model_type: multi_transit
+      parfiles: [day.yaml, night.yaml]
+      fractions: 0.7
 
 In that configuration TauREx reads one regional parameter file per entry in
 ``parfiles`` and combines the resulting spectra with the supplied weights. If
@@ -126,22 +110,20 @@ the total remains unity.
 
 That change also expands the fitting-parameter surface. Composite models expose
 shared area-fraction parameters such as ``fr_1`` and region-prefixed component
-parameters such as ``m1_T`` whenever profiles are not coupled between regions::
+parameters such as ``m1_T`` whenever profiles are not coupled between regions:
 
-    [Fitting]
-    fr_1:fit = True
-    m1_T:fit = True
+.. code-block:: yaml
 
-The same pattern applies to ``model_type = multi_eclipse`` and
-``model_type = multi_directimage``.
+    Fitting:
+      fr_1:fit: true
+      m1_T:fit: true
+
+The same pattern applies to ``model_type: multi_eclipse`` and
+``model_type: multi_directimage``.
 
 
-YAML files
-----------
-
-Files ending in ``.yaml`` or ``.yml`` use YAML syntax with the same section names,
-parameters and model-building behavior as ``.par`` files. Existing ``.par``
-files continue to work unchanged. For example:
+Complete example
+----------------
 
 .. code-block:: yaml
 
@@ -175,23 +157,7 @@ notation and boolean strings. Quoting a numeric value does not disable this
 conversion. Keys such as the molecule name ``NO`` remain strings. Duplicate
 keys are rejected.
 
-The equivalent of ``examples/parfiles/quickstart.par`` is provided in
-``examples/parfiles/quickstart.yaml``. Run it with::
-
-    taurex -i examples/parfiles/quickstart.yaml --plot
-
-Set the opacity paths first, as for the original quickstart. Relative paths are
-still resolved from the working directory, not the input file's directory.
-
-Multimodel configurations can reference separate regional files. These can
-be either format, including a mixture of YAML and ``.par``:
-
-.. code-block:: yaml
-
-    Model:
-      model_type: multi_transit
-      parfiles: [east.yaml, west.par]
-      fractions: [0.5, 0.5]
+See :doc:`quickstart` to run the YAML example included in the repository.
 
 For ``multi_transit``, you can instead place the regional configurations in the
 same file using ``Model.regions``:
@@ -242,7 +208,7 @@ This support does not introduce explicit shared-object references.
 Environment variables
 ---------------------
 
-Both YAML and PAR files support ``$NAME`` and ``${NAME}`` in parameter values.
+TauREx supports ``$NAME`` and ``${NAME}`` in parameter values.
 This lets users share a configuration while keeping data paths local:
 
 .. code-block:: yaml
@@ -285,51 +251,65 @@ Mixins
 .. versionadded:: 3.1
 
 :ref:`mixin` can be applied to any base component through the ``+``
-operator::
+operator:
 
-    [Temperature]
-    profile_type = mixin1+mixin2+base
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: mixin1+mixin2+base
 
 Where we apply ``mixin1`` and ``mixin2`` to a ``base``.
 Including mixins will also include their keywords as well. If ``mixin1``
 has the keyword ``param1``, ``mixin2`` has ``param2`` and ``base`` has
-``another_param`` then we can define in the input file::
+``another_param`` then we can define in the input file:
 
-    [Temperature]
-    profile_type = mixin1+mixin2+base
-    param1 = "Hello"       # From mixin 1
-    param2 = "World"       # From mixin 2
-    another_param = 10.0   # From base
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: mixin1+mixin2+base
+      param1: "Hello"       # From mixin 1
+      param2: "World"       # From mixin 2
+      another_param: 10.0  # From base
 
 Mixins are evaluated in reverse, the last must be a *non-mixin*
 for example if we have a ``doubler`` mixin that doubles temperature profiles
-then this is valid::
+then this is valid:
 
-    [Temperature]
-    profile_type = doubler+isothermal
+.. code-block:: yaml
 
-but this is *not valid*::
+    Temperature:
+      profile_type: doubler+isothermal
 
-    [Temperature]
-    profile_type = isothermal+doubler
+but this is *not valid*:
 
-Additionally we cannot have more than one base class so this is *invalid*::
+.. code-block:: yaml
 
-    [Temeprature]
-    profile_type = doubler+isothermal+guillot
+    Temperature:
+      profile_type: isothermal+doubler
+
+Additionally we cannot have more than one base class so this is *invalid*:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: doubler+isothermal+guillot
 
 The reverse evaluation means that the first mixin will be *applied last*.
 If we have another mixin called ``add50`` which adds 50 K to the profile,
-then::
+then:
 
-    [Temperature]
-    profile_type = doubler+add50+isothermal
-    T = 1000
+.. code-block:: yaml
 
-Will result in a temperature profile of :math:`2100~K`. If we instead do this::
+    Temperature:
+      profile_type: doubler+add50+isothermal
+      T: 1000
 
-    [Temperature]
-    profile_type = add50+doubler+isothermal
-    T = 1000
+Will result in a temperature profile of :math:`2100~K`. If we instead do this:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: add50+doubler+isothermal
+      T: 1000
 
 Then the resultant temperature will be :math:`2050~K`.

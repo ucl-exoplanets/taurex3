@@ -1,11 +1,11 @@
 .. _userplanet:
 
-============
-``[Planet]``
-============
+==========
+``Planet``
+==========
 
-This header is used to define planetary properties. Currently, only ``planet_type = simple``
-is supported and must be included. ``planet_type = custom`` is also valid, See :ref:`customtypes`
+This header is used to define planetary properties. Currently, only ``planet_type: simple``
+is supported and must be included. ``planet_type: custom`` is also valid, See :ref:`customtypes`
 
 :Class: :class:`~taurex.data.planet.Planet`
 
@@ -54,9 +54,11 @@ Fitting Parameters
 Examples
 --------
 
-Planet with 1.5 Jupiter mass and 1.2 Jupiter radii::
+Planet with 1.5 Jupiter mass and 1.2 Jupiter radii:
 
-    [Planet]
-    planet_type = simple
-    planet_mass = 1.5
-    planet_radius = 1.2
+.. code-block:: yaml
+
+    Planet:
+      planet_type: simple
+      planet_mass: 1.5
+      planet_radius: 1.2

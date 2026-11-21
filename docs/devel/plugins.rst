@@ -194,12 +194,14 @@ This is our random temperature profile, we will steal the implementation from
 As before a terrible temperature profile we now include two extra parameters.
 The class method ``input_keywords`` informs TauREx on how this temperature profile
 is selected in the input file. It must return a list and can include more than one keyword.
-If this plugin is installed we can use the profile through one of those keywords::
+If this plugin is installed we can use the profile through one of those keywords:
 
-    [Temperature]
-    profile_type = helloworld    # Valid keyword RandomTemperature
-    # profile_type = helloearth  # Also valid
-    # profile_type = hello-world # Also valid
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: helloworld  # Valid keyword RandomTemperature
+      # profile_type: helloearth  # Also valid
+      # profile_type: hello-world  # Also valid
 
 
 The ``BIBTEX_ENTRIES`` parameter is used by TauREx to list relevant publications
@@ -258,12 +260,14 @@ profile was detected as well by doing ``taurex --keywords temperature``::
     ╘═══════════════════════════════════════╧═══════════════════╧════════════╛
 
 
-Now we can write in the input file::
+Now we can write in the input file:
 
-    [Temperature]
-    profile_type = helloworld
-    base_temp = 500.0
-    random_scale = 100.0
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: helloworld
+      base_temp: 500.0
+      random_scale: 100.0
 
 Which gives us
 

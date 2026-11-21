@@ -84,16 +84,18 @@ We now have FastChem available!!!
     It must be stressed that *downloading and installing FastChem is not necessary*,
     the plugin includes the precompiled library in the package.
 
-Now we can use FastChem in the input file with retrievals::
+Now we can use FastChem in the input file with retrievals:
 
-    [Chemistry]
-    chemistry_type = fastchem
-    selected_elements = H, He, C, N, O
-    metallicity = 2
+.. code-block:: yaml
 
-    [Fitting]
-    C_O_ratio:fit = True
-    C_O_ratio:priors = "LogUniform(-1,2)"
+    Chemistry:
+      chemistry_type: fastchem
+      selected_elements: [H, He, C, N, O]
+      metallicity: 2
+
+    Fitting:
+      C_O_ratio:fit: true
+      C_O_ratio:prior: "LogUniform(bounds=(-1, 2))"
 
 
 Building Plugins

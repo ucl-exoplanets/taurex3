@@ -1,8 +1,8 @@
 .. _usermodel:
 
-===========
-``[Model]``
-===========
+=========
+``Model``
+=========
 
 This header defines the type of forward model (FM) that will be computed by TauREx3.
 There are several built-in forward ``model_type`` values:
@@ -23,7 +23,7 @@ There are several built-in forward ``model_type`` values:
 
 Both emission and direct image also include an optional keyword ``ngauss`` which
 dictates the number of Gaussian quadrate points used in the integration. By default
-this is set to ``ngauss=4``.
+this is set to ``ngauss: 4``.
 
 Composite Forward Models
 ========================
@@ -54,12 +54,14 @@ from the remaining weight so that the total remains unity.
 For a complete worked setup, see the multimodel notebook example in
 :ref:`Examples`.
 
-Example composite transmission setup::
+Example composite transmission setup:
 
-    [Model]
-    model_type = multi_transit
-    parfiles = day.par, night.par
-    fractions = 0.7
+.. code-block:: yaml
+
+    Model:
+      model_type: multi_transit
+      parfiles: [day.yaml, night.yaml]
+      fractions: 0.7
 
 The same pattern applies to ``multi_eclipse`` and ``multi_directimage``.
 
@@ -83,26 +85,30 @@ to add into the forward model.Any forward model type can be augmented with these
 Examples
 --------
 
-Transmission spectrum with molecular absorption and CIA from ``H2-He`` and ``H2-H2``::
+Transmission spectrum with molecular absorption and CIA from ``H2-He`` and ``H2-H2``:
 
-    [Model]
-    model_type = transmission
-        [[Absorption]]
+.. code-block:: yaml
 
-        [[CIA]]
-        cia_pairs = H2-He,He-He
+    Model:
+      model_type: transmission
+      Absorption: {}
 
-Emission spectrum with molecular absorption, CIA and Rayleigh scattering::
+      CIA:
+        cia_pairs: [H2-He, He-He]
 
-    [Model]
-    model_type = emission
-    ngauss = 4
-        [[Absorption]]
+Emission spectrum with molecular absorption, CIA and Rayleigh scattering:
 
-        [[CIA]]
-        cia_pairs = H2-He,He-He
+.. code-block:: yaml
 
-        [[Rayleigh]]
+    Model:
+      model_type: emission
+      ngauss: 4
+      Absorption: {}
+
+      CIA:
+        cia_pairs: [H2-He, He-He]
+
+      Rayleigh: {}
 
 The following sections give a list of available contributions
 
@@ -111,7 +117,7 @@ The following sections give a list of available contributions
 Molecular Absorption
 ====================
 
-``[[Absorption]]``
+``Absorption``
 
 Adds molecular absorption to the forward model. Here the *active*
 molecules contribute to absorption.
@@ -121,7 +127,7 @@ No other keywords are needed. No fitting parameters.
 
 Collisionally Induced Absorption
 ================================
-``[[CIA]]``
+``CIA``
 
 Adds collisionally induced absorption to the forward model.
 Requires ``cia_path`` to be set. Both *active* and *inactive*
@@ -142,7 +148,7 @@ Keywords
 
 Rayleigh Scattering
 ===================
-``[[Rayleigh]]``
+``Rayleigh``
 
 Adds Rayleigh scattering to the forward model. Both *active* and *inactive*
 molecules can contribute. No keywords or fitting parameters.
@@ -151,7 +157,7 @@ molecules can contribute. No keywords or fitting parameters.
 
 Optically thick clouds
 ======================
-``[[SimpleClouds]]`` or ``[[ThickClouds]]``
+``SimpleClouds`` or ``ThickClouds``
 
 A simple cloud model that puts a infinitely absorping cloud deck
 in the atmosphere.
@@ -181,7 +187,7 @@ Fitting Parameters
 
 Mie scattering (Lee)
 ======================
-``[[LeeMie]]``
+``LeeMie``
 
 Computes Mie scattering contribution to optical depth
 Formalism taken from: Lee et al. 2013, ApJ, 778, 97
@@ -226,7 +232,7 @@ Fitting Parameters
 
 Mie scattering (Precomputed grids)
 ===================================
-``[[PyMieScattGridExtinction]]``
+``PyMieScattGridExtinction``
 
 Computes cloud extinction from precomputed :math:`Q_\mathrm{ext}` grids,
 promoting the former ``taurex-PCQ`` plugin into the main TauREx codebase.
@@ -316,29 +322,31 @@ The main ones are:
 | ``decayP_<species>`` | :obj:`float` | Per-species exponential-decay index              |
 +----------------------+--------------+--------------------------------------------------+
 
-Example parameter-file usage::
+Example parameter-file usage:
 
-    [Model]
-    model_type = transmission
+.. code-block:: yaml
 
-        [[Absorption]]
+    Model:
+      model_type: transmission
 
-        [[PyMieScattGridExtinction]]
-        species = Mg2SiO4_glass, SiO2
-        mie_species_path = /path/Mg2SiO4_glass.h5, /path/SiO2.h5
-        mie_particle_radius_distribution = budaj
-        mie_particle_mean_radius = 0.1, 0.5
-        mie_particle_mix_ratio = 1e8, 5e7
-        mie_midP = 1e5, 1e3
-        mie_rangeP = 2.0, 1.0
-        mie_particle_altitude_distrib = exp_decay
-        mie_particle_altitude_decay = -4.0, -5.0
+      Absorption: {}
+
+      PyMieScattGridExtinction:
+        species: [Mg2SiO4_glass, SiO2]
+        mie_species_path: [/path/Mg2SiO4_glass.h5, /path/SiO2.h5]
+        mie_particle_radius_distribution: budaj
+        mie_particle_mean_radius: [0.1, 0.5]
+        mie_particle_mix_ratio: [1e8, 5e7]
+        mie_midP: [1e5, 1e3]
+        mie_rangeP: [2.0, 1.0]
+        mie_particle_altitude_distrib: exp_decay
+        mie_particle_altitude_decay: [-4.0, -5.0]
 
 ---------------------------
 
 Mie scattering (BH)
 ======================
-``[[BHMie]]``
+``BHMie``
 
 Computes a Mie scattering contribution using method given by
 Bohren & Huffman 2007
@@ -384,7 +392,7 @@ Fitting Parameters
 
 Mie scattering (Flat)
 ======================
-``[[FlatMie]]``
+``FlatMie``
 
 Computes a flat absorbing region of the atmosphere
 across all wavelengths

@@ -1,8 +1,8 @@
 .. _userchemistry:
 
-===============
-``[Chemistry]``
-===============
+=============
+``Chemistry``
+=============
 
 This header describes the chemical composition of the
 atmosphere. The type of model used is defined by the
@@ -33,8 +33,8 @@ ACE Equlibrium Chemistry
         pip install acepython
 
 
-``chemistry_type = ace``
-``chemistry_type = equilibrium``
+``chemistry_type: ace``
+``chemistry_type: equilibrium``
 
 Equilibrium chemistry using the ACE FORTRAN program. *Fortran compiler required*
 
@@ -67,8 +67,8 @@ Fitting Parameters
 
 Taurex Chemistry
 ================
-``chemistry_type = taurex``
-``chemistry_type = free``
+``chemistry_type: taurex``
+``chemistry_type: free``
 
 This chemistry type allows you to define individual
 abundance profiles for each molecule. Molecules are either active or inactive depending on
@@ -103,7 +103,7 @@ Here, we use ``[Gas-0]`` to designate the first gas defined in the fill gas list
 ``[Gas-(number)]`` to designate the nth gas after the main gas. If we have a
 gas list like::
 
-    fill_gases = H2,He,CO2,
+    fill_gases: [H2, He, CO2]
 
 then ``[Gas-1]_[Gas-0] == He_H2`` and ``[Gas-2]_[Gas-0] == CO2_H2``:
 
@@ -119,16 +119,18 @@ then ``[Gas-1]_[Gas-0] == He_H2`` and ``[Gas-2]_[Gas-0] == CO2_H2``:
 However molecules are defined as *subheaders* with the subheader being the name of the molecule.
 Each molecule can be assigned an abundance profile through the ``gas_type`` variable.
 For example, to describe a chemical profile with water in constant abundance in the atmosphere
-is simply done like so::
+is simply done like so:
 
-    [Chemistry]
-    chemistry_type = taurex
-    fill_gases = H2,He,
-    ratio = 0.1524
+.. code-block:: yaml
 
-        [[H2O]]
-        gas_type = constant
-        mix_ratio = 1e-4
+    Chemistry:
+      chemistry_type: taurex
+      fill_gases: [H2, He]
+      ratio: 0.1524
+
+      H2O:
+        gas_type: constant
+        mix_ratio: 1e-4
 
 For each molecule, the available ``gas_type`` are:
     - ``constant``
@@ -161,7 +163,7 @@ e.g. ``[Mol]_surface`` should be ``H2O_surface`` for water etc.
 Constant Profile
 ================
 
-``gas_type = constant``
+``gas_type: constant``
 
 An abundance profile that is constant with height of the atmosphere
 
@@ -193,7 +195,7 @@ Fitting Parameters
 
 Two Layer Profile
 =================
-``gas_type = twolayer``
+``gas_type: twolayer``
 
 An abundance profile where abundance is defined on the planet surface and top of
 the atmosphere with a pressure point determining the boundary between the layers.
@@ -239,7 +241,7 @@ Fitting Parameters
 
 Chemsitry File
 ==============
-``chemistry_type = file``
+``chemistry_type: file``
 
 Reads a multi-column text file. Order must be
 from BOA to TOA. Each column must represent a unique
@@ -259,7 +261,7 @@ Keywords
 +--------------+--------------+--------------------------+---------+
 .. Two Point Profile
 .. =================
-.. ``gas_type = twopoint``
+.. ``gas_type: twopoint``
 
 .. An abundance profile where abundance is defined on the planet surface and top of
 .. the atmosphere and interpolated

@@ -32,28 +32,36 @@ and oh no someone just created a brand new temperature profile and deeper into t
 endless abyss you go.
 
 This is what mixins solve, if instead we develop a ``doubler`` mixin we can instead
-*add* it to our original profile using the ``+`` operator::
+*add* it to our original profile using the ``+`` operator:
 
-    [Temperature]
-    profile_type = doubler+isothermal
-    T = 1000
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: doubler+isothermal
+      T: 1000
 
 And TauREx will build an isothermal profile that doubles itself for you. Neat
-We can do the same and build an ``add50`` mixin::
+We can do the same and build an ``add50`` mixin:
 
-    [Temperature]
-    profile_type = add50+isothermal
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: add50+isothermal
 
 Now the beauty is that we can stack them together!! If we want to double then add 50
-we can write::
+we can write:
 
-    [Temperature]
-    profile_type = add50+doubler+isothermal
+.. code-block:: yaml
 
-Or add 50 then double::
+    Temperature:
+      profile_type: add50+doubler+isothermal
 
-    [Temperature]
-    profile_type = doubler+add50+isothermal
+Or add 50 then double:
+
+.. code-block:: yaml
+
+    Temperature:
+      profile_type: doubler+add50+isothermal
 
 The examples given are fairly simple, performing a summation. There are other
 useful features related to mixins, one mixin sets planet and stellar properties

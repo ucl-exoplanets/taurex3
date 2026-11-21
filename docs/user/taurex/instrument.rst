@@ -1,8 +1,8 @@
 .. _userinstrument:
 
-================
-``[Instrument]``
-================
+==============
+``Instrument``
+==============
 
 This section deals with passing the forward model through
 some form of noise model.
@@ -26,7 +26,7 @@ The instrument is defined by the ``instrument`` variable:
 
 SNR
 ===
-``instrument = snr``
+``instrument: snr``
 A very basic instrument that generates noise based on the forward model
 spectrum and signal-to-noise ratio value. Uses the native spectrum as the grid,
 unless a :ref:`manualbinning` is defined in which case that is used as the grid.

@@ -1,8 +1,8 @@
 .. _userobservation:
 
-=================
-``[Observation]``
-=================
+===============
+``Observation``
+===============
 
 This header deals with loading in spectral data
 for retrievals or plotting.
@@ -29,10 +29,12 @@ Only one of these is required. All accept a string path to a file
 Example
 -------
 
-An example of loading an ascii data-set::
+An example of loading an ascii data-set:
 
-    [Observation]
-    observed_spectrum = /path/to/data.dat
+.. code-block:: yaml
+
+    Observation:
+      observed_spectrum: /path/to/data.dat
 
 
 .. _taurexspectrum:
@@ -43,5 +45,5 @@ TauREx Spectrum
 The ``taurex_spectrum`` has two different modes. The first mode is specifing a filename path of a
 a TauREx3 HDF5 output. This output must have been run with some form of instrument function (see :ref:`userinstrument`),
 for it to be useable as an observation.
-Another is to set ``taurex_spectrum = self``, this will set the current forward model + instrument function
+Another is to set ``taurex_spectrum: self``, this will set the current forward model + instrument function
 as the observation. This type observation is valid of the fitting procedure making it possible to do *self-retrievals*.

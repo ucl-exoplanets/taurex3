@@ -1,8 +1,8 @@
 .. _userbinning:
 
-=============
-``[Binning]``
-=============
+===========
+``Binning``
+===========
 
 This section deals with the resampling of the forward model.
 
@@ -29,7 +29,7 @@ The available ``bin_type`` are:
 
 Manual binning
 ==============
-``bin_type = manual``
+``bin_type: manual``
 
 When set to manual, you can then define the *start*, *end* and *number of points*
 of the grid using one of these keywords:
@@ -46,17 +46,21 @@ of the grid using one of these keywords:
 | ``log_wavenumber_grid`` | Equally log-spaced grid in wavenumber (cm-1) |
 +-------------------------+----------------------------------------------+
 
-An example, to define an equally spaced wavelength grid at 0.3-5 um::
+An example, to define an equally spaced wavelength grid at 0.3-5 um:
 
-    [Binning]
-    bin_type = manual
-    wavelength_grid = 0.3, 5, 300
+.. code-block:: yaml
 
-Or define an equally log spaced wavenumber grid between 400-5000 cm-1::
+    Binning:
+      bin_type: manual
+      wavelength_grid: [0.3, 5, 300]
 
-    [Binning]
-    bin_type = manual
-    log_wavenumber_grid = 400, 5000, 300
+Or define an equally log spaced wavenumber grid between 400-5000 cm-1:
+
+.. code-block:: yaml
+
+    Binning:
+      bin_type: manual
+      log_wavenumber_grid: [400, 5000, 300]
 
 Alternativly you can instead define it based on the resolution
 with the format as *start*, *end*, *resolution*
@@ -67,11 +71,13 @@ with the format as *start*, *end*, *resolution*
 | ``wavelength_res``      | Wavelength grid at resolution (um)           |
 +-------------------------+----------------------------------------------+
 
-We can define a grid with 1.1-1.7 um at R=50 resolution::
+We can define a grid with 1.1-1.7 um at R=50 resolution:
 
-    [Binning]
-    bin_type = manual
-    wavelength_res = 1.1, 1.7, 50
+.. code-block:: yaml
+
+    Binning:
+      bin_type: manual
+      wavelength_res: [1.1, 1.7, 50]
 
 Finally there is an optional parameter ``accurate``. When *False*,
 a simpler histogramming method is used to perform the resampling.
